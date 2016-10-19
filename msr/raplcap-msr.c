@@ -145,6 +145,8 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   struct rapl_limit l0, l1;
+  memset(&l0, 0, sizeof(struct rapl_limit));
+  memset(&l1, 0, sizeof(struct rapl_limit));
   int ret;
   if (rc == NULL || rc->state != &global_state || socket >= rc->nsockets) {
     errno = EINVAL;

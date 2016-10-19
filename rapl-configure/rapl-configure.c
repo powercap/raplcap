@@ -72,8 +72,8 @@ static void print_limits(raplcap_zone zone,
     case RAPLCAP_ZONE_UNCORE:
     case RAPLCAP_ZONE_DRAM:
     default:
-      printf("%7s: %f\n", "watts", watts_short);
-      printf("%7s: %f\n", "seconds", seconds_short);
+      printf("%7s: %f\n", "watts", watts_long);
+      printf("%7s: %f\n", "seconds", seconds_long);
       break;
   }
 }
