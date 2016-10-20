@@ -25,6 +25,8 @@ add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_D
 
 # Subdirectories
 
+add_subdirectory(msr-direct)
+
 find_package(libmsr)
 if(libmsr_FOUND)
   add_subdirectory(msr)

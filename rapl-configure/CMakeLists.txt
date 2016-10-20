@@ -1,5 +1,9 @@
 # Binaries
 
+add_executable(rapl-configure-msr-direct rapl-configure.c)
+target_link_libraries(rapl-configure-msr-direct raplcap-msr-direct)
+install(TARGETS rapl-configure-msr-direct DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+
 if(libmsr_FOUND)
   add_executable(rapl-configure-msr rapl-configure.c)
   # target_link_libraries(rapl-configure-msr -L${libmsr_LIB_PATH} msr)

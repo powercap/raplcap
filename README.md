@@ -3,13 +3,16 @@
 This project provides a C interface for getting/setting power caps with Intel Running Average Power Limit (RAPL).
 It supports multiple implementations.
 
-It also provides two binaries, `rapl-configure-msr` and `rapl-configure-sysfs`, for getting/setting RAPL configurations from the command line.
+It also provides binaries for getting/setting RAPL configurations from the command line.
 Each provides the same command line interface, but use different RAPLCap libraries for interfacing with RAPL.
+ * `rapl-configure-msr`
+ * `rapl-configure-msr-direct`
+ * `rapl-configure-sysfs`
 
 ## Prerequisites
 
 This project depends on:
- * [libmsr](https://github.com/LLNL/libmsr/)
+ * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - most recently tested with release `v0.3.0`.
  * [powercap](https://github.com/powercap/powercap)
 
 ## Building
@@ -58,6 +61,7 @@ To link with an implementation of RAPLCap, get linker information (including tra
 ``` sh
 pkg-config --libs --static raplcap-sysfs
 pkg-config --libs --static raplcap-msr
+pkg-config --libs --static raplcap-msr-direct
 ```
 
 Or in your Makefile, add to your linker flags one of:
@@ -65,6 +69,7 @@ Or in your Makefile, add to your linker flags one of:
 ``` Makefile
 $(shell pkg-config --libs --static raplcap-sysfs)
 $(shell pkg-config --libs --static raplcap-msr)
+$(shell pkg-config --libs --static raplcap-msr-direct)
 ```
 
 You may leave off the `--static` option if you built shared object libraries.
@@ -74,6 +79,7 @@ Depending on your install location, you may also need to augment your compiler f
 ``` sh
 pkg-config --cflags raplcap-sysfs
 pkg-config --cflags raplcap-msr
+pkg-config --cflags raplcap-msr-direct
 ```
 
 ## Usage

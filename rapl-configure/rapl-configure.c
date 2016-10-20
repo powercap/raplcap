@@ -111,10 +111,10 @@ int get_limits(unsigned int socket, raplcap_zone zone) {
 int main(int argc, char** argv) {
   int ret = 0;
   int c;
-  int read = 0;
   prog = argv[0];
 
   // parse parameters
+  ctx.print = 1;
   while ((c = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
     switch (c) {
       case 'h':
@@ -140,15 +140,19 @@ int main(int argc, char** argv) {
         break;
       case 's':
         ctx.sec_long = atof(optarg);
+        ctx.print = 0;
         break;
       case 'w':
         ctx.watts_long = atof(optarg);
+        ctx.print = 0;
         break;
       case 'S':
         ctx.sec_short = atof(optarg);
+        ctx.print = 0;
         break;
       case 'W':
         ctx.watts_short = atof(optarg);
+        ctx.print = 0;
         break;
       case '?':
       default:
@@ -162,7 +166,6 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Power and interval values must be > 0 (0 values are ignored)\n");
     print_usage(1);
   }
-  read = ctx.watts_short == 0 && ctx.sec_short == 0 && ctx.watts_long == 0 && ctx.sec_long == 0;
 
   // initialize
   if (raplcap_init(&rc)) {
@@ -171,7 +174,7 @@ int main(int argc, char** argv) {
   }
 
   // perform requested action
-  if (read) {
+  if (ctx.print) {
     ret = get_limits(ctx.socket, ctx.zone);
   } else {
     ret = configure_limits(ctx.socket, ctx.zone, ctx.watts_long, ctx.sec_long, ctx.watts_short, ctx.sec_short);
