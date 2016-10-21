@@ -54,6 +54,18 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc);
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone);
 
 /**
+ * Check if a zone is enabled.
+ * Returns a negative value on error, 0 if disabled, 1 if enabled.
+ */
+int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone);
+
+/**
+ * Enable/disable a zone.
+ * Returns a negative value on error, 0 on success.
+ */
+int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled);
+
+/**
  * Get the limits for a zone, if it is supported.
  * Not all zones use limit_short.
  * Returns a negative value on error, 0 on suceess.

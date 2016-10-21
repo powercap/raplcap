@@ -15,9 +15,10 @@
 typedef struct rapl_configure_ctx {
   raplcap_zone zone;
   unsigned int socket;
-  int print;
+  int set_long;
   double watts_long;
   double sec_long;
+  int set_short;
   double watts_short;
   double sec_short;
 } rapl_configure_ctx;
@@ -52,17 +53,20 @@ void print_usage(int exit_code) {
           "  -S, --seconds1=SECONDS   short_term time window (PACKAGE & PSYS only)\n"
           "  -W, --watts1=WATTS       short_term power limit (PACKAGE & PSYS only)\n"
           "  -h, --help               Print this message and exit\n\n"
-          "Unless time or power limits are specified, current values will be printed\n\n",
+          "Unless time or power limits are specified, current values will be printed.\n"
+          "If the only values specified are 0, the zone will be disabled.\n\n",
           prog);
   exit(exit_code);
 }
 
-static void print_limits(raplcap_zone zone,
+static void print_limits(raplcap_zone zone, int enabled,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short) {
+  const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
   switch (zone) {
     case RAPLCAP_ZONE_PACKAGE:
     case RAPLCAP_ZONE_PSYS:
+      printf("%13s: %s\n", "enabled", en);
       printf("%13s: %f\n", "watts_long", watts_long);
       printf("%13s: %f\n", "seconds_long", seconds_long);
       printf("%13s: %f\n", "watts_short", watts_short);
@@ -72,28 +76,45 @@ static void print_limits(raplcap_zone zone,
     case RAPLCAP_ZONE_UNCORE:
     case RAPLCAP_ZONE_DRAM:
     default:
+      printf("%7s: %s\n", "enabled", en);
       printf("%7s: %f\n", "watts", watts_long);
       printf("%7s: %f\n", "seconds", seconds_long);
       break;
   }
 }
 
-int configure_limits(unsigned int socket, raplcap_zone zone,
-                     double watts_long, double seconds_long,
-                     double watts_short, double seconds_short) {
-  assert(seconds_short >= 0);
-  assert(watts_short >= 0);
-  assert(seconds_long >= 0);
-  assert(watts_long >= 0);
+static inline void print_enable_error(const char* fn) {
+  perror(fn);
+  fprintf(stderr, "Trying to proceed anyway...\n");
+}
+
+int configure_limits(const rapl_configure_ctx* c) {
+  assert(c != NULL);
   raplcap_limit limit_long;
   raplcap_limit limit_short;
-  raplcap_limit* ll = (seconds_long > 0 || watts_long > 0) ? &limit_long : NULL;
-  raplcap_limit* ls = (seconds_short > 0 || watts_short > 0) ? &limit_short : NULL;
-  limit_long.seconds = seconds_long;
-  limit_long.watts = watts_long;
-  limit_short.seconds = seconds_short;
-  limit_short.watts = watts_short;
-  return raplcap_set_limits(socket, &rc, zone, ll, ls);
+  raplcap_limit* ll = NULL;
+  raplcap_limit* ls = NULL;
+  int disable = 1;
+  if (c->set_long) {
+    limit_long.seconds = c->sec_long;
+    limit_long.watts = c->watts_long;
+    ll = &limit_long;
+    disable &= limit_long.seconds == 0 && limit_long.watts == 0;
+  }
+  if (c->set_short) {
+    limit_short.seconds = c->sec_short;
+    limit_short.watts = c->watts_short;
+    ls = &limit_short;
+    disable &= limit_short.seconds == 0 && limit_short.watts == 0;
+  }
+  if (disable) {
+    // all given values were 0 - disable the zone
+    return raplcap_set_zone_enabled(c->socket, &rc, c->zone, 0);
+  }
+  if (raplcap_set_zone_enabled(c->socket, &rc, c->zone, 1)) {
+    print_enable_error("raplcap_set_zone_enabled");
+  }
+  return raplcap_set_limits(c->socket, &rc, c->zone, ll, ls);
 }
 
 int get_limits(unsigned int socket, raplcap_zone zone) {
@@ -101,10 +122,16 @@ int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ls;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
-  if (raplcap_get_limits(socket, &rc, zone, &ll, &ls)) {
+  int enabled = raplcap_is_zone_enabled(socket, &rc, zone);
+  if (enabled < 0) {
+    print_enable_error("raplcap_is_zone_enabled");
+  }
+  // short only allowed for package and psys zones
+  raplcap_limit* s = (zone == RAPLCAP_ZONE_PACKAGE || zone == RAPLCAP_ZONE_PSYS) ? &ls : NULL;
+  if (raplcap_get_limits(socket, &rc, zone, &ll, s)) {
     return -1;
   }
-  print_limits(zone, ll.watts, ll.seconds, ls.watts, ls.seconds);
+  print_limits(zone, enabled, ll.watts, ll.seconds, ls.watts, ls.seconds);
   return 0;
 }
 
@@ -114,7 +141,7 @@ int main(int argc, char** argv) {
   prog = argv[0];
 
   // parse parameters
-  ctx.print = 1;
+  memset(&ctx, 0, sizeof(rapl_configure_ctx));
   while ((c = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
     switch (c) {
       case 'h':
@@ -140,19 +167,19 @@ int main(int argc, char** argv) {
         break;
       case 's':
         ctx.sec_long = atof(optarg);
-        ctx.print = 0;
+        ctx.set_long = 1;
         break;
       case 'w':
         ctx.watts_long = atof(optarg);
-        ctx.print = 0;
+        ctx.set_long = 1;
         break;
       case 'S':
         ctx.sec_short = atof(optarg);
-        ctx.print = 0;
+        ctx.set_short = 1;
         break;
       case 'W':
         ctx.watts_short = atof(optarg);
-        ctx.print = 0;
+        ctx.set_short = 1;
         break;
       case '?':
       default:
@@ -163,7 +190,7 @@ int main(int argc, char** argv) {
 
   // verify parameters
   if (ctx.watts_short < 0 || ctx.sec_short < 0 || ctx.watts_long < 0 || ctx.sec_long < 0) {
-    fprintf(stderr, "Power and interval values must be > 0 (0 values are ignored)\n");
+    fprintf(stderr, "Power and interval values must be >= 0\n");
     print_usage(1);
   }
 
@@ -174,10 +201,10 @@ int main(int argc, char** argv) {
   }
 
   // perform requested action
-  if (ctx.print) {
+  if (!ctx.set_long && !ctx.set_short) {
     ret = get_limits(ctx.socket, ctx.zone);
   } else {
-    ret = configure_limits(ctx.socket, ctx.zone, ctx.watts_long, ctx.sec_long, ctx.watts_short, ctx.sec_short);
+    ret = configure_limits(&ctx);
   }
 
   if (ret) {

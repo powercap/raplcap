@@ -142,6 +142,18 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
   }
 }
 
+int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  // TODO
+  errno = ENOSYS;
+  return -1;
+}
+
+int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
+  // TODO
+  errno = ENOSYS;
+  return -1;
+}
+
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   struct rapl_limit l0, l1;

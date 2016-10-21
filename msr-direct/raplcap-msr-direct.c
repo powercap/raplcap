@@ -246,6 +246,149 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
   }
 }
 
+/**
+ * Get the bits requested and shift right if needed.
+ * First and last are inclusive.
+ */
+static inline uint64_t get_bits(uint64_t msrval, uint32_t first, uint32_t last) {
+  assert(first <= last);
+  assert(last < 64);
+  return (msrval >> first) & ((1 << (last - first + 1)) - 1);
+}
+
+static inline int is_pkg_platform_enabled(uint64_t msrval) {
+  return get_bits(msrval, 15, 15) || get_bits(msrval, 47, 47);
+}
+
+static inline int is_core_uncore_dram_enabled(uint64_t msrval) {
+  return get_bits(msrval, 15, 15);
+}
+
+int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  int ret = 0;
+  uint64_t msrval = 0;
+  if (rc == NULL || rc->state == NULL || socket >= rc->nsockets) {
+    errno = EINVAL;
+    return -1;
+  }
+  raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+  switch (zone) {
+    case RAPLCAP_ZONE_PACKAGE:
+      ret = read_msr(state->fds[socket], MSR_PKG_POWER_LIMIT, &msrval);
+      if (!ret) {
+        ret = is_pkg_platform_enabled(msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_CORE:
+      ret = read_msr(state->fds[socket], MSR_PP0_POWER_LIMIT, &msrval);
+      if (!ret) {
+        ret = is_core_uncore_dram_enabled(msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_UNCORE:
+      ret = read_msr(state->fds[socket], MSR_PP1_POWER_LIMIT, &msrval);
+      if (!ret) {
+        ret = is_core_uncore_dram_enabled(msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_DRAM:
+      ret = read_msr(state->fds[socket], MSR_DRAM_POWER_LIMIT, &msrval);
+      if (!ret) {
+        ret = is_core_uncore_dram_enabled(msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_PSYS:
+      ret = read_msr(state->fds[socket], MSR_PLATFORM_POWER_LIMIT, &msrval);
+      if (!ret) {
+        ret = is_pkg_platform_enabled(msrval);
+      }
+      break;
+    default:
+      errno = EINVAL;
+      ret = -1;
+      break;
+  }
+  return ret;
+}
+
+static inline uint64_t replace_bits(uint64_t msrval, uint64_t data, uint32_t first, uint32_t last) {
+  // first and last are inclusive
+  assert(first <= last);
+  assert(last < 64);
+  uint64_t mask = (((uint64_t) 1 << (last - first + 1)) - 1) << first;
+  return (msrval & ~mask) | (data & mask);
+}
+
+static inline uint64_t set_pkg_platform_enabled(uint64_t msrval, int enabled) {
+  int set = enabled ? 1 : 0;
+  // set RAPL enable
+  msrval = replace_bits(msrval, set ? 1 : 0, 15, 15);
+  msrval = replace_bits(msrval, set ? 1 : 0, 47, 47);
+  // set clamping enable
+  msrval = replace_bits(msrval, set ? 1 : 0, 16, 16);
+  return replace_bits(msrval, set ? 1 : 0, 48, 48);
+}
+
+static inline uint64_t set_core_uncore_dram_enabled(uint64_t msrval, int enabled) {
+  int set = enabled ? 1 : 0;
+  // set RAPL enable
+  msrval = replace_bits(msrval, set ? 1 : 0, 15, 15);
+  // set clamping enable
+  return replace_bits(msrval, set ? 1 : 0, 16, 16);
+}
+
+int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
+  int ret = 0;
+  uint64_t msrval = 0;
+  if (rc == NULL || rc->state == NULL || socket >= rc->nsockets) {
+    errno = EINVAL;
+    return -1;
+  }
+  raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+  switch (zone) {
+    case RAPLCAP_ZONE_PACKAGE:
+      ret = read_msr(state->fds[socket], MSR_PKG_POWER_LIMIT, &msrval);
+      if (!ret) {
+        msrval = set_pkg_platform_enabled(msrval, enabled);
+        ret = write_msr(state->fds[socket], MSR_PKG_POWER_LIMIT, msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_CORE:
+      ret = read_msr(state->fds[socket], MSR_PP0_POWER_LIMIT, &msrval);
+      if (!ret) {
+        msrval = set_core_uncore_dram_enabled(msrval, enabled);
+        ret = write_msr(state->fds[socket], MSR_PP0_POWER_LIMIT, msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_UNCORE:
+      ret = read_msr(state->fds[socket], MSR_PP1_POWER_LIMIT, &msrval);
+      if (!ret) {
+        msrval = set_core_uncore_dram_enabled(msrval, enabled);
+        ret = write_msr(state->fds[socket], MSR_PP1_POWER_LIMIT, msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_DRAM:
+      ret = read_msr(state->fds[socket], MSR_DRAM_POWER_LIMIT, &msrval);
+      if (!ret) {
+        msrval = set_core_uncore_dram_enabled(msrval, enabled);
+        ret = write_msr(state->fds[socket], MSR_DRAM_POWER_LIMIT, msrval);
+      }
+      break;
+    case RAPLCAP_ZONE_PSYS:
+      ret = read_msr(state->fds[socket], MSR_PLATFORM_POWER_LIMIT, &msrval);
+      if (!ret) {
+        msrval = set_pkg_platform_enabled(msrval, enabled);
+        ret = write_msr(state->fds[socket], MSR_PLATFORM_POWER_LIMIT, msrval);
+      }
+      break;
+    default:
+      errno = EINVAL;
+      ret = -1;
+      break;
+  }
+  return ret;
+}
+
 static inline void to_raplcap(raplcap_limit* limit, double seconds, double watts) {
   assert(limit != NULL);
   limit->seconds = seconds;
@@ -259,16 +402,6 @@ static inline void to_raplcap(raplcap_limit* limit, double seconds, double watts
 static inline double to_time_window_F(uint32_t bits) {
   assert(bits <= 3);
   return 1.0 + 0.1 * bits;
-}
-
-/**
- * Get the bits requested and shift right if needed.
- * First and last are inclusive.
- */
-static inline uint64_t get_bits(uint64_t msrval, uint32_t first, uint32_t last) {
-  assert(first <= last);
-  assert(last < 64);
-  return (msrval >> first) & ((1 << (last - first + 1)) - 1);
 }
 
 /**
@@ -369,14 +502,6 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   return ret ? -1 : 0;
 }
 
-static inline uint64_t replace_bits(uint64_t msrval, uint64_t data, uint32_t first, uint32_t last) {
-  // first and last are inclusive
-  assert(first <= last);
-  assert(last < 64);
-  uint64_t mask = (((uint64_t) 1 << (last - first + 1)) - 1) << first;
-  return (msrval & ~mask) | (data & mask);
-}
-
 /**
  * Computes bit field based on equations in get_pkg_platform(...).
  * Needs to solve for a different value in the equation though.
@@ -385,39 +510,24 @@ static inline uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr_direc
                                         const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   assert(state != NULL);
   if (limit_long != NULL) {
-    if (limit_long->watts == 0 && limit_long->seconds == 0) {
-      // disable RAPL
-      msrval = replace_bits(msrval, 0, 15, 15);
-    } else {
-      // enable RAPL
-      msrval = replace_bits(msrval, 1, 15, 15);
-      if (limit_long->watts > 0) {
-        double power_long = (limit_long->watts / state->power_units);
-        msrval = replace_bits(msrval, power_long, 0, 14);
-      }
-      if (limit_long->seconds > 0) {
-        double time_long = log10((4.0 * limit_long->seconds) / (state->time_units * (get_bits(msrval, 22, 23) + 4.0))) / log10(2.0);
-        msrval = replace_bits(msrval, time_long, 17, 21);
-      }
+    if (limit_long->watts > 0) {
+      double power_long = (limit_long->watts / state->power_units);
+      msrval = replace_bits(msrval, power_long, 0, 14);
+    }
+    if (limit_long->seconds > 0) {
+      double time_long = log10((4.0 * limit_long->seconds) / (state->time_units * (get_bits(msrval, 22, 23) + 4.0))) / log10(2.0);
+      printf("%lf\n", time_long);
+      msrval = replace_bits(msrval, time_long, 17, 21);
     }
   }
   if (limit_short != NULL) {
-    if (limit_short->watts == 0 && limit_short->seconds == 0) {
-      // disable RAPL
-      msrval = replace_bits(msrval, 0, 47, 47);
-    } else {
-      // enable RAPL
-      msrval = replace_bits(msrval, 1, 47, 47);
-      // clamping limitation
-      // msrval = replace_bits(msrval, 1, 16, 16);
-      if (limit_short->watts > 0) {
-        double power_short = (limit_short->watts / state->power_units);
-        msrval = replace_bits(msrval, power_short, 32, 46);
-      }
-      if (limit_short->seconds > 0) {
-        double time_short = log10((4.0 * limit_short->seconds) / (state->time_units * (get_bits(msrval, 54, 55) + 4.0))) / log10(2.0);
-        msrval = replace_bits(msrval, time_short, 49, 53);
-      }
+    if (limit_short->watts > 0) {
+      double power_short = (limit_short->watts / state->power_units);
+      msrval = replace_bits(msrval, power_short, 32, 46);
+    }
+    if (limit_short->seconds > 0) {
+      double time_short = log10((4.0 * limit_short->seconds) / (state->time_units * (get_bits(msrval, 54, 55) + 4.0))) / log10(2.0);
+      msrval = replace_bits(msrval, time_short, 49, 53);
     }
   }
   return msrval;
@@ -430,22 +540,13 @@ static inline uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr_direc
 static inline uint64_t set_core_uncore_dram(uint64_t msrval, const raplcap_msr_direct* state, const raplcap_limit* limit_long) {
   assert(state != NULL);
   if (limit_long != NULL) {
-    if (limit_long->watts == 0 && limit_long->seconds == 0) {
-      // disable RAPL
-      msrval = replace_bits(msrval, 0, 15, 15);
-    } else {
-      // enable RAPL
-      msrval = replace_bits(msrval, 1, 15, 15);
-      // clamping limitation
-      // msrval = replace_bits(msrval, 1, 16, 16);
-      if (limit_long->watts > 0) {
-        double power_long = (limit_long->watts / state->power_units);
-        msrval = replace_bits(msrval, power_long, 0, 14);
-      }
-      if (limit_long->seconds > 0) {
-        double time_long = log10(limit_long->seconds / to_time_window_F(get_bits(msrval, 22, 23))) / log10(2.0);
-        msrval = replace_bits(msrval, time_long, 17, 21);
-      }
+    if (limit_long->watts > 0) {
+      double power_long = (limit_long->watts / state->power_units);
+      msrval = replace_bits(msrval, power_long, 0, 14);
+    }
+    if (limit_long->seconds > 0) {
+      double time_long = log10(limit_long->seconds / to_time_window_F(get_bits(msrval, 22, 23))) / log10(2.0);
+      msrval = replace_bits(msrval, time_long, 17, 21);
     }
   }
   return msrval;

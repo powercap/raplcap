@@ -135,6 +135,28 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
   return powercap_rapl_is_zone_supported(&pkgs[socket], z);
 }
 
+int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  powercap_rapl_zone z = POWERCAP_RAPL_ZONE_PACKAGE;
+  const powercap_rapl_pkg* pkg;
+  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_sysfs(zone, &z)) {
+    errno = EINVAL;
+    return -1;
+  }
+  pkg = &((powercap_rapl_pkg*) rc->state)[socket];
+  return powercap_rapl_is_enabled(pkg, z);
+}
+
+int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
+  powercap_rapl_zone z = POWERCAP_RAPL_ZONE_PACKAGE;
+  const powercap_rapl_pkg* pkg;
+  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_sysfs(zone, &z)) {
+    errno = EINVAL;
+    return -1;
+  }
+  pkg = &((powercap_rapl_pkg*) rc->state)[socket];
+  return powercap_rapl_set_enabled(pkg, z, enabled);
+}
+
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   uint64_t time_window, power_limit;
@@ -146,7 +168,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     return -1;
   }
   pkg = &((powercap_rapl_pkg*) rc->state)[socket];
-  if (limit_long != NULL && powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG)) {
+  if (limit_long != NULL) {
     if (powercap_rapl_get_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, &time_window) ||
         powercap_rapl_get_power_limit_uw(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, &power_limit)) {
       ret = -1;
@@ -154,7 +176,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
       sysfs_to_raplcap(time_window, power_limit, limit_long);
     }
   }
-  if (limit_short != NULL && powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT)) {
+  if (limit_short != NULL) {
     if (powercap_rapl_get_time_window_us(pkg, zone, POWERCAP_RAPL_CONSTRAINT_SHORT, &time_window) ||
         powercap_rapl_get_power_limit_uw(pkg, zone, POWERCAP_RAPL_CONSTRAINT_SHORT, &power_limit)) {
       ret = -1;
@@ -175,7 +197,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     return -1;
   }
   pkg = &((powercap_rapl_pkg*) rc->state)[socket];
-  if (limit_long != NULL && powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG)) {
+  if (limit_long != NULL) {
     raplcap_limit_to_sysfs(limit_long, &time_window, &power_limit);
     if (time_window != 0 && powercap_rapl_set_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, time_window)) {
       return -1;
@@ -184,7 +206,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
       return -1;
     }
   }
-  if (limit_short != NULL && powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT)) {
+  if (limit_short != NULL) {
     raplcap_limit_to_sysfs(limit_short, &time_window, &power_limit);
     if (time_window != 0 && powercap_rapl_set_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, time_window)) {
       return -1;
