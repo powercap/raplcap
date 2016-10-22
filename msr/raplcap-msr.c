@@ -144,12 +144,19 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   // TODO
+  (void) socket;
+  (void) rc;
+  (void) zone;
   errno = ENOSYS;
   return -1;
 }
 
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
   // TODO
+  (void) socket;
+  (void) rc;
+  (void) zone;
+  (void) enabled;
   errno = ENOSYS;
   return -1;
 }
@@ -194,12 +201,11 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   return ret ? -1 : 0;
 }
 
-static inline void enforce_not_zero(double* dest, const double* alternative) {
+static inline void enforce_not_zero(double* dest, double alternative) {
   assert(dest != NULL);
-  assert(alternative != NULL);
-  assert(*alternative != 0);
+  assert(alternative != 0);
   if (*dest == 0) {
-    *dest = *alternative;
+    *dest = alternative;
   }
 }
 
@@ -221,14 +227,14 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   }
   if (limit_long != NULL) {
     raplcap_to_msr(limit_long, &l0);
-    enforce_not_zero(&l0.watts, &c0.watts);
-    enforce_not_zero(&l0.seconds, &c0.seconds);
+    enforce_not_zero(&l0.watts, c0.watts);
+    enforce_not_zero(&l0.seconds, c0.seconds);
     r0 = &l0;
   }
   if (limit_short != NULL) {
     raplcap_to_msr(limit_short, &l1);
-    enforce_not_zero(&l1.watts, &c1.watts);
-    enforce_not_zero(&l1.seconds, &c1.seconds);
+    enforce_not_zero(&l1.watts, c1.watts);
+    enforce_not_zero(&l1.seconds, c1.seconds);
     r1 = &l1;
   }
   switch (zone) {
