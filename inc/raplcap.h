@@ -44,6 +44,7 @@ int raplcap_destroy(raplcap* rc);
 /**
  * Get the number of available sockets.
  * If the context is NULL, the function will attempt to discover the number of available sockets.
+ * May return 0 on error.
  */
 uint32_t raplcap_get_num_sockets(const raplcap* rc);
 

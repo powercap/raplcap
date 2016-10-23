@@ -50,7 +50,7 @@ typedef struct raplcap_msr_direct {
 static inline int open_msr(uint32_t core) {
   char msr_filename[32];
   int fd;
-  sprintf(msr_filename, "/dev/cpu/%"PRIu32"/msr", core);
+  snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr", core);
   fd = open(msr_filename, O_RDWR);
   return fd < 0 ? -1 : fd;
 }
@@ -110,71 +110,94 @@ static inline int write_msr(int fd, raplcap_zone z, uint64_t data) {
   return pwrite(fd, &data, sizeof(uint64_t), msr) == sizeof(uint64_t) ? 0 : -1;
 }
 
-// modified from LLNL's libmsr
-static inline uint32_t get_num_sockets() {
-  unsigned first = 0;
-  unsigned second = 0;
-  uint64_t rax = 0xb;
-  uint64_t rbx = 0;
-  uint64_t rcx = 0x0;
-  uint64_t rdx = 0;
-  int allcores = 0;
-
-  uint64_t coresPerSocket;
-  uint64_t hyperThreads;
-  int HTenabled;
-  uint64_t sockets;
-
-  // Use rcx = 0 to see if hyperthreading is supported. If > 1, then there is
-  // HT.
-  // Use rcx = 1 to see how many cores are available per socket (including
-  // HT, if supported).
-  FILE* thread = fopen("/sys/devices/system/cpu/cpu0/topology/thread_siblings_list", "r");
-  if (thread == NULL) {
+static inline uint32_t count_sockets() {
+  // pretty hacky, but seems to work
+  const char* cmd = "egrep 'physical id' /proc/cpuinfo | sort -u | cut -d : -f 2 | awk '{print $1}' | tail -n 1";
+  uint32_t sockets = 0;
+  int err_save = 0;
+  char output[32] = {'\0'};
+  FILE* fp = popen(cmd, "r");
+  if (fp == NULL) {
     return 0;
   }
-  int ret = fscanf(thread, "%u,%u", &first, &second);
-  if (ret < 2 || ret == EOF) {
-    /* Hyperthreading is disabled. */
-    HTenabled = 0;
-  } else {
-    HTenabled = 1;
+  while (fgets(output, sizeof(output) - 1, fp) != NULL) {
+    errno = 0;
+    sockets = strtoul(output, NULL, 0);
+    if (sockets == 0 && errno) {
+      // preserve the error
+      err_save = errno;
+      break;
+    }
+    sockets++;
   }
-  fclose(thread);
-
-  asm volatile(
-      "cpuid"
-      : "=a" (rax), "=b" (rbx), "=c" (rcx), "=d" (rdx)
-      : "0" (rax), "2"(rcx)
-  );
-  hyperThreads = ((rbx) & 0xFFFF);
-  rax = 0xb;
-  rbx = 0;
-  rcx = 0x1;
-  rdx = 0;
-
-  asm volatile(
-      "cpuid"
-      : "=a" (rax), "=b" (rbx), "=c" (rcx), "=d" (rdx)
-      : "0" (rax), "2"(rcx)
-  );
-  coresPerSocket = ((rbx) & 0xFFFF) / hyperThreads;
-  // get_nprocs_conf() returns max number of logical processors (including
-  // hyperthreading)
-  // get_nprocs() returns num logical processors depending on whether
-  // hyperthreading is enabled or not
-  allcores = get_nprocs_conf();
-  if (allcores == coresPerSocket * (HTenabled + 1)) {
-    sockets = 1;
-  } else {
-    sockets = 2;
-  }
-
+  pclose(fp);
+  errno = err_save;
   return sockets;
 }
 
+static inline int raplcap_open_msrs(uint32_t sockets, int* fds) {
+  // need to find a core for each socket
+  assert(sockets > 0);
+  assert(fds != NULL);
+  uint32_t coreids[sockets];
+  int coreids_found[sockets];
+  char output[32] = {'\0'};
+  uint32_t socket;
+  uint32_t core;
+  uint32_t i, j;
+  int err_save;
+  // this is REALLY hacky... I'm so sorry. --CKI, 10/22/16
+  const char* cmd = "egrep 'processor|core id|physical id' /proc/cpuinfo | cut -d : -f 2 | paste - - -  | awk '{print $2 \" \" $1}'";
+  FILE* fp = popen(cmd, "r");
+  if (fp == NULL) {
+    return 0;
+  }
+  memset(coreids, 0, sockets * sizeof(uint32_t));
+  memset(coreids_found, 0, sockets * sizeof(int));
+  // first column of the output is the socket, second column is the core id
+  while (fgets(output, sizeof(output) - 1, fp) != NULL) {
+    if (sscanf(output, "%"PRIu32" %"PRIu32, &socket, &core) != 2) {
+      fprintf(stderr, "raplcap_open_msrs: Failed to parse socket to MSR mapping\n");
+      errno = ENOENT;
+      return -1;
+    }
+    if (socket >= sockets) {
+      fprintf(stderr, "raplcap_open_msrs: Found more sockets than expected: %"PRIu32" instead of %"PRIu32"\n", socket + 1, sockets);
+      errno = EINVAL;
+      return -1;
+    }
+    // keep the smallest core value (ideally maps to the first physical core on the socket)
+    if (!coreids_found[socket] || core < coreids[socket]) {
+      coreids_found[socket] = 1;
+      coreids[socket] = core;
+    }
+  }
+  pclose(fp);
+  // verify that we found a MSR for each socket
+  for (i = 0; i < sockets; i++) {
+    if (!coreids_found[i]) {
+      fprintf(stderr, "raplcap_open_msrs: Failed to find a MSR for socket %"PRIu32"\n", i);
+      errno = ENOENT;
+      return -1;
+    }
+  }
+  // now open the MSR for each core
+  for (i = 0; i < sockets; i++) {
+    fds[i] = open_msr(coreids[i]);
+    if (fds[i] < 0) {
+      err_save = errno;
+      // cleanup
+      for (j = 0; j < i; j++) {
+        close(fds[j]);
+      }
+      errno = err_save;
+      return -1;
+    }
+  }
+  return 0;
+}
+
 int raplcap_init(raplcap* rc) {
-  int err_save = 0;
   if (rc == NULL) {
     errno = EINVAL;
     return -1;
@@ -193,21 +216,10 @@ int raplcap_init(raplcap* rc) {
     free(state);
     return -1;
   }
-  uint32_t i, j;
-  for (i = 0; i < sockets; i++) {
-    // TODO: when >1 socket, decide which MSRs to actually open and open them
-    state->fds[i] = open_msr(i);
-    if (state->fds[i] < 0) {
-      err_save = errno;
-      // cleanup
-      for (j = 0; j < i; j++) {
-        close(state->fds[j]);
-      }
-      free(state->fds);
-      free(state);
-      errno = err_save;
-      return -1;
-    }
+  if (raplcap_open_msrs(sockets, state->fds)) {
+    free(state->fds);
+    free(state);
+    return -1;
   }
 
   rc->nsockets = sockets;
@@ -244,9 +256,7 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  // tODO: Defaulting to 1 socket for now
-  // return rc == NULL ? get_num_sockets() : rc->nsockets;
-  return rc == NULL ? 1 : rc->nsockets;
+  return rc == NULL ? count_sockets() : rc->nsockets;
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
