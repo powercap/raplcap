@@ -138,6 +138,7 @@ int get_limits(unsigned int socket, raplcap_zone zone) {
 int main(int argc, char** argv) {
   int ret = 0;
   int c;
+  int supported;
   prog = argv[0];
 
   // parse parameters
@@ -200,15 +201,24 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // perform requested action
-  if (!ctx.set_long && !ctx.set_short) {
-    ret = get_limits(ctx.socket, ctx.zone);
+  supported = raplcap_is_zone_supported(ctx.socket, &rc, ctx.zone);
+  if (supported == 0) {
+    fprintf(stderr, "Zone not supported\n");
+    ret = -1;
   } else {
-    ret = configure_limits(&ctx);
-  }
-
-  if (ret) {
-    perror("Action failed");
+    if (supported < 0) {
+      perror("raplcap_is_zone_supported");
+      fprintf(stderr, "Trying to proceed anyway...\n");
+    }
+    // perform requested action
+    if (!ctx.set_long && !ctx.set_short) {
+      ret = get_limits(ctx.socket, ctx.zone);
+    } else {
+      ret = configure_limits(&ctx);
+    }
+    if (ret) {
+      perror("Action failed");
+    }
   }
 
   // cleanup
