@@ -105,41 +105,36 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  int ret;
+  struct rapl_limit rl;
   if (rc == NULL || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
-  // we have no way to check with libmsr without just trying operations, so we hardcode responses
+  // we have no way to check with libmsr without just trying operations
+  memset(&rl, 0, sizeof(struct rapl_limit));
   switch (zone) {
     case RAPLCAP_ZONE_PACKAGE:
+      ret = get_pkg_rapl_limit(socket, &rl, NULL);
+      break;
     case RAPLCAP_ZONE_CORE:
-      // always supported
-      return 1;
+      ret = get_pp_rapl_limit(socket, &rl, NULL);
+      break;
     case RAPLCAP_ZONE_UNCORE:
-#if defined(RAPL_UNCORE_SUPPORTED)
-      return RAPL_UNCORE_SUPPORTED;
-#else
-      // TODO
-      return 1;
-#endif
+      ret = get_pp_rapl_limit(socket, NULL, &rl);
+      break;
     case RAPLCAP_ZONE_DRAM:
-#if defined(RAPL_DRAM_SUPPORTED)
-      return RAPL_DRAM_SUPPORTED;
-#else
-      // TODO
-      return 1;
-#endif
+      ret = get_dram_rapl_limit(socket, &rl);
+      break;
     case RAPLCAP_ZONE_PSYS:
-#if defined(RAPL_PSYS_SUPPORTED)
-      return RAPL_PSYS_SUPPORTED;
-#else
-      // TODO: not yet supported by libmsr
-      return 0;
-#endif
+      // not yet supported by libmsr
+      ret = -1;
+      break;
     default:
       errno = EINVAL;
       return -1;
   }
+  return ret ? 0 : 1;
 }
 
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
@@ -164,16 +159,22 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   struct rapl_limit l0, l1;
-  memset(&l0, 0, sizeof(struct rapl_limit));
-  memset(&l1, 0, sizeof(struct rapl_limit));
   int ret;
   if (rc == NULL || rc->state != &global_state || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
+  // NOTE: Currently the getter functions don't return errors when the domain isn't supported.
+  // See: https://github.com/LLNL/libmsr/issues/8
+  memset(&l0, 0, sizeof(struct rapl_limit));
+  memset(&l1, 0, sizeof(struct rapl_limit));
   switch (zone) {
     case RAPLCAP_ZONE_PACKAGE:
       ret = get_pkg_rapl_limit(socket, &l0, &l1);
+      // short term constraint currently only supported in PACKAGE
+      if (!ret && limit_short != NULL) {
+        msr_to_raplcap(&l1, limit_short);
+      }
       break;
     case RAPLCAP_ZONE_CORE:
       ret = get_pp_rapl_limit(socket, &l0, NULL);
@@ -190,20 +191,16 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
       ret = -1;
       break;
   }
-  if (!ret) {
-    if (limit_long != NULL) {
-      msr_to_raplcap(&l0, limit_long);
-    }
-    if (limit_short != NULL) {
-      msr_to_raplcap(&l1, limit_short);
-    }
+  if (!ret && limit_long != NULL) {
+    msr_to_raplcap(&l0, limit_long);
   }
   return ret ? -1 : 0;
 }
 
 static inline void enforce_not_zero(double* dest, double alternative) {
   assert(dest != NULL);
-  assert(alternative != 0);
+  // disabled assertion due to limsr bug #8
+  // assert(alternative != 0);
   if (*dest == 0) {
     *dest = alternative;
   }
