@@ -48,7 +48,6 @@ int raplcap_init(raplcap* rc) {
     return -1;
   }
   memset(rc, 0, sizeof(raplcap));
-  // TODO: We should cache sockets in global state
   sockets = num_sockets();
   if (sockets > UINT32_MAX) {
     // totally unexpected, but we shouldn't proceed
@@ -164,8 +163,6 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     errno = EINVAL;
     return -1;
   }
-  // NOTE: Currently the getter functions don't return errors when the domain isn't supported.
-  // See: https://github.com/LLNL/libmsr/issues/8
   memset(&l0, 0, sizeof(struct rapl_limit));
   memset(&l1, 0, sizeof(struct rapl_limit));
   switch (zone) {
@@ -199,8 +196,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
 
 static inline void enforce_not_zero(double* dest, double alternative) {
   assert(dest != NULL);
-  // disabled assertion due to limsr bug #8
-  // assert(alternative != 0);
+  assert(alternative != 0);
   if (*dest == 0) {
     *dest = alternative;
   }
