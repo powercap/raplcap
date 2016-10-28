@@ -14,7 +14,7 @@ set(PKG_CONFIG_NAME "raplcap-msr-direct")
 set(PKG_CONFIG_DESCRIPTION "Implementation of RAPLCap that uses the MSR directly")
 set(PKG_CONFIG_REQUIRES_PRIVATE "")
 set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-msr-direct")
-set(PKG_CONFIG_LIBS_PRIVATE "-L${libmsr_LIB_PATH} -lm")
+set(PKG_CONFIG_LIBS_PRIVATE "-lm")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_BINARY_DIR}/pkgconfig/raplcap-msr-direct.pc)
