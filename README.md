@@ -12,8 +12,11 @@ Each provides the same command line interface, but use different RAPLCap librari
 ## Prerequisites
 
 This project depends on:
- * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - most recently tested with release `v0.3.0`.
- * [powercap](https://github.com/powercap/powercap)
+ * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `msr` implementation, most recently tested with release `v0.3.0`.
+ * [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr-direct` implementation (falls back on the standard `msr` kernel module).
+ * [powercap](https://github.com/powercap/powercap) - required to compile and run the `sysfs` implementation.
+
+If dependencies are not found, CMake will not attempt to compile the implementations that use them (worst case scenario is that only the `msr-direct` implementation is compiled).
 
 ## Building
 

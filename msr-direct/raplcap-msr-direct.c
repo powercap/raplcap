@@ -50,8 +50,14 @@ typedef struct raplcap_msr_direct {
 static inline int open_msr(uint32_t core) {
   char msr_filename[32];
   int fd;
-  snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr", core);
+  // first try using the msr_safe kernel module
+  snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr_safe", core);
   fd = open(msr_filename, O_RDWR);
+  if (fd < 0) {
+    // fall back on the standard msr kernel module
+    snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr", core);
+    fd = open(msr_filename, O_RDWR);
+  }
   return fd < 0 ? -1 : fd;
 }
 
