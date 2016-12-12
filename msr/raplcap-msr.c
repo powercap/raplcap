@@ -208,6 +208,7 @@ int raplcap_init(raplcap* rc) {
     errno = EINVAL;
     return -1;
   }
+  int err_save;
   memset(rc, 0, sizeof(raplcap));
   uint32_t sockets = raplcap_get_num_sockets(NULL);
   if (sockets == 0) {
@@ -227,13 +228,17 @@ int raplcap_init(raplcap* rc) {
     free(state);
     return -1;
   }
+  state->nfds = sockets;
 
   rc->nsockets = sockets;
   rc->state = state;
 
   uint64_t msrval;
   if (read_msr_by_offset(state->fds[0], MSR_RAPL_POWER_UNIT, &msrval)) {
+    err_save = errno;
     raplcap_destroy(rc);
+    errno = err_save;
+    return -1;
   }
   state->power_units = pow(0.5, (double) (msrval & 0xf));
   state->time_units = pow(0.5, (double) ((msrval >> 16) & 0xf));

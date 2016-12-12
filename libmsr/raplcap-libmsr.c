@@ -194,9 +194,8 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   return ret ? -1 : 0;
 }
 
-static inline void enforce_not_zero(double* dest, double alternative) {
+static inline void alternative_if_zero(double* dest, double alternative) {
   assert(dest != NULL);
-  assert(alternative != 0);
   if (*dest == 0) {
     *dest = alternative;
   }
@@ -208,7 +207,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   struct rapl_limit l1;
   struct rapl_limit* r0 = NULL;
   struct rapl_limit* r1 = NULL;
-  struct raplcap_limit c0, c1;
+  raplcap_limit c0, c1;
   if (rc == NULL || rc->state != &global_state || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
@@ -220,14 +219,14 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   }
   if (limit_long != NULL) {
     raplcap_to_msr(limit_long, &l0);
-    enforce_not_zero(&l0.watts, c0.watts);
-    enforce_not_zero(&l0.seconds, c0.seconds);
+    alternative_if_zero(&l0.watts, c0.watts);
+    alternative_if_zero(&l0.seconds, c0.seconds);
     r0 = &l0;
   }
-  if (limit_short != NULL) {
+  if (limit_short != NULL && zone == RAPLCAP_ZONE_PACKAGE) {
     raplcap_to_msr(limit_short, &l1);
-    enforce_not_zero(&l1.watts, c1.watts);
-    enforce_not_zero(&l1.seconds, c1.seconds);
+    alternative_if_zero(&l1.watts, c1.watts);
+    alternative_if_zero(&l1.seconds, c1.seconds);
     r1 = &l1;
   }
   switch (zone) {
