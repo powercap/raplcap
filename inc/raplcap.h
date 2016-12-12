@@ -56,12 +56,14 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 
 /**
  * Check if a zone is enabled.
+ * Constraints can technically be enabled/disabled separately, but for simplicity and compatibility with lower-level
+ * RAPL interfaces, we define a zone to be enabled only if all of its constraints are enabled (disabled otherwise).
  * Returns a negative value on error, 0 if disabled, 1 if enabled.
  */
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone);
 
 /**
- * Enable/disable a zone.
+ * Enable/disable a zone by enabling/disabling all of its constraints.
  * Returns a negative value on error, 0 on success.
  */
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled);

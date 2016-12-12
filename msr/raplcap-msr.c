@@ -311,7 +311,6 @@ static inline uint64_t get_bits(uint64_t msrval, uint8_t first, uint8_t last) {
 }
 
 static inline int is_pkg_platform_enabled(uint64_t msrval) {
-  // since setting enables both, only return true if both are enabled`
   return get_bits(msrval, 15, 15) && get_bits(msrval, 47, 47);
 }
 
