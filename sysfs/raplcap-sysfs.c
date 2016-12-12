@@ -177,8 +177,8 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     }
   }
   if (limit_short != NULL) {
-    if (powercap_rapl_get_time_window_us(pkg, zone, POWERCAP_RAPL_CONSTRAINT_SHORT, &time_window) ||
-        powercap_rapl_get_power_limit_uw(pkg, zone, POWERCAP_RAPL_CONSTRAINT_SHORT, &power_limit)) {
+    if (powercap_rapl_get_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, &time_window) ||
+        powercap_rapl_get_power_limit_uw(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, &power_limit)) {
       ret = -1;
     } else {
       sysfs_to_raplcap(time_window, power_limit, limit_short);
