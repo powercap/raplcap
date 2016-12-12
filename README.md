@@ -5,14 +5,14 @@ It supports multiple implementations.
 
 It also provides binaries for getting/setting RAPL configurations from the command line.
 Each provides the same command line interface, but use different RAPLCap libraries for interfacing with RAPL.
- * `rapl-configure-msr`
+ * `rapl-configure-libmsr`
  * `rapl-configure-msr-direct`
  * `rapl-configure-sysfs`
 
 ## Prerequisites
 
 This project depends on:
- * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `msr` implementation, most recently tested with release `v0.3.0`.
+ * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
  * [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr-direct` implementation (falls back on the standard `msr` kernel module).
  * [powercap](https://github.com/powercap/powercap) - required to compile and run the `sysfs` implementation.
 
@@ -63,7 +63,7 @@ To link with an implementation of RAPLCap, get linker information (including tra
 
 ``` sh
 pkg-config --libs --static raplcap-sysfs
-pkg-config --libs --static raplcap-msr
+pkg-config --libs --static raplcap-libmsr
 pkg-config --libs --static raplcap-msr-direct
 ```
 
@@ -71,7 +71,7 @@ Or in your Makefile, add to your linker flags one of:
 
 ``` Makefile
 $(shell pkg-config --libs --static raplcap-sysfs)
-$(shell pkg-config --libs --static raplcap-msr)
+$(shell pkg-config --libs --static raplcap-libmsr)
 $(shell pkg-config --libs --static raplcap-msr-direct)
 ```
 
@@ -81,7 +81,7 @@ Depending on your install location, you may also need to augment your compiler f
 
 ``` sh
 pkg-config --cflags raplcap-sysfs
-pkg-config --cflags raplcap-msr
+pkg-config --cflags raplcap-libmsr
 pkg-config --cflags raplcap-msr-direct
 ```
 

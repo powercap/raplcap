@@ -29,7 +29,7 @@ add_subdirectory(msr-direct)
 
 find_package(libmsr)
 if(libmsr_FOUND)
-  add_subdirectory(msr)
+  add_subdirectory(libmsr)
 endif()
 
 find_package(PkgConfig REQUIRED)

@@ -21,8 +21,8 @@ install:
   - make install
   - cd ../..
   # libmsr dependency (force version 0.3.0) (force Ivy Bridge architecture)
-  - git clone git@github.com:LLNL/libmsr.git
-  - cd libmsr
+  - git clone git@github.com:LLNL/libmsr.git libmsr_src
+  - cd libmsr_src
   - git checkout v0.3.0
   - ./install.sh _install -f3E
   - cd ..
@@ -30,5 +30,5 @@ install:
 script:
   - mkdir _build
   - cd _build
-  - PKG_CONFIG_PATH="../powercap/_build/_install/lib/pkgconfig" cmake -DCMAKE_PREFIX_PATH="`pwd`/../libmsr/_install/" ..
+  - PKG_CONFIG_PATH="../powercap/_build/_install/lib/pkgconfig" cmake -DCMAKE_PREFIX_PATH="`pwd`/../libmsr_src/_install/" ..
   - make
