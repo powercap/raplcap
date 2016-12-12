@@ -39,13 +39,13 @@
 /* Platform (PSys) Domain (Skylake and newer) */
 #define MSR_PLATFORM_POWER_LIMIT  0x65C
 
-typedef struct raplcap_msr_direct {
+typedef struct raplcap_msr {
   int* fds;
   uint32_t nfds;
   // assuming consistent unit values between sockets
   double power_units;
   double time_units;
-} raplcap_msr_direct;
+} raplcap_msr;
 
 static inline int open_msr(uint32_t core) {
   char msr_filename[32];
@@ -213,7 +213,7 @@ int raplcap_init(raplcap* rc) {
   if (sockets == 0) {
     return -1;
   }
-  raplcap_msr_direct* state = malloc(sizeof(raplcap_msr_direct));
+  raplcap_msr* state = malloc(sizeof(raplcap_msr));
   if (state == NULL) {
     return -1;
   }
@@ -246,7 +246,7 @@ int raplcap_destroy(raplcap* rc) {
   int err_save = 0;
   uint32_t i;
   if (rc != NULL && rc->state != NULL) {
-    raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+    raplcap_msr* state = (raplcap_msr*) rc->state;
     for (i = 0; i < state->nfds; i++) {
       if (state->fds[i] > 0 && close(state->fds[i])) {
         err_save = errno;
@@ -326,7 +326,7 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
     errno = EINVAL;
     return -1;
   }
-  const raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+  const raplcap_msr* state = (raplcap_msr*) rc->state;
   if (read_msr(state->fds[socket], zone, &msrval)) {
     return -1;
   }
@@ -381,7 +381,7 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
     errno = EINVAL;
     return -1;
   }
-  const raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+  const raplcap_msr* state = (raplcap_msr*) rc->state;
   if (read_msr(state->fds[socket], zone, &msrval)) {
     return -1;
   }
@@ -420,7 +420,7 @@ static inline double to_time_window_F(uint64_t bits) {
 /**
  * Get the power and time window values for long and short limits.
  */
-static inline void get_pkg_platform(uint64_t msrval, const raplcap_msr_direct* state,
+static inline void get_pkg_platform(uint64_t msrval, const raplcap_msr* state,
                                     raplcap_limit* limit_long, raplcap_limit* limit_short) {
   assert(state != NULL);
   double watts;
@@ -448,7 +448,7 @@ static inline void get_pkg_platform(uint64_t msrval, const raplcap_msr_direct* s
   }
 }
 
-static inline void get_core_uncore_dram(uint64_t msrval, const raplcap_msr_direct* state,
+static inline void get_core_uncore_dram(uint64_t msrval, const raplcap_msr* state,
                                         raplcap_limit* limit_long) {
   assert(state != NULL);
   double watts;
@@ -474,7 +474,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     errno = EINVAL;
     return -1;
   }
-  const raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+  const raplcap_msr* state = (raplcap_msr*) rc->state;
   if (read_msr(state->fds[socket], zone, &msrval)) {
     return -1;
   }
@@ -500,7 +500,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
  * Computes bit field based on equations in get_pkg_platform(...).
  * Needs to solve for a different value in the equation though.
  */
-static inline uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr_direct* state,
+static inline uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr* state,
                                         const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   assert(state != NULL);
   double msr_pwr;
@@ -532,7 +532,7 @@ static inline uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr_direc
  * Computes bit field based on equations in get_core_uncore_dram(...)
  * Needs to solve for a different value in the equation though.
  */
-static inline uint64_t set_core_uncore_dram(uint64_t msrval, const raplcap_msr_direct* state,
+static inline uint64_t set_core_uncore_dram(uint64_t msrval, const raplcap_msr* state,
                                             const raplcap_limit* limit_long) {
   assert(state != NULL);
   double msr_pwr;
@@ -557,7 +557,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     errno = EINVAL;
     return -1;
   }
-  const raplcap_msr_direct* state = (raplcap_msr_direct*) rc->state;
+  const raplcap_msr* state = (raplcap_msr*) rc->state;
   if (read_msr(state->fds[socket], zone, &msrval)) {
     return -1;
   }

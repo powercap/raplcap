@@ -5,18 +5,20 @@ It supports multiple implementations.
 
 It also provides binaries for getting/setting RAPL configurations from the command line.
 Each provides the same command line interface, but use different RAPLCap libraries for interfacing with RAPL.
- * `rapl-configure-libmsr`
- * `rapl-configure-msr-direct`
+ * `rapl-configure-msr`
  * `rapl-configure-sysfs`
+ * `rapl-configure-libmsr`
+
 
 ## Prerequisites
 
 This project depends on:
- * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
- * [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr-direct` implementation (falls back on the standard `msr` kernel module).
+ * [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr` and `libmsr` implementations (both will fall back on the standard `msr` kernel module).
  * [powercap](https://github.com/powercap/powercap) - required to compile and run the `sysfs` implementation.
+ * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
 
-If dependencies are not found, CMake will not attempt to compile the implementations that use them (worst case scenario is that only the `msr-direct` implementation is compiled).
+If dependencies are not found, CMake will not attempt to compile the implementations that use them (worst case scenario is that only the `msr` implementation is compiled).
+
 
 ## Building
 
@@ -37,6 +39,7 @@ When running `cmake`, you may need to set the property `CMAKE_PREFIX_PATH` to th
 cmake .. -DCMAKE_PREFIX_PATH=/path/to/libmsr/install_dir/
 ```
 
+
 ## Installing
 
 To install all libraries and headers, run with proper privileges:
@@ -46,6 +49,7 @@ make install
 ```
 
 On Linux, installation typically places libraries in `/usr/local/lib` and header files in `/usr/local/include`.
+
 
 ## Uninstalling
 
@@ -57,22 +61,23 @@ To remove libraries and headers installed to the system, run with proper privile
 make uninstall
 ```
 
+
 ## Linking
 
 To link with an implementation of RAPLCap, get linker information (including transitive dependencies) with `pkg-config`, e.g. one of:
 
 ``` sh
+pkg-config --libs --static raplcap-msr
 pkg-config --libs --static raplcap-sysfs
 pkg-config --libs --static raplcap-libmsr
-pkg-config --libs --static raplcap-msr-direct
 ```
 
 Or in your Makefile, add to your linker flags one of:
 
 ``` Makefile
+$(shell pkg-config --libs --static raplcap-msr)
 $(shell pkg-config --libs --static raplcap-sysfs)
 $(shell pkg-config --libs --static raplcap-libmsr)
-$(shell pkg-config --libs --static raplcap-msr-direct)
 ```
 
 You may leave off the `--static` option if you built shared object libraries.
@@ -80,10 +85,11 @@ You may leave off the `--static` option if you built shared object libraries.
 Depending on your install location, you may also need to augment your compiler flags with one of:
 
 ``` sh
+pkg-config --cflags raplcap-msr
 pkg-config --cflags raplcap-sysfs
 pkg-config --cflags raplcap-libmsr
-pkg-config --cflags raplcap-msr-direct
 ```
+
 
 ## Usage
 
