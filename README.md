@@ -1,21 +1,27 @@
 # RAPLCap
 
 This project provides a C interface for getting/setting power caps with Intel Running Average Power Limit (RAPL).
-It supports multiple implementations.
+It supports multiple implementations:
+
+* `libraplcap-msr`: Uses Intel [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the Linux `/dev` filesystem.
+* `libraplcap-sysfs`: Uses the [powercap](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the Linux `/sys` filesystem.
+* `libraplcap-libmsr`: Uses LLNL's [libmsr](https://software.llnl.gov/libmsr) interface.
 
 It also provides binaries for getting/setting RAPL configurations from the command line.
 Each provides the same command line interface, but use different RAPLCap libraries for interfacing with RAPL.
- * `rapl-configure-msr`
- * `rapl-configure-sysfs`
- * `rapl-configure-libmsr`
+
+* `rapl-configure-msr`
+* `rapl-configure-sysfs`
+* `rapl-configure-libmsr`
 
 
 ## Prerequisites
 
 This project depends on:
- * [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr` and `libmsr` implementations (both will fall back on the standard `msr` kernel module).
- * [powercap](https://github.com/powercap/powercap) - required to compile and run the `sysfs` implementation.
- * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
+
+* [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr` and `libmsr` implementations (both will fall back on the standard `msr` kernel module).
+* [powercap](https://github.com/powercap/powercap) - required to compile and run the `sysfs` implementation.
+* [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
 
 If dependencies are not found, CMake will not attempt to compile the implementations that use them (worst case scenario is that only the `msr` implementation is compiled).
 
@@ -130,3 +136,11 @@ The following is a simple example of setting power caps.
     perror("raplcap_destroy");
   }
 ```
+
+
+## Project Source
+
+Find this and related project sources at the [powercap organization on GitHub](https://github.com/powercap).  
+This project originates at: https://github.com/powercap/raplcap
+
+Bug reports and pull requests for new implementations, bug fixes, and enhancements are welcome.
