@@ -83,7 +83,7 @@ static void print_limits(raplcap_zone zone, int enabled,
   }
 }
 
-static inline void print_enable_error(const char* fn) {
+static void print_enable_error(const char* fn) {
   perror(fn);
   fprintf(stderr, "Trying to proceed anyway...\n");
 }

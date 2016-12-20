@@ -24,7 +24,7 @@ static raplcap_libmsr global_state;
 static int global_count = 0;
 static int lock = 0;
 
-static inline void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl) {
+static void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl) {
   assert(pl != NULL);
   assert(rl != NULL);
   rl->bits = 0;
@@ -32,7 +32,7 @@ static inline void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl
   rl->seconds = pl->seconds;
 }
 
-static inline void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
+static void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
   assert(rl != NULL);
   assert(pl != NULL);
   pl->seconds = rl->seconds;
@@ -47,7 +47,6 @@ int raplcap_init(raplcap* rc) {
     errno = EINVAL;
     return -1;
   }
-  memset(rc, 0, sizeof(raplcap));
   sockets = num_sockets();
   if (sockets > UINT32_MAX) {
     // totally unexpected, but we shouldn't proceed
@@ -194,7 +193,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   return ret ? -1 : 0;
 }
 
-static inline void alternative_if_zero(double* dest, double alternative) {
+static void alternative_if_zero(double* dest, double alternative) {
   assert(dest != NULL);
   if (*dest == 0) {
     *dest = alternative;
