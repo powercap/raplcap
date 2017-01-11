@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "raplcap.h"
+#include "raplcap-libmsr.h"
 // libmsr headers
 #include <msr_core.h>
 #include <msr_rapl.h>
@@ -23,6 +24,45 @@ static raplcap_libmsr global_state;
 // keep track of how many callers we have so we don't init/destroy at wrong times
 static int global_count = 0;
 static int lock = 0;
+
+// by default, assume we need to manage the lifecycle
+// if other code also uses libmsr, the app must be aware of it and configure us as needed
+#ifndef RAPLCAP_LIBMSR_DO_LIFECYCLE
+  #define RAPLCAP_LIBMSR_DO_LIFECYCLE 1
+#endif
+static int manage_lifecycle = RAPLCAP_LIBMSR_DO_LIFECYCLE;
+
+static int lifecycle_init() {
+  int ret = 0;
+  // libmsr semantics force us to keep a global state rather than encapsulating it in the caller's struct
+  // use global state to track if we've really initialized though - helps avoid improper management of global count
+  while (__sync_lock_test_and_set(&lock, 1)) {
+    while (lock);
+  }
+  if (global_count++ == 0) {
+    // init msr and rapl
+    ret = init_msr() || rapl_init(&global_state.rdata, NULL);
+    if (ret) {
+      // initialization failed, allow somebody to retry later
+      global_count = 0;
+    }
+  }
+  __sync_lock_release(&lock);
+  return ret;
+}
+
+static int lifecycle_finish() {
+  int ret = 0;
+  while (__sync_lock_test_and_set(&lock, 1)) {
+    while (lock);
+  }
+  if (--global_count == 0) {
+    // cleanup
+    ret = finalize_msr() ? -1 : 0;
+  }
+  __sync_lock_release(&lock);
+  return ret;
+}
 
 static void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl) {
   assert(pl != NULL);
@@ -39,63 +79,43 @@ static void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
   pl->watts = rl->watts;
 }
 
+void raplcap_libmsr_set_manage_lifecycle(int is_manage_lifecycle) {
+  manage_lifecycle = is_manage_lifecycle;
+}
+
 int raplcap_init(raplcap* rc) {
-  int ret = 0;
-  int initialized;
   uint64_t sockets;
   if (rc == NULL || rc->state == &global_state) {
     errno = EINVAL;
     return -1;
   }
   sockets = num_sockets();
+  if (sockets == 0) {
+    // tODO: Not sure what errno to use if one isn't already set
+    return -1;
+  }
   if (sockets > UINT32_MAX) {
     // totally unexpected, but we shouldn't proceed
     errno = EOVERFLOW;
     return -1;
   }
-  // libmsr semantics force us to keep a global state rather than encapsulating it in the caller's struct
-  // use global state to track if we've really initialized though - helps avoid improper management of global count
-  while (__sync_lock_test_and_set(&lock, 1)) {
-    while (lock);
+
+  if (manage_lifecycle && lifecycle_init()) {
+    return -1;
   }
-  initialized = __sync_fetch_and_add(&global_count, 1);
-  if (!initialized) {
-    // init msr and rapl
-    ret = init_msr() || rapl_init(&global_state.rdata, NULL);
-    if (ret) {
-      // initialization failed, allow somebody to retry later
-      global_count = 0;
-    }
-  }
-  __sync_lock_release(&lock);
-  if (!ret) {
-    rc->nsockets = (uint32_t) sockets;
-    rc->state = &global_state;
-  }
-  return ret ? -1 : 0;
+
+  rc->nsockets = (uint32_t) sockets;
+  rc->state = &global_state;
+  return 0;
 }
 
 int raplcap_destroy(raplcap* rc) {
-  int ret = 0;
-  int count;
   if (rc == NULL || rc->state != &global_state) {
     errno = EINVAL;
     return -1;
   }
-  while (__sync_lock_test_and_set(&lock, 1)) {
-    while (lock);
-  }
-  count = __sync_add_and_fetch(&global_count, -1);
-  if (count == 0) {
-    // cleanup
-    // TODO: In the future rapl_finalize will restore registers, which we don't want
-    // It will also clean up memory... but these should be separate operations
-    // rapl_finalize();
-    ret = finalize_msr() ? -1 : 0;
-  }
-  __sync_lock_release(&lock);
   rc->state = NULL;
-  return ret;
+  return manage_lifecycle ? lifecycle_finish() : 0;
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
