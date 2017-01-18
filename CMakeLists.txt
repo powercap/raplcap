@@ -10,7 +10,7 @@ include_directories(${PROJECT_SOURCE_DIR}/inc)
 
 # Install
 
-install(FILES inc/raplcap.h DESTINATION "${CMAKE_INSTALL_PREFIX}/include")
+install(FILES inc/raplcap.h DESTINATION include/${PROJECT_NAME})
 install(DIRECTORY ${CMAKE_BINARY_DIR}/pkgconfig/ DESTINATION lib/pkgconfig)
 
 # Uninstall

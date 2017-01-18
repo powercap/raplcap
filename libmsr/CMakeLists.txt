@@ -9,7 +9,7 @@ target_link_libraries(raplcap-libmsr -L${libmsr_LIB_PATH} msr)
 
 set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
 set(PKG_CONFIG_LIBDIR "\${prefix}/lib")
-set(PKG_CONFIG_INCLUDEDIR "\${prefix}/include")
+set(PKG_CONFIG_INCLUDEDIR "\${prefix}/include/${PROJECT_NAME}")
 set(PKG_CONFIG_CFLAGS "-I\${includedir}")
 
 set(PKG_CONFIG_NAME "raplcap-libmsr")
@@ -23,4 +23,5 @@ configure_file(
 
 # Install
 
+install(FILES raplcap-libmsr.h DESTINATION include/${PROJECT_NAME})
 install(TARGETS raplcap-libmsr DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")

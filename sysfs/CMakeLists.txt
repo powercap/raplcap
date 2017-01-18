@@ -9,7 +9,7 @@ target_link_libraries(raplcap-sysfs -L${POWERCAP_LIBDIR} ${POWERCAP_LIBRARIES})
 
 set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
 set(PKG_CONFIG_LIBDIR "\${prefix}/lib")
-set(PKG_CONFIG_INCLUDEDIR "\${prefix}/include")
+set(PKG_CONFIG_INCLUDEDIR "\${prefix}/include/${PROJECT_NAME}")
 set(PKG_CONFIG_CFLAGS "-I\${includedir}")
 
 set(PKG_CONFIG_NAME "raplcap-sysfs")
