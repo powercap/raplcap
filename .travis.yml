@@ -10,6 +10,10 @@ addons:
 
 language: c
 
+compiler:
+  - gcc
+  - clang
+
 install:
   # powercap dependency
   - git clone git@github.com:powercap/powercap.git
@@ -24,7 +28,8 @@ install:
   - git clone git@github.com:LLNL/libmsr.git libmsr_src
   - cd libmsr_src
   - git checkout v0.3.0
-  - ./install.sh _install -f3E
+  # libmsr only claims to support gcc, so don't let it build with clang
+  - CC=gcc ./install.sh _install -f3E
   - cd ..
 
 script:
