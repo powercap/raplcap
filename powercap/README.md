@@ -1,4 +1,4 @@
-# RAPLCap - sysfs
+# RAPLCap - powercap
 
 This implementation of the `raplcap` interface uses the [Linux Power Capping Framework](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the Linux `/sys` filesystem.
 

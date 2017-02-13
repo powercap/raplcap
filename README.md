@@ -4,14 +4,14 @@ This project provides a C interface for getting/setting power caps with Intel Ru
 It supports multiple implementations:
 
 * `libraplcap-msr`: Uses Intel [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the Linux `/dev` filesystem.
-* `libraplcap-sysfs`: Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the Linux `/sys` filesystem.
+* `libraplcap-powercap`: Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the Linux `/sys` filesystem.
 * `libraplcap-libmsr`: Uses LLNL's [libmsr](https://software.llnl.gov/libmsr) interface.
 
 It also provides binaries for getting/setting RAPL configurations from the command line.
 Each provides the same command line interface, but use different RAPLCap libraries for interfacing with RAPL.
 
 * `rapl-configure-msr`
-* `rapl-configure-sysfs`
+* `rapl-configure-powercap`
 * `rapl-configure-libmsr`
 
 
@@ -20,7 +20,7 @@ Each provides the same command line interface, but use different RAPLCap librari
 This project depends on:
 
 * [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr` and `libmsr` implementations (both will fall back on the standard `msr` kernel module).
-* [powercap](https://github.com/powercap/powercap) - required to compile and run the `sysfs` implementation.
+* [powercap](https://github.com/powercap/powercap) - required to compile and run the `powercap` implementation.
 * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
 
 If dependencies are not found, CMake will not attempt to compile the implementations that use them (worst case scenario is that only the `msr` implementation is compiled).
@@ -74,7 +74,7 @@ To link with an implementation of RAPLCap, get linker information (including tra
 
 ``` sh
 pkg-config --libs --static raplcap-msr
-pkg-config --libs --static raplcap-sysfs
+pkg-config --libs --static raplcap-powercap
 pkg-config --libs --static raplcap-libmsr
 ```
 
@@ -82,7 +82,7 @@ Or in your Makefile, add to your linker flags one of:
 
 ``` Makefile
 $(shell pkg-config --libs --static raplcap-msr)
-$(shell pkg-config --libs --static raplcap-sysfs)
+$(shell pkg-config --libs --static raplcap-powercap)
 $(shell pkg-config --libs --static raplcap-libmsr)
 ```
 
@@ -92,7 +92,7 @@ Depending on your install location, you may also need to augment your compiler f
 
 ``` sh
 pkg-config --cflags raplcap-msr
-pkg-config --cflags raplcap-sysfs
+pkg-config --cflags raplcap-powercap
 pkg-config --cflags raplcap-libmsr
 ```
 

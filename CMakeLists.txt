@@ -30,7 +30,7 @@ add_subdirectory(msr)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(POWERCAP powercap)
 if(POWERCAP_FOUND)
-  add_subdirectory(sysfs)
+  add_subdirectory(powercap)
 endif()
 
 find_package(libmsr)

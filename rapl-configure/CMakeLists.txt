@@ -5,9 +5,9 @@ target_link_libraries(rapl-configure-msr raplcap-msr)
 install(TARGETS rapl-configure-msr DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 
 if(POWERCAP_FOUND)
-  add_executable(rapl-configure-sysfs rapl-configure.c)
-  target_link_libraries(rapl-configure-sysfs raplcap-sysfs)
-  install(TARGETS rapl-configure-sysfs DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+  add_executable(rapl-configure-powercap rapl-configure.c)
+  target_link_libraries(rapl-configure-powercap raplcap-powercap)
+  install(TARGETS rapl-configure-powercap DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 endif()
 
 if(libmsr_FOUND)
