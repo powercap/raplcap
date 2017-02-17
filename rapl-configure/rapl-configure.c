@@ -25,7 +25,7 @@ typedef struct rapl_configure_ctx {
 
 static rapl_configure_ctx ctx;
 static const char* prog;
-static const char short_options[] = "c:z:ps:w:S:W:h";
+static const char short_options[] = "c:z:s:w:S:W:h";
 static const struct option long_options[] = {
   {"socket",   required_argument, NULL, 'c'},
   {"zone",     required_argument, NULL, 'z'},
