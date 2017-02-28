@@ -1,14 +1,14 @@
 # RAPLCap
 
 This project provides a C interface for getting/setting power caps with Intel Running Average Power Limit (RAPL).
-It supports multiple implementations:
+It supports multiple implementations with different backends:
 
 * `libraplcap-msr`: Uses Intel [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the Linux `/dev` filesystem.
 * `libraplcap-powercap`: Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the Linux `/sys` filesystem.
 * `libraplcap-libmsr`: Uses LLNL's [libmsr](https://software.llnl.gov/libmsr) interface.
 
 It also provides binaries for getting/setting RAPL configurations from the command line.
-Each provides the same command line interface, but use different RAPLCap libraries for interfacing with RAPL.
+Each provides the same command line interface, but use different RAPLCap library backends.
 
 * `rapl-configure-msr`
 * `rapl-configure-powercap`
@@ -17,13 +17,20 @@ Each provides the same command line interface, but use different RAPLCap librari
 
 ## Prerequisites
 
+First, you must be using an Intel processor that supports RAPL.
+Currently only Linux systems are supported.
+
 This project depends on:
 
-* [msr-safe](https://github.com/LLNL/msr-safe) - optional runtime dependency for the `msr` and `libmsr` implementations (both will fall back on the standard `msr` kernel module).
-* [powercap](https://github.com/powercap/powercap) - required to compile and run the `powercap` implementation.
-* [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
+* [powercap](https://github.com/powercap/powercap) - backend required to compile and run the `powercap` implementation.
+* [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - backend required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
 
-If dependencies are not found, CMake will not attempt to compile the implementations that use them (worst case scenario is that only the `msr` implementation is compiled).
+If dependencies are not found, CMake will not attempt to compile the implementations that use them.
+The worst-case scenario is that only the `msr` implementation is compiled.
+
+Users are expected to be familiar with basic RAPL capabilities and terminology, like zones (domains) and long/short term power constraints.
+Due to lack of portability in backends and data availability on some systems, the interface does not support discovering processor min/max power caps or thermal design power.
+Users should reference their hardware documentation or other system utilities to discover this information as needed.
 
 
 ## Building
@@ -98,6 +105,14 @@ pkg-config --cflags raplcap-libmsr
 
 
 ## Usage
+
+The [raplcap.h](inc/raplcap.h) header provides the C interface along with detailed function documentation.
+
+For backend-specific runtime dependencies, see the README files in their implementation subdirectories:
+
+* [msr/README.md](msr/README.md)
+* [powercap/README.md](powercap/README.md)
+* [libmsr/README.md](libmsr/README.md)
 
 The following is a simple example of setting power caps.
 
