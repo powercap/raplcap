@@ -13,6 +13,8 @@
 // powercap header
 #include <powercap-rapl.h>
 
+static raplcap rc_default;
+
 static void raplcap_limit_to_powercap(const raplcap_limit* l, uint64_t* us, uint64_t* uw) {
   assert(l != NULL);
   assert(us != NULL);
@@ -58,8 +60,7 @@ int raplcap_init(raplcap* rc) {
   uint32_t i;
   int err_save;
   if (rc == NULL) {
-    errno = EINVAL;
-    return -1;
+    rc = &rc_default;
   }
   // get the number of packages/sockets
   rc->nsockets = powercap_rapl_get_num_packages();
@@ -81,7 +82,10 @@ int raplcap_init(raplcap* rc) {
 int raplcap_destroy(raplcap* rc) {
   uint32_t i;
   int err_save = 0;
-  if (rc != NULL && rc->state != NULL) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != NULL) {
     for (i = 0; i < rc->nsockets; i++) {
       if (powercap_rapl_destroy(&((powercap_rapl_pkg*) rc->state)[i])) {
         err_save = errno;
@@ -96,12 +100,18 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  return rc == NULL ? powercap_rapl_get_num_packages() : rc->nsockets;
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  return rc->nsockets == 0 ? powercap_rapl_get_num_packages() : rc->nsockets;
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   powercap_rapl_zone z;
-  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
     errno = EINVAL;
     return -1;
   }
@@ -110,7 +120,10 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   powercap_rapl_zone z;
-  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
     errno = EINVAL;
     return -1;
   }
@@ -119,7 +132,10 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
 
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
   powercap_rapl_zone z;
-  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
     errno = EINVAL;
     return -1;
   }
@@ -130,7 +146,10 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   uint64_t time_window, power_limit;
   powercap_rapl_zone z;
-  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
     errno = EINVAL;
     return -1;
   }
@@ -156,7 +175,10 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   uint64_t time_window, power_limit;
   powercap_rapl_zone z;
-  if (rc == NULL || socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets || raplcap_zone_to_powercap(zone, &z)) {
     errno = EINVAL;
     return -1;
   }

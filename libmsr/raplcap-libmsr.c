@@ -25,6 +25,8 @@ static raplcap_libmsr global_state;
 static int global_count = 0;
 static int lock = 0;
 
+static raplcap rc_default;
+
 // by default, assume we need to manage the lifecycle
 // if other code also uses libmsr, the app must be aware of it and configure us as needed
 #ifndef RAPLCAP_LIBMSR_DO_LIFECYCLE
@@ -85,7 +87,10 @@ void raplcap_libmsr_set_manage_lifecycle(int is_manage_lifecycle) {
 
 int raplcap_init(raplcap* rc) {
   uint64_t sockets;
-  if (rc == NULL || rc->state == &global_state) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state == &global_state) {
     errno = EINVAL;
     return -1;
   }
@@ -110,7 +115,10 @@ int raplcap_init(raplcap* rc) {
 }
 
 int raplcap_destroy(raplcap* rc) {
-  if (rc == NULL || rc->state != &global_state) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != &global_state) {
     errno = EINVAL;
     return -1;
   }
@@ -119,13 +127,19 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  return (rc == NULL || rc->state != &global_state) ? num_sockets() : rc->nsockets;
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  return (rc->state == &global_state && rc->nsockets > 0) ? rc->nsockets : num_sockets();
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   int ret;
   struct rapl_limit rl;
-  if (rc == NULL || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
@@ -178,7 +192,10 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   struct rapl_limit l0, l1;
   int ret;
-  if (rc == NULL || rc->state != &global_state || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != &global_state || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
@@ -227,7 +244,10 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   struct rapl_limit* r0 = NULL;
   struct rapl_limit* r1 = NULL;
   raplcap_limit c0, c1;
-  if (rc == NULL || rc->state != &global_state || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != &global_state || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }

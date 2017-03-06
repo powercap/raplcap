@@ -35,7 +35,6 @@ static const struct option long_options[] = {
   {"watts1",   required_argument, NULL, 'W'},
   {"help",     required_argument, NULL, 'h'},
 };
-static raplcap rc;
 
 void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
@@ -109,12 +108,12 @@ int configure_limits(const rapl_configure_ctx* c) {
   }
   if (disable) {
     // all given values were 0 - disable the zone
-    return raplcap_set_zone_enabled(c->socket, &rc, c->zone, 0);
+    return raplcap_set_zone_enabled(c->socket, NULL, c->zone, 0);
   }
-  if (raplcap_set_zone_enabled(c->socket, &rc, c->zone, 1)) {
+  if (raplcap_set_zone_enabled(c->socket, NULL, c->zone, 1)) {
     print_enable_error("raplcap_set_zone_enabled");
   }
-  return raplcap_set_limits(c->socket, &rc, c->zone, ll, ls);
+  return raplcap_set_limits(c->socket, NULL, c->zone, ll, ls);
 }
 
 int get_limits(unsigned int socket, raplcap_zone zone) {
@@ -122,13 +121,13 @@ int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ls;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
-  int enabled = raplcap_is_zone_enabled(socket, &rc, zone);
+  int enabled = raplcap_is_zone_enabled(socket, NULL, zone);
   if (enabled < 0) {
     print_enable_error("raplcap_is_zone_enabled");
   }
   // short only allowed for package and psys zones
   raplcap_limit* s = (zone == RAPLCAP_ZONE_PACKAGE || zone == RAPLCAP_ZONE_PSYS) ? &ls : NULL;
-  if (raplcap_get_limits(socket, &rc, zone, &ll, s)) {
+  if (raplcap_get_limits(socket, NULL, zone, &ll, s)) {
     return -1;
   }
   print_limits(zone, enabled, ll.watts, ll.seconds, ls.watts, ls.seconds);
@@ -196,12 +195,12 @@ int main(int argc, char** argv) {
   }
 
   // initialize
-  if (raplcap_init(&rc)) {
+  if (raplcap_init(NULL)) {
     perror("Init failed");
     return 1;
   }
 
-  supported = raplcap_is_zone_supported(ctx.socket, &rc, ctx.zone);
+  supported = raplcap_is_zone_supported(ctx.socket, NULL, ctx.zone);
   if (supported == 0) {
     fprintf(stderr, "Zone not supported\n");
     ret = -1;
@@ -222,7 +221,7 @@ int main(int argc, char** argv) {
   }
 
   // cleanup
-  if (raplcap_destroy(&rc)) {
+  if (raplcap_destroy(NULL)) {
     perror("Cleanup failed");
   }
 

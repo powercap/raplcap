@@ -40,6 +40,8 @@ typedef struct raplcap_msr {
   double time_units;
 } raplcap_msr;
 
+static raplcap rc_default;
+
 static int open_msr(uint32_t core) {
   char msr_filename[32];
   // first try using the msr_safe kernel module
@@ -170,8 +172,7 @@ static int raplcap_open_msrs(uint32_t sockets, int* fds) {
 
 int raplcap_init(raplcap* rc) {
   if (rc == NULL) {
-    errno = EINVAL;
-    return -1;
+    rc = &rc_default;
   }
   uint64_t msrval;
   int err_save;
@@ -199,7 +200,10 @@ int raplcap_init(raplcap* rc) {
 int raplcap_destroy(raplcap* rc) {
   int err_save = 0;
   uint32_t i;
-  if (rc != NULL && rc->state != NULL) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != NULL) {
     raplcap_msr* state = (raplcap_msr*) rc->state;
     for (i = 0; state->fds != NULL && i < rc->nsockets; i++) {
       if (state->fds[i] > 0 && close(state->fds[i])) {
@@ -215,11 +219,17 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  return rc == NULL ? count_sockets() : rc->nsockets;
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  return rc->nsockets == 0 ? count_sockets() : rc->nsockets;
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  if (rc == NULL || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
@@ -273,7 +283,10 @@ static int is_core_uncore_dram_enabled(uint64_t msrval) {
 
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   uint64_t msrval;
-  if (rc == NULL || rc->state == NULL || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state == NULL || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
@@ -324,7 +337,10 @@ static uint64_t set_core_uncore_dram_enabled(uint64_t msrval, int enabled) {
 
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
   uint64_t msrval;
-  if (rc == NULL || rc->state == NULL || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state == NULL || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
@@ -418,7 +434,10 @@ static int get_core_uncore_dram(uint64_t msrval, const raplcap_msr* state, raplc
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   uint64_t msrval;
-  if (rc == NULL || rc->state == NULL || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state == NULL || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
@@ -497,7 +516,10 @@ static uint64_t set_core_uncore_dram(uint64_t msrval, const raplcap_msr* state,
 int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   uint64_t msrval;
-  if (rc == NULL || rc->state == NULL || socket >= rc->nsockets) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state == NULL || socket >= rc->nsockets) {
     errno = EINVAL;
     return -1;
   }
