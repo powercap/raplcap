@@ -61,23 +61,24 @@ void print_usage(int exit_code) {
 static void print_limits(raplcap_zone zone, int enabled,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short) {
+  // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
   switch (zone) {
     case RAPLCAP_ZONE_PACKAGE:
     case RAPLCAP_ZONE_PSYS:
       printf("%13s: %s\n", "enabled", en);
-      printf("%13s: %f\n", "watts_long", watts_long);
-      printf("%13s: %f\n", "seconds_long", seconds_long);
-      printf("%13s: %f\n", "watts_short", watts_short);
-      printf("%13s: %f\n", "seconds_short", seconds_short);
+      printf("%13s: %.12f\n", "watts_long", watts_long);
+      printf("%13s: %.12f\n", "seconds_long", seconds_long);
+      printf("%13s: %.12f\n", "watts_short", watts_short);
+      printf("%13s: %.12f\n", "seconds_short", seconds_short);
       break;
     case RAPLCAP_ZONE_CORE:
     case RAPLCAP_ZONE_UNCORE:
     case RAPLCAP_ZONE_DRAM:
     default:
       printf("%7s: %s\n", "enabled", en);
-      printf("%7s: %f\n", "watts", watts_long);
-      printf("%7s: %f\n", "seconds", seconds_long);
+      printf("%7s: %.12f\n", "watts", watts_long);
+      printf("%7s: %.12f\n", "seconds", seconds_long);
       break;
   }
 }
