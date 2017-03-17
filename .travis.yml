@@ -16,7 +16,7 @@ compiler:
 
 install:
   # powercap dependency
-  - git clone git@github.com:powercap/powercap.git libpowercap
+  - git clone https://github.com/powercap/powercap.git libpowercap
   - cd libpowercap
   - mkdir _build
   - cd _build
@@ -25,7 +25,7 @@ install:
   - make install
   - cd ../..
   # libmsr dependency (force version 0.3.0) (force Ivy Bridge architecture)
-  - git clone git@github.com:LLNL/libmsr.git libmsr_src
+  - git clone https://github.com/LLNL/libmsr.git libmsr_src
   - cd libmsr_src
   - git checkout v0.3.0
   # libmsr only claims to support gcc, so don't let it build with clang
