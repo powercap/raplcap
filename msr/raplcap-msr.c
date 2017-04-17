@@ -385,7 +385,7 @@ static double to_time_window_F(uint64_t bits) {
  * Get the power and time window values for long and short limits.
  */
 static int get_pkg_platform(uint64_t msrval, const raplcap_msr* state,
-                                   raplcap_limit* limit_long, raplcap_limit* limit_short) {
+                            raplcap_limit* limit_long, raplcap_limit* limit_short) {
   assert(state != NULL);
   double watts;
   double seconds;
@@ -407,7 +407,7 @@ static int get_pkg_platform(uint64_t msrval, const raplcap_msr* state,
     // Here “Y” is the unsigned integer value represented. by bits 53:49, “Z” is an unsigned integer represented by
     // bits 55:54. “Time_Unit” is specified by the “Time Units” field of MSR_RAPL_POWER_UNIT. This field may have
     // a hard-coded value in hardware and ignores values written by software.
-    seconds =  pow(2.0, (double) get_bits(msrval, 49, 53)) * (1.0 + (get_bits(msrval, 54, 55) / 4.0)) * state->time_units;
+    seconds = pow(2.0, (double) get_bits(msrval, 49, 53)) * (1.0 + (get_bits(msrval, 54, 55) / 4.0)) * state->time_units;
     to_raplcap(limit_short, seconds, watts);
   }
   return 0;
@@ -460,32 +460,61 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
 }
 
 /**
+ * Z is an unsigned integer represented by 2 bits.
+ */
+static uint64_t to_time_window_Z(double real_part) {
+  assert(real_part >= 0);
+  assert(real_part < 1.0);
+  uint64_t z;
+  if (real_part > 0.7) {
+    z = 3;
+  } else if (real_part > 0.45) {
+    z = 2;
+  } else if (real_part > 0.15) {
+    z = 1;
+  } else {
+    z = 0;
+  }
+  return z;
+}
+
+static uint64_t seconds_to_msr_time(double seconds, double time_units) {
+  assert(seconds > 0);
+  assert(time_units > 0);
+  double r = log2(seconds / time_units);
+  // Y is the lower 5 of 7 bits
+  uint64_t bits_y = (uint64_t) r;
+  // Z is the upper 2 of 7 bits
+  uint64_t bits_z = to_time_window_Z(r - (double) bits_y) << 5;
+  return (bits_y | bits_z);
+}
+
+/**
  * Computes bit field based on equations in get_pkg_platform(...).
  * Needs to solve for a different value in the equation though.
  */
 static uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr* state,
-                                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
+                                 const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   assert(state != NULL);
-  double msr_pwr;
-  double msr_time;
+  uint64_t new_bits;
   if (limit_long != NULL) {
     if (limit_long->watts > 0) {
-      msr_pwr = limit_long->watts / state->power_units;
-      msrval = replace_bits(msrval, msr_pwr, 0, 14);
+      new_bits = (uint64_t) (limit_long->watts / state->power_units);
+      msrval = replace_bits(msrval, new_bits, 0, 14);
     }
     if (limit_long->seconds > 0) {
-      msr_time = log2((4.0 * limit_long->seconds) / (state->time_units * (get_bits(msrval, 22, 23) + 4.0)));
-      msrval = replace_bits(msrval, msr_time, 17, 21);
+      new_bits = seconds_to_msr_time(limit_long->seconds, state->time_units);
+      msrval = replace_bits(msrval, new_bits, 17, 23);
     }
   }
   if (limit_short != NULL) {
     if (limit_short->watts > 0) {
-      msr_pwr = limit_short->watts / state->power_units;
-      msrval = replace_bits(msrval, msr_pwr, 32, 46);
+      new_bits = (uint64_t) (limit_short->watts / state->power_units);
+      msrval = replace_bits(msrval, new_bits, 32, 46);
     }
     if (limit_short->seconds > 0) {
-      msr_time = log2((4.0 * limit_short->seconds) / (state->time_units * (get_bits(msrval, 54, 55) + 4.0)));
-      msrval = replace_bits(msrval, msr_time, 49, 53);
+      new_bits = seconds_to_msr_time(limit_short->seconds, state->time_units);
+      msrval = replace_bits(msrval, new_bits, 49, 55);
     }
   }
   return msrval;
@@ -496,18 +525,17 @@ static uint64_t set_pkg_platform(uint64_t msrval, const raplcap_msr* state,
  * Needs to solve for a different value in the equation though.
  */
 static uint64_t set_core_uncore_dram(uint64_t msrval, const raplcap_msr* state,
-                                            const raplcap_limit* limit_long) {
+                                     const raplcap_limit* limit_long) {
   assert(state != NULL);
-  double msr_pwr;
-  double msr_time;
+  uint64_t new_bits;
   if (limit_long != NULL) {
     if (limit_long->watts > 0) {
-      msr_pwr = limit_long->watts / state->power_units;
-      msrval = replace_bits(msrval, msr_pwr, 0, 14);
+      new_bits = (uint64_t) (limit_long->watts / state->power_units);
+      msrval = replace_bits(msrval, new_bits, 0, 14);
     }
     if (limit_long->seconds > 0) {
-      msr_time = log2(limit_long->seconds / to_time_window_F(get_bits(msrval, 22, 23)));
-      msrval = replace_bits(msrval, msr_time, 17, 21);
+      new_bits = seconds_to_msr_time(limit_long->seconds, state->time_units);
+      msrval = replace_bits(msrval, new_bits, 17, 23);
     }
   }
   return msrval;
