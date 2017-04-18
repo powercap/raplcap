@@ -226,41 +226,15 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  if (rc == NULL) {
-    rc = &rc_default;
-  }
-  if (socket >= rc->nsockets) {
-    errno = EINVAL;
+  if (raplcap_is_zone_enabled(socket, rc, zone) < 0) {
+    if (errno == EIO) {
+      // I/O error indicates zone is not supported
+      return 0;
+    }
+    // some other error (e.g. EINVAL)
     return -1;
   }
-  // TODO: Discover dynamically
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-    case RAPLCAP_ZONE_CORE:
-      // always supported
-      return 1;
-    case RAPLCAP_ZONE_UNCORE:
-#if defined(RAPL_UNCORE_SUPPORTED)
-      return RAPL_UNCORE_SUPPORTED;
-#else
-      return 1;
-#endif
-    case RAPLCAP_ZONE_DRAM:
-#if defined(RAPL_DRAM_SUPPORTED)
-      return RAPL_DRAM_SUPPORTED;
-#else
-      return 1;
-#endif
-    case RAPLCAP_ZONE_PSYS:
-#if defined(RAPL_PSYS_SUPPORTED)
-      return RAPL_PSYS_SUPPORTED;
-#else
-      return 1;
-#endif
-    default:
-      errno = EINVAL;
-      return -1;
-  }
+  return 1;
 }
 
 /**
