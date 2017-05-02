@@ -94,9 +94,13 @@ int raplcap_init(raplcap* rc) {
     errno = EINVAL;
     return -1;
   }
+  errno = 0;
   sockets = num_sockets();
   if (sockets == 0) {
-    // tODO: Not sure what errno to use if one isn't already set
+    if (!errno) {
+      // best guess is that some type of I/O error occurred
+      errno = EIO;
+    }
     return -1;
   }
   if (sockets > UINT32_MAX) {
