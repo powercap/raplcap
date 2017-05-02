@@ -60,7 +60,7 @@ static int lifecycle_finish() {
   }
   if (--global_count == 0) {
     // cleanup
-    ret = finalize_msr() ? -1 : 0;
+    ret = finalize_msr();
   }
   __sync_lock_release(&lock);
   return ret;
@@ -70,8 +70,12 @@ static void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl) {
   assert(pl != NULL);
   assert(rl != NULL);
   rl->bits = 0;
-  rl->watts = pl->watts;
-  rl->seconds = pl->seconds;
+  if (pl->watts != 0) {
+    rl->watts = pl->watts;
+  }
+  if (pl->seconds != 0) {
+    rl->seconds = pl->seconds;
+  }
 }
 
 static void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
@@ -137,49 +141,67 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
   return (rc->state == &global_state && rc->nsockets > 0) ? rc->nsockets : num_sockets();
 }
 
-int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  int ret;
-  struct rapl_limit rl;
-  if (rc == NULL) {
-    rc = &rc_default;
+static int msr_get_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit* ll, struct rapl_limit* ls) {
+  if (ll != NULL) {
+    memset(ll, 0, sizeof(struct rapl_limit));
   }
-  if (socket >= rc->nsockets) {
-    errno = EINVAL;
-    return -1;
+  if (ls != NULL) {
+    memset(ls, 0, sizeof(struct rapl_limit));
   }
-  // we have no way to check with libmsr without just trying operations
-  memset(&rl, 0, sizeof(struct rapl_limit));
   switch (zone) {
     case RAPLCAP_ZONE_PACKAGE:
-      ret = get_pkg_rapl_limit(socket, &rl, NULL);
-      break;
+      return get_pkg_rapl_limit(socket, ll, ls);
     case RAPLCAP_ZONE_CORE:
-      ret = get_pp_rapl_limit(socket, &rl, NULL);
-      break;
+      return get_pp_rapl_limit(socket, ll, NULL);
     case RAPLCAP_ZONE_UNCORE:
-      ret = get_pp_rapl_limit(socket, NULL, &rl);
-      break;
+      return get_pp_rapl_limit(socket, NULL, ll);
     case RAPLCAP_ZONE_DRAM:
-      ret = get_dram_rapl_limit(socket, &rl);
-      break;
+      return get_dram_rapl_limit(socket, ll);
+    // not yet supported by libmsr
     case RAPLCAP_ZONE_PSYS:
-      // not yet supported by libmsr
-      ret = -1;
-      break;
     default:
       errno = EINVAL;
-      return -1;
   }
-  return ret ? 0 : 1;
+  return -1;
+}
+
+int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  // we have no way to check with libmsr without just trying operations
+  return raplcap_is_zone_enabled(socket, rc, zone) < 0 ? 0 : 1;
 }
 
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  // TODO
-  (void) socket;
-  (void) rc;
-  (void) zone;
-  errno = ENOSYS;
-  return -1;
+  struct rapl_limit l;
+  int ret;
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != &global_state || socket >= rc->nsockets) {
+    errno = EINVAL;
+    return -1;
+  }
+  // libmsr doesn't provide an interface to determine enabled/disabled, so we check the bits directly
+  // we only need to check one limit - the MSR bits for both limits are from the same register
+  ret = msr_get_limits(socket, zone, &l, NULL);
+  if (!ret) {
+    switch (zone) {
+      case RAPLCAP_ZONE_PACKAGE:
+      case RAPLCAP_ZONE_PSYS:
+        // check that enabled bits (15 and 47) and clamping bits (16 and 48) are set
+        ret = (l.bits & (0x1800000018000)) == 0x1800000018000;
+        break;
+      case RAPLCAP_ZONE_CORE:
+      case RAPLCAP_ZONE_UNCORE:
+      case RAPLCAP_ZONE_DRAM:
+        // check that enabled bit 15 and clamping bit 16 are set
+        ret = (l.bits & 0x18000) == 0x18000;
+        break;
+      default:
+        errno = EINVAL;
+        ret = -1;
+    }
+  }
+  return ret;
 }
 
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
@@ -194,7 +216,7 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
 
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
-  struct rapl_limit l0, l1;
+  struct rapl_limit ll, ls;
   int ret;
   if (rc == NULL) {
     rc = &rc_default;
@@ -203,51 +225,60 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     errno = EINVAL;
     return -1;
   }
-  memset(&l0, 0, sizeof(struct rapl_limit));
-  memset(&l1, 0, sizeof(struct rapl_limit));
+  ret = msr_get_limits(socket, zone, &ll, &ls);
+  if (!ret) {
+    switch (zone) {
+      case RAPLCAP_ZONE_PACKAGE:
+      case RAPLCAP_ZONE_PSYS:
+        // short term constraint currently only supported in PACKAGE and PSYS
+        if (limit_short != NULL) {
+          msr_to_raplcap(&ls, limit_short);
+        }
+        // fall through to get long term constraint
+      case RAPLCAP_ZONE_CORE:
+      case RAPLCAP_ZONE_UNCORE:
+      case RAPLCAP_ZONE_DRAM:
+        if (limit_long != NULL) {
+          msr_to_raplcap(&ll, limit_long);
+        }
+        break;
+      default:
+        errno = EINVAL;
+        ret = -1;
+        break;
+    }
+  }
+  return ret;
+}
+
+static int has_empty_field(const raplcap_limit* l) {
+  // NULL values do not have empty fields - they are ignored
+  return l == NULL ? 0 : (l->watts == 0 || l->seconds == 0);
+}
+
+static int msr_set_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit* ll, struct rapl_limit* ls) {
   switch (zone) {
     case RAPLCAP_ZONE_PACKAGE:
-      ret = get_pkg_rapl_limit(socket, &l0, &l1);
-      // short term constraint currently only supported in PACKAGE
-      if (!ret && limit_short != NULL) {
-        msr_to_raplcap(&l1, limit_short);
-      }
-      break;
+      return set_pkg_rapl_limit(socket, ll, ls);
     case RAPLCAP_ZONE_CORE:
-      ret = get_pp_rapl_limit(socket, &l0, NULL);
-      break;
+      return set_pp_rapl_limit(socket, ll, NULL);
     case RAPLCAP_ZONE_UNCORE:
-      ret = get_pp_rapl_limit(socket, NULL, &l0);
-      break;
+      return set_pp_rapl_limit(socket, NULL, ll);
     case RAPLCAP_ZONE_DRAM:
-      ret = get_dram_rapl_limit(socket, &l0);
-      break;
+      return set_dram_rapl_limit(socket, ll);
+    // not yet supported by libmsr
     case RAPLCAP_ZONE_PSYS:
     default:
       errno = EINVAL;
-      ret = -1;
-      break;
-  }
-  if (!ret && limit_long != NULL) {
-    msr_to_raplcap(&l0, limit_long);
-  }
-  return ret ? -1 : 0;
-}
-
-static void alternative_if_zero(double* dest, double alternative) {
-  assert(dest != NULL);
-  if (*dest == 0) {
-    *dest = alternative;
+      return -1;
   }
 }
 
 int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
-  struct rapl_limit l0;
-  struct rapl_limit l1;
-  struct rapl_limit* r0 = NULL;
-  struct rapl_limit* r1 = NULL;
-  raplcap_limit c0, c1;
+  struct rapl_limit ll, ls;
+  struct rapl_limit* ptr_ll = NULL;
+  struct rapl_limit* ptr_ls = NULL;
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -255,35 +286,17 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     errno = EINVAL;
     return -1;
   }
-  // first get values to fill in empty ones
-  // TODO: Only make this call when we have to (i.e. some time or power values are actually 0)
-  if (raplcap_get_limits(socket, rc, zone, &c0, &c1)) {
+  // first get values to fill in empty ones (if there are any)
+  if ((has_empty_field(limit_long) || has_empty_field(limit_short)) && msr_get_limits(socket, zone, &ll, &ls)) {
     return -1;
   }
   if (limit_long != NULL) {
-    raplcap_to_msr(limit_long, &l0);
-    alternative_if_zero(&l0.watts, c0.watts);
-    alternative_if_zero(&l0.seconds, c0.seconds);
-    r0 = &l0;
+    raplcap_to_msr(limit_long, &ll);
+    ptr_ll = &ll;
   }
-  if (limit_short != NULL && zone == RAPLCAP_ZONE_PACKAGE) {
-    raplcap_to_msr(limit_short, &l1);
-    alternative_if_zero(&l1.watts, c1.watts);
-    alternative_if_zero(&l1.seconds, c1.seconds);
-    r1 = &l1;
+  if (limit_short != NULL) {
+    raplcap_to_msr(limit_short, &ls);
+    ptr_ls = &ls;
   }
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-      return set_pkg_rapl_limit(socket, r0, r1) ? -1 : 0;
-    case RAPLCAP_ZONE_CORE:
-      return set_pp_rapl_limit(socket, r0, NULL) ? -1 : 0;
-    case RAPLCAP_ZONE_UNCORE:
-      return set_pp_rapl_limit(socket, NULL, r0) ? -1 : 0;
-    case RAPLCAP_ZONE_DRAM:
-      return set_dram_rapl_limit(socket, r0) ? -1 : 0;
-    case RAPLCAP_ZONE_PSYS:
-    default:
-      errno = EINVAL;
-      return -1;
-  }
+  return msr_set_limits(socket, zone, ptr_ll, ptr_ls);
 }
