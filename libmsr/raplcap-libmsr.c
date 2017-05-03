@@ -34,14 +34,14 @@ static raplcap rc_default;
 #endif
 static int manage_lifecycle = RAPLCAP_LIBMSR_DO_LIFECYCLE;
 
-static int lifecycle_init() {
+static int maybe_lifecycle_init(void) {
   int ret = 0;
   // libmsr semantics force us to keep a global state rather than encapsulating it in the caller's struct
   // use global state to track if we've really initialized though - helps avoid improper management of global count
   while (__sync_lock_test_and_set(&lock, 1)) {
     while (lock);
   }
-  if (global_count++ == 0) {
+  if (manage_lifecycle && global_count++ == 0) {
     // init msr and rapl
     ret = init_msr() || rapl_init(&global_state.rdata, NULL);
     if (ret) {
@@ -53,12 +53,12 @@ static int lifecycle_init() {
   return ret;
 }
 
-static int lifecycle_finish() {
+static int maybe_lifecycle_finish(void) {
   int ret = 0;
   while (__sync_lock_test_and_set(&lock, 1)) {
     while (lock);
   }
-  if (--global_count == 0) {
+  if (manage_lifecycle && --global_count == 0) {
     // cleanup
     ret = finalize_msr();
   }
@@ -67,26 +67,32 @@ static int lifecycle_finish() {
 }
 
 static void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl) {
-  assert(pl != NULL);
   assert(rl != NULL);
-  rl->bits = 0;
-  if (pl->watts != 0) {
-    rl->watts = pl->watts;
-  }
-  if (pl->seconds != 0) {
-    rl->seconds = pl->seconds;
+  if (pl != NULL) {
+    rl->bits = 0;
+    if (pl->watts != 0) {
+      rl->watts = pl->watts;
+    }
+    if (pl->seconds != 0) {
+      rl->seconds = pl->seconds;
+    }
   }
 }
 
 static void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
   assert(rl != NULL);
-  assert(pl != NULL);
-  pl->seconds = rl->seconds;
-  pl->watts = rl->watts;
+  if (pl != NULL) {
+    pl->seconds = rl->seconds;
+    pl->watts = rl->watts;
+  }
 }
 
 void raplcap_libmsr_set_manage_lifecycle(int is_manage_lifecycle) {
+  while (__sync_lock_test_and_set(&lock, 1)) {
+    while (lock);
+  }
   manage_lifecycle = is_manage_lifecycle;
+  __sync_lock_release(&lock);
 }
 
 int raplcap_init(raplcap* rc) {
@@ -112,11 +118,9 @@ int raplcap_init(raplcap* rc) {
     errno = EOVERFLOW;
     return -1;
   }
-
-  if (manage_lifecycle && lifecycle_init()) {
+  if (maybe_lifecycle_init()) {
     return -1;
   }
-
   rc->nsockets = (uint32_t) sockets;
   rc->state = &global_state;
   return 0;
@@ -131,7 +135,7 @@ int raplcap_destroy(raplcap* rc) {
     return -1;
   }
   rc->state = NULL;
-  return manage_lifecycle ? lifecycle_finish() : 0;
+  return maybe_lifecycle_finish();
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
@@ -161,8 +165,8 @@ static int msr_get_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit*
     case RAPLCAP_ZONE_PSYS:
     default:
       errno = EINVAL;
+      return -1;
   }
-  return -1;
 }
 
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
@@ -183,6 +187,7 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
   // libmsr doesn't provide an interface to determine enabled/disabled, so we check the bits directly
   // we only need to check one limit - the MSR bits for both limits are from the same register
   ret = msr_get_limits(socket, zone, &l, NULL);
+  printf("%lX %f %f\n", l.bits, l.watts, l.seconds);
   if (!ret) {
     switch (zone) {
       case RAPLCAP_ZONE_PACKAGE:
@@ -199,13 +204,14 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
       default:
         errno = EINVAL;
         ret = -1;
+        break;
     }
   }
   return ret;
 }
 
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
-  // TODO
+  // TODO: We can enable a zone by simply writing back its current values, but there's no way to disable it...
   (void) socket;
   (void) rc;
   (void) zone;
@@ -231,16 +237,12 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
       case RAPLCAP_ZONE_PACKAGE:
       case RAPLCAP_ZONE_PSYS:
         // short term constraint currently only supported in PACKAGE and PSYS
-        if (limit_short != NULL) {
-          msr_to_raplcap(&ls, limit_short);
-        }
+        msr_to_raplcap(&ls, limit_short);
         // fall through to get long term constraint
       case RAPLCAP_ZONE_CORE:
       case RAPLCAP_ZONE_UNCORE:
       case RAPLCAP_ZONE_DRAM:
-        if (limit_long != NULL) {
-          msr_to_raplcap(&ll, limit_long);
-        }
+        msr_to_raplcap(&ll, limit_long);
         break;
       default:
         errno = EINVAL;
@@ -277,8 +279,7 @@ static int msr_set_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit*
 int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   struct rapl_limit ll, ls;
-  struct rapl_limit* ptr_ll = NULL;
-  struct rapl_limit* ptr_ls = NULL;
+  int ret = 0;
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -286,17 +287,14 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     errno = EINVAL;
     return -1;
   }
-  // first get values to fill in empty ones (if there are any)
-  if ((has_empty_field(limit_long) || has_empty_field(limit_short)) && msr_get_limits(socket, zone, &ll, &ls)) {
-    return -1;
+  // first get values to fill any empty ones; no harm done if the zone doesn't actually use both constraints
+  if (has_empty_field(limit_long) || has_empty_field(limit_short)) {
+    ret = msr_get_limits(socket, zone, &ll, &ls);
   }
-  if (limit_long != NULL) {
+  if (!ret) {
     raplcap_to_msr(limit_long, &ll);
-    ptr_ll = &ll;
-  }
-  if (limit_short != NULL) {
     raplcap_to_msr(limit_short, &ls);
-    ptr_ls = &ls;
+    ret = msr_set_limits(socket, zone, limit_long == NULL ? NULL : &ll, limit_short == NULL ? NULL : &ls);
   }
-  return msr_set_limits(socket, zone, ptr_ll, ptr_ls);
+  return ret;
 }
