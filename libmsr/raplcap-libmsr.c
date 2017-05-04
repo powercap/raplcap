@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "raplcap.h"
@@ -87,6 +86,17 @@ static void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
   }
 }
 
+static int check_state(uint32_t socket, const raplcap* rc) {
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if (rc->state != &global_state || socket >= rc->nsockets) {
+    errno = EINVAL;
+    return -1;
+  }
+  return 0;
+}
+
 void raplcap_libmsr_set_manage_lifecycle(int is_manage_lifecycle) {
   while (__sync_lock_test_and_set(&lock, 1)) {
     while (lock);
@@ -132,7 +142,6 @@ int raplcap_destroy(raplcap* rc) {
   }
   if (rc->state != &global_state) {
     errno = EINVAL;
-    return -1;
   }
   rc->state = NULL;
   return maybe_lifecycle_finish();
@@ -177,17 +186,12 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   struct rapl_limit l;
   int ret;
-  if (rc == NULL) {
-    rc = &rc_default;
-  }
-  if (rc->state != &global_state || socket >= rc->nsockets) {
-    errno = EINVAL;
+  if (check_state(socket, rc)) {
     return -1;
   }
   // libmsr doesn't provide an interface to determine enabled/disabled, so we check the bits directly
   // we only need to check one limit - the MSR bits for both limits are from the same register
   ret = msr_get_limits(socket, zone, &l, NULL);
-  printf("%lX %f %f\n", l.bits, l.watts, l.seconds);
   if (!ret) {
     switch (zone) {
       case RAPLCAP_ZONE_PACKAGE:
@@ -224,11 +228,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   struct rapl_limit ll, ls;
   int ret;
-  if (rc == NULL) {
-    rc = &rc_default;
-  }
-  if (rc->state != &global_state || socket >= rc->nsockets) {
-    errno = EINVAL;
+  if (check_state(socket, rc)) {
     return -1;
   }
   ret = msr_get_limits(socket, zone, &ll, &ls);
@@ -280,11 +280,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   struct rapl_limit ll, ls;
   int ret = 0;
-  if (rc == NULL) {
-    rc = &rc_default;
-  }
-  if (rc->state != &global_state || socket >= rc->nsockets) {
-    errno = EINVAL;
+  if (check_state(socket, rc)) {
     return -1;
   }
   // first get values to fill any empty ones; no harm done if the zone doesn't actually use both constraints
