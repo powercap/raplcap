@@ -6,6 +6,9 @@
  *
  * It is the developer's responsibility to synchronize as needed when a context is accessed by multiple threads.
  *
+ * RAPL "clamping" may be managed automatically as part of enabling, disabling, or setting power caps.
+ * It is implementation-specific if clamping is considered when getting or setting a zone's "enabled" status.
+ *
  * @author Connor Imes
  * @date 2016-05-13
  */
