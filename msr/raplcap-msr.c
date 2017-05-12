@@ -366,20 +366,8 @@ static void to_raplcap(raplcap_limit* limit, double seconds, double watts) {
  * See the Linux kernel: drivers/powercap/intel_rapl.c:rapl_compute_time_window_core
  */
 static double from_msr_time(uint64_t y, uint64_t f, double time_units) {
-  raplcap_log(DEBUG, "from_msr_time: y=0x%02lX, f=0x%lX, time_units=%lf\n", y, f, time_units);
+  raplcap_log(DEBUG, "from_msr_time: y=0x%02lX, f=0x%lX, time_units=%.12f\n", y, f, time_units);
   return pow2_u64(y) * ((4 + f) / 4.0) * time_units;
-}
-
-static double clamp_f(double min, double max, double val) {
-  if (val < min) {
-    raplcap_log(WARN, "from_msr_time: MSR time value too small: %.12f, setting to min: %.12f\n", val, min);
-    return min;
-  }
-  if (val > max) {
-    raplcap_log(WARN, "from_msr_time: MSR time value too large: %.12f, setting to max: %.12f\n", val, max);
-    return max;
-  }
-  return val;
 }
 
 static uint64_t to_msr_time(double seconds, double time_units) {
@@ -387,14 +375,39 @@ static uint64_t to_msr_time(double seconds, double time_units) {
   assert(time_units > 0);
   // Seconds cannot be shorter than the smallest time unit - log2 would get a negative value and overflow "y".
   // They also cannot be larger than 2^2^5-1 so that log2 doesn't produce a value that uses more than 5 bits for "y".
-  // Clamping just prevents values outside the allowable range, but precision can still be lost in the conversion.
-  const double d = clamp_f(1.0, (double) ((uint32_t) 0xFFFFFFFF), seconds / time_units);
+  // Clamping prevents values outside the allowable range, but precision can still be lost in the conversion.
+  static const double MSR_TIME_MIN = 1.0;
+  static const double MSR_TIME_MAX = (double) 0xFFFFFFFF;
+  double t = seconds / time_units;
+  if (t < MSR_TIME_MIN) {
+    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %.12f sec\n", seconds, time_units);
+    t = MSR_TIME_MIN;
+  } else if (t > MSR_TIME_MAX) {
+    // "trying" instead of "using" because precision loss will definitely throw off the final value at this extreme
+    raplcap_log(WARN, "Time window too large: %.12f sec, trying max: %.12f sec\n", seconds, MSR_TIME_MAX * time_units);
+    t = MSR_TIME_MAX;
+  }
   // TODO: use an integer log2 function - faster and avoids need for libm
-  // y = log2((4*d)/(4+f)), however we can ignore f since d >= 1 and we're casting to an unsigned integer type
-  const uint64_t y = (uint64_t) log2(d);
-  const uint64_t f = (uint64_t) (4 * (d - pow2_u64(y)) / pow2_u64(y));
-  raplcap_log(DEBUG, "to_msr_time: y=0x%02lX, f=0x%lX\n", y, f);
+  // y = log2((4*t)/(4+f)), however we can ignore f since t >= 1 and we're casting to an unsigned integer type
+  const uint64_t y = (uint64_t) log2(t);
+  const uint64_t f = (uint64_t) (4 * (t - pow2_u64(y)) / pow2_u64(y));
+  raplcap_log(DEBUG, "to_msr_time: seconds=%.12f, time_units=%.12f, t=%.12f, y=0x%02lX, f=0x%lX\n",
+              seconds, time_units, t, y, f);
   return ((y & 0x1F) | ((f & 0x3) << 5));
+}
+
+static uint64_t to_msr_power(double watts, double power_units) {
+  assert(watts >= 0);
+  assert(power_units > 0);
+  // Lower bound is 0, but upper bound is limited by what fits in 15 bits
+  static const uint64_t MSR_POWER_MAX = 0x7FFF;
+  uint64_t p = (uint64_t) (watts / power_units);
+  if (p > MSR_POWER_MAX) {
+    raplcap_log(WARN, "Power limit too large: %.12f W, using max: %.12f W\n", watts, MSR_POWER_MAX * power_units);
+    p = MSR_POWER_MAX;
+  }
+  raplcap_log(DEBUG, "to_msr_power: watts=%.12f, power_units=%.12f, p=0x%04lX\n", watts, power_units, p);
+  return p;
 }
 
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
@@ -445,7 +458,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 socket, zone, limit_long->seconds, limit_long->watts);
     if (limit_long->watts > 0) {
-      msrval = replace_bits(msrval, (uint64_t) (limit_long->watts / state->power_units), 0, 14);
+      msrval = replace_bits(msrval, to_msr_power(limit_long->watts, state->power_units), 0, 14);
     }
     if (limit_long->seconds > 0) {
       msrval = replace_bits(msrval, to_msr_time(limit_long->seconds, state->time_units), 17, 23);
@@ -455,7 +468,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 socket, zone, limit_short->seconds, limit_short->watts);
     if (limit_short->watts > 0) {
-      msrval = replace_bits(msrval, (uint64_t) (limit_short->watts / state->power_units), 32, 46);
+      msrval = replace_bits(msrval, to_msr_power(limit_short->watts, state->power_units), 32, 46);
     }
     if (limit_short->seconds > 0) {
       msrval = replace_bits(msrval, to_msr_time(limit_short->seconds, state->time_units), 49, 55);
