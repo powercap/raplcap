@@ -42,10 +42,10 @@ typedef enum raplcap_loglevel {
   (severity) == WARN  ? "[WARN] " : \
                         "[ERROR]"
 
-#define raplcap_log(severity, args...) \
+#define raplcap_log(severity, ...) \
   do { if (raplcap_is_log_enabled((severity))) { \
       fprintf(TO_FILE((severity)), "%s [%s] ", TO_LOG_PREFIX((severity)), RAPLCAP_IMPL); \
-      fprintf(TO_FILE((severity)), args); \
+      fprintf(TO_FILE((severity)), __VA_ARGS__); \
     } } while (0)
 
 
