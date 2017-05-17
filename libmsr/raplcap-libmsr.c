@@ -82,10 +82,10 @@ static void raplcap_to_msr(const raplcap_limit* pl, struct rapl_limit* rl) {
   assert(rl != NULL);
   if (pl != NULL) {
     rl->bits = 0;
-    if (pl->watts != 0) {
+    if (!is_zero_dbl(pl->watts)) {
       rl->watts = pl->watts;
     }
-    if (pl->seconds != 0) {
+    if (!is_zero_dbl(pl->seconds)) {
       rl->seconds = pl->seconds;
     }
   }
@@ -325,7 +325,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
 
 static int has_empty_field(const raplcap_limit* l) {
   // NULL values do not have empty fields - they are ignored
-  return l == NULL ? 0 : (l->watts == 0 || l->seconds == 0);
+  return l == NULL ? 0 : (is_zero_dbl(l->watts) || is_zero_dbl(l->seconds));
 }
 
 static int msr_set_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit* ll, struct rapl_limit* ls) {

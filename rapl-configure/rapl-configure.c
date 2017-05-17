@@ -11,6 +11,7 @@
 #include <string.h>
 #include <getopt.h>
 #include "raplcap.h"
+#include "raplcap-common.h"
 
 typedef struct rapl_configure_ctx {
   raplcap_zone zone;
@@ -36,7 +37,7 @@ static const struct option long_options[] = {
   {"help",     required_argument, NULL, 'h'},
 };
 
-void print_usage(int exit_code) {
+static void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
           "Usage:\n"
           "  %s [options]\n\n"
@@ -88,7 +89,7 @@ static void print_enable_error(const char* fn) {
   fprintf(stderr, "Trying to proceed anyway...\n");
 }
 
-int configure_limits(const rapl_configure_ctx* c) {
+static int configure_limits(const rapl_configure_ctx* c) {
   assert(c != NULL);
   raplcap_limit limit_long;
   raplcap_limit limit_short;
@@ -99,13 +100,13 @@ int configure_limits(const rapl_configure_ctx* c) {
     limit_long.seconds = c->sec_long;
     limit_long.watts = c->watts_long;
     ll = &limit_long;
-    disable &= limit_long.seconds == 0 && limit_long.watts == 0;
+    disable &= is_zero_dbl(limit_long.seconds) && is_zero_dbl(limit_long.watts);
   }
   if (c->set_short) {
     limit_short.seconds = c->sec_short;
     limit_short.watts = c->watts_short;
     ls = &limit_short;
-    disable &= limit_short.seconds == 0 && limit_short.watts == 0;
+    disable &= is_zero_dbl(limit_short.seconds) && is_zero_dbl(limit_short.watts);
   }
   if (disable) {
     // all given values were 0 - disable the zone
@@ -117,7 +118,7 @@ int configure_limits(const rapl_configure_ctx* c) {
   return raplcap_set_limits(c->socket, NULL, c->zone, ll, ls);
 }
 
-int get_limits(unsigned int socket, raplcap_zone zone) {
+static int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ll;
   raplcap_limit ls;
   memset(&ll, 0, sizeof(raplcap_limit));

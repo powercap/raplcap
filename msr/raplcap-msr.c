@@ -107,7 +107,7 @@ static off_t zone_to_msr_offset(raplcap_zone zone) {
   }
 }
 
-static uint32_t count_sockets() {
+static uint32_t count_sockets(void) {
   uint32_t sockets = 0;
   int err_save;
   char output[32];

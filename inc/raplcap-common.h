@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#include <float.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -51,6 +52,12 @@ typedef enum raplcap_loglevel {
 
 #define raplcap_perror(severity, msg) \
   raplcap_log(severity, "%s: %s\n", msg, strerror(errno))
+
+/**
+ * Returns 1 (true) if the value is close enough to zero.
+ * Silences compiler warnings about comparing double values with "==".
+ */
+#define is_zero_dbl(val) ((val) >= 0 ? (val) < DBL_EPSILON : (val) > -DBL_EPSILON)
 
 #ifdef __cplusplus
 }
