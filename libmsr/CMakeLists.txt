@@ -2,8 +2,13 @@ include_directories(${libmsr_INCLUDE_DIR})
 
 # Libraries
 
+set(MSR_LIB_NAME msr-static)
+if(BUILD_SHARED_LIBS)
+  set(MSR_LIB_NAME msr)
+endif()
+
 add_library(raplcap-libmsr raplcap-libmsr.c)
-target_link_libraries(raplcap-libmsr -L${libmsr_LIB_PATH} msr)
+target_link_libraries(raplcap-libmsr -L${libmsr_LIB_PATH} ${MSR_LIB_NAME})
 
 # pkg-config
 
@@ -16,6 +21,8 @@ set(PKG_CONFIG_NAME "raplcap-libmsr")
 set(PKG_CONFIG_DESCRIPTION "Implementation of RAPLCap that uses LLNL's libmsr")
 set(PKG_CONFIG_REQUIRES_PRIVATE "")
 set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-libmsr")
+# libmsr creates static and dynamic libs with the same name... "msr" (no "msr-static")
+# the linker or user will have to figure out whether to use the static or dynamic lib
 set(PKG_CONFIG_LIBS_PRIVATE "-L${libmsr_LIB_PATH} -lmsr -lm")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
