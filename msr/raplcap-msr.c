@@ -165,6 +165,7 @@ static int raplcap_open_msrs(uint32_t sockets, int* fds) {
       errno = ENOENT;
       return -1;
     }
+    raplcap_log(DEBUG, "raplcap_open_msrs: Found mapping: socket %"PRIu32", core %"PRIu32"\n", socket, core);
     if (socket >= sockets) {
       raplcap_log(ERROR, "raplcap_open_msrs: Socket %"PRIu32" is outside range [0, %"PRIu32")\n", socket, sockets);
       if (pclose(fp)) {
@@ -192,6 +193,7 @@ static int raplcap_open_msrs(uint32_t sockets, int* fds) {
   }
   // now open the MSR for each core
   for (i = 0; i < sockets; i++) {
+    raplcap_log(DEBUG, "raplcap_open_msrs: Using mapping: socket %"PRIu32", core %"PRIu32"\n", i, coreids[i]);
     if ((fds[i] = open_msr(coreids[i])) < 0) {
       return -1;
     }
