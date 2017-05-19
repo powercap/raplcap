@@ -111,27 +111,33 @@ static uint32_t count_sockets(void) {
   uint32_t sockets = 0;
   int err_save;
   char output[32];
-  // pretty hacky, but seems to work
-  FILE* fp = popen("egrep 'physical id' /proc/cpuinfo | sort -u | cut -d : -f 2 | awk '{print $1}' | tail -n 1", "r");
+  // hacky, but seems to work
+  FILE* fp = popen("grep '^physical id' /proc/cpuinfo | sort -u | wc -l", "r");
   if (fp == NULL) {
     raplcap_perror(ERROR, "count_sockets: popen");
-  } else {
-    while (fgets(output, sizeof(output), fp) != NULL) {
-      errno = 0;
-      sockets = strtoul(output, NULL, 0) + 1;
-      if (errno) {
-        raplcap_perror(ERROR, "count_sockets: strtoul");
-        sockets = 0;
-        break;
-      }
-    }
-    // preserve any error
-    err_save = errno;
-    if (pclose(fp)) {
-      raplcap_perror(WARN, "count_sockets: pclose");
-    }
-    errno = err_save;
+    return 0;
   }
+  if (fgets(output, sizeof(output), fp) == NULL) {
+    // got nothing back from the process? shouldn't happen...
+    raplcap_log(ERROR, "count_sockets: No data to parse from process output");
+    errno = ENODATA;
+  } else {
+    errno = 0;
+    sockets = strtoul(output, NULL, 0);
+    if (errno) {
+      raplcap_perror(ERROR, "count_sockets: strtoul");
+      sockets = 0;
+    } else if (sockets == 0) {
+      // would occur if grep didn't find anything, which shouldn't happen, but we'll just say there's no such device
+      raplcap_log(ERROR, "count_sockets: no result from grep");
+      errno = ENODEV;
+    }
+  }
+  err_save = errno;
+  if (pclose(fp)) {
+    raplcap_perror(WARN, "count_sockets: pclose");
+  }
+  errno = err_save;
   raplcap_log(DEBUG, "count_sockets: sockets=%"PRIu32"\n", sockets);
   return sockets;
 }
@@ -141,64 +147,53 @@ static int raplcap_open_msrs(uint32_t sockets, int* fds) {
   // need to find a core for each socket
   assert(sockets > 0);
   assert(fds != NULL);
-  uint32_t coreids[sockets];
-  int coreids_found[sockets];
   char output[32];
   uint32_t socket;
   uint32_t core;
-  uint32_t i;
-  // this is REALLY hacky... I'm so sorry. --CKI, 10/22/16
-  FILE* fp = popen("egrep 'processor|core id|physical id' /proc/cpuinfo | cut -d : -f 2 | paste - - -  | awk '{print $2 \" \" $1}'", "r");
+  int ret = 0;
+  int err_save;
+  // hacky, but not as bad as before...
+  FILE* fp = popen("egrep '^processor|^physical id' /proc/cpuinfo | cut -d : -f 2 | paste - - | sort -u -k 2", "r");
   if (fp == NULL) {
     raplcap_perror(ERROR, "raplcap_open_msrs: popen");
     return -1;
   }
-  memset(coreids, 0, sockets * sizeof(uint32_t));
-  memset(coreids_found, 0, sockets * sizeof(int));
-  // first column of the output is the socket, second column is the core id
+  // first column of the output is the core id, second column is the socket
   while (fgets(output, sizeof(output), fp) != NULL) {
-    if (sscanf(output, "%"PRIu32" %"PRIu32, &socket, &core) != 2) {
+    if (sscanf(output, "%"PRIu32" %"PRIu32, &core, &socket) != 2) {
       raplcap_log(ERROR, "raplcap_open_msrs: Failed to parse socket to MSR mapping\n");
-      if (pclose(fp)) {
-        raplcap_perror(WARN, "raplcap_open_msrs: pclose");
-      }
+      ret = -1;
       errno = ENOENT;
-      return -1;
+      break;
     }
     raplcap_log(DEBUG, "raplcap_open_msrs: Found mapping: socket %"PRIu32", core %"PRIu32"\n", socket, core);
     if (socket >= sockets) {
       raplcap_log(ERROR, "raplcap_open_msrs: Socket %"PRIu32" is outside range [0, %"PRIu32")\n", socket, sockets);
-      if (pclose(fp)) {
-        raplcap_perror(WARN, "raplcap_open_msrs: pclose");
-      }
-      errno = EINVAL;
-      return -1;
+      ret = -1;
+      errno = ERANGE;
+      break;
     }
-    // keep the smallest core value (ideally maps to the first physical core on the socket)
-    if (!coreids_found[socket] || core < coreids[socket]) {
-      coreids_found[socket] = 1;
-      coreids[socket] = core;
+    // open the cpu MSR for this socket
+    if ((fds[socket] = open_msr(core)) < 0) {
+      ret = -1;
+      break;
     }
   }
+  err_save = errno;
   if (pclose(fp)) {
     raplcap_perror(WARN, "raplcap_open_msrs: pclose");
   }
-  // verify that we found a MSR for each socket
-  for (i = 0; i < sockets; i++) {
-    if (!coreids_found[i]) {
-      raplcap_log(ERROR, "raplcap_open_msrs: No MSR found for socket %"PRIu32"\n", i);
+  errno = err_save;
+  // verify that we actually found a MSR for each socket (requires the fds was previously zeroed-out)
+  for (socket = 0; ret == 0 && socket < sockets; socket++) {
+    if (fds[socket] <= 0) {
+      raplcap_log(ERROR, "raplcap_open_msrs: No MSR found for socket %"PRIu32"\n", socket);
+      ret = -1;
       errno = ENOENT;
-      return -1;
+      break;
     }
   }
-  // now open the MSR for each core
-  for (i = 0; i < sockets; i++) {
-    raplcap_log(DEBUG, "raplcap_open_msrs: Using mapping: socket %"PRIu32", core %"PRIu32"\n", i, coreids[i]);
-    if ((fds[i] = open_msr(coreids[i])) < 0) {
-      return -1;
-    }
-  }
-  return 0;
+  return ret;
 }
 
 static uint64_t pow2_u64(uint64_t y) {
