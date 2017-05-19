@@ -14,6 +14,7 @@
 #include "raplcap-common.h"
 
 typedef struct rapl_configure_ctx {
+  int get_sockets;
   raplcap_zone zone;
   unsigned int socket;
   int set_long;
@@ -26,21 +27,23 @@ typedef struct rapl_configure_ctx {
 
 static rapl_configure_ctx ctx;
 static const char* prog;
-static const char short_options[] = "c:z:s:w:S:W:h";
+static const char short_options[] = "nc:z:s:w:S:W:h";
 static const struct option long_options[] = {
+  {"nsockets", no_argument,       NULL, 'n'},
   {"socket",   required_argument, NULL, 'c'},
   {"zone",     required_argument, NULL, 'z'},
   {"seconds0", required_argument, NULL, 's'},
   {"watts0",   required_argument, NULL, 'w'},
   {"seconds1", required_argument, NULL, 'S'},
   {"watts1",   required_argument, NULL, 'W'},
-  {"help",     required_argument, NULL, 'h'},
+  {"help",     no_argument,       NULL, 'h'},
 };
 
 static void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
           "Usage:\n"
           "  %s [options]\n\n"
+          "  -n, --nsockets           Print the number of sockets found and exit\n"
           "  -c, --socket=SOCKET      The processor socket (0 by default)\n"
           "  -z, --zone=ZONE          Specify what to configure. Allowable values:\n"
           "                           PACKAGE - a processor socket (default)\n"
@@ -140,6 +143,7 @@ int main(int argc, char** argv) {
   int ret = 0;
   int c;
   int supported;
+  uint32_t sockets;
   prog = argv[0];
 
   // parse parameters
@@ -151,6 +155,9 @@ int main(int argc, char** argv) {
         break;
       case 'c':
         ctx.socket = atoi(optarg);
+        break;
+      case 'n':
+        ctx.get_sockets = 1;
         break;
       case 'z':
         if (!strcmp(optarg, "PACKAGE")) {
@@ -188,6 +195,18 @@ int main(int argc, char** argv) {
         print_usage(1);
         break;
     }
+  }
+
+  // just print the number of sockets and exit
+  // this is often an unprivileged operation since we don't need to initialize a raplcap instance
+  if (ctx.get_sockets) {
+    sockets = raplcap_get_num_sockets(NULL);
+    if (sockets == 0) {
+      perror("raplcap_get_num_sockets");
+      return 1;
+    }
+    printf("%"PRIu32"\n", sockets);
+    return 0;
   }
 
   // verify parameters
