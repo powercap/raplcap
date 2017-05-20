@@ -1,7 +1,7 @@
 # Libraries
 
 add_library(raplcap-msr raplcap-msr.c)
-target_link_libraries(raplcap-msr m)
+target_link_libraries(raplcap-msr)
 
 # pkg-config
 
@@ -14,7 +14,7 @@ set(PKG_CONFIG_NAME "raplcap-msr")
 set(PKG_CONFIG_DESCRIPTION "Implementation of RAPLCap that uses the MSR directly")
 set(PKG_CONFIG_REQUIRES_PRIVATE "")
 set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-msr")
-set(PKG_CONFIG_LIBS_PRIVATE "-lm")
+set(PKG_CONFIG_LIBS_PRIVATE "")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_BINARY_DIR}/pkgconfig/raplcap-msr.pc)

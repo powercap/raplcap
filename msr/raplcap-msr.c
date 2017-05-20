@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -201,6 +200,15 @@ static uint64_t pow2_u64(uint64_t y) {
   return ((uint64_t) 1) << y;
 }
 
+static uint64_t log2_u64(uint64_t y) {
+  // log2(y); returns 0 for y = 0
+  uint8_t ret = 0;
+  while (y >>= 1) {
+    ret++;
+  }
+  return ret;
+}
+
 int raplcap_init(raplcap* rc) {
   if (rc == NULL) {
     rc = &rc_default;
@@ -384,10 +392,10 @@ static uint64_t to_msr_time(double seconds, double time_units) {
     raplcap_log(WARN, "Time window too large: %.12f sec, trying max: %.12f sec\n", seconds, MSR_TIME_MAX * time_units);
     t = MSR_TIME_MAX;
   }
-  // TODO: use an integer log2 function - faster and avoids need for libm
-  // y = log2((4*t)/(4+f)), however we can ignore f since t >= 1 and we're casting to an unsigned integer type
-  const uint64_t y = (uint64_t) log2(t);
-  const uint64_t f = (uint64_t) (4 * (t - pow2_u64(y)) / pow2_u64(y));
+  // y = log2((4*t)/(4+f)); we can ignore "f" since t >= 1 and 0 <= f <= 3; we can also drop the real part of "t"
+  const uint64_t y = log2_u64((uint64_t) t);
+  // f = (4*t)/(2^y)-4; the real part of "t" only matters for t < 4, otherwise it's insignificant in computing "f"
+  const uint64_t f = (((uint64_t) (4 * t)) / pow2_u64(y)) - 4;
   raplcap_log(DEBUG, "to_msr_time: seconds=%.12f, time_units=%.12f, t=%.12f, y=0x%02lX, f=0x%lX\n",
               seconds, time_units, t, y, f);
   return ((y & 0x1F) | ((f & 0x3) << 5));
