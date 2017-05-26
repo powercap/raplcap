@@ -25,17 +25,34 @@ add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_D
 
 # Subdirectories
 
-add_subdirectory(msr)
+# Could compile on any UNIX system, but will only work on Linux
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  add_subdirectory(msr)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(POWERCAP powercap)
-if(POWERCAP_FOUND)
-  add_subdirectory(powercap)
+  find_package(PkgConfig)
+  if(PkgConfig_FOUND)
+    pkg_check_modules(POWERCAP powercap)
+    if(POWERCAP_FOUND)
+      add_subdirectory(powercap)
+    endif()
+  endif()
+
+  find_package(libmsr)
+  if(libmsr_FOUND)
+    add_subdirectory(libmsr)
+  endif()
 endif()
 
-find_package(libmsr)
-if(libmsr_FOUND)
-  add_subdirectory(libmsr)
+
+# Should just be on OSX and Windows
+if(APPLE)
+  find_library(IntelPowerGadgetLib NAMES "IntelPowerGadget")
+  if(IntelPowerGadgetLib)
+    add_subdirectory(ipg)
+  endif()
+elseif(WIN32)
+  # No compile-time dependency, so always build
+  add_subdirectory(ipg)
 endif()
 
 add_subdirectory(rapl-configure)

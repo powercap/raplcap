@@ -26,7 +26,6 @@ This project depends on:
 * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - backend required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
 
 If dependencies are not found, CMake will not attempt to compile the implementations that use them.
-The worst-case scenario is that only the `msr` implementation is compiled.
 
 Users are expected to be familiar with basic RAPL capabilities and terminology, like zones (domains) and long/short term power constraints.
 Due to lack of portability in backends and data availability on some systems, the interface does not support discovering processor min/max power caps or thermal design power.
