@@ -7,8 +7,17 @@ if(BUILD_SHARED_LIBS)
   set(MSR_LIB_NAME msr)
 endif()
 
+# PP0/PP1 support was removed from libmsr after v0.3.1...
+include(CheckSymbolExists)
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES};${libmsr_INCLUDE_DIR})
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES};${MSR_LIB_NAME})
+CHECK_SYMBOL_EXISTS(get_pp_rapl_limit msr_rapl.h LIBMSR_PP_SUPPORTED)
+
 add_library(raplcap-libmsr raplcap-libmsr.c)
 target_link_libraries(raplcap-libmsr -L${libmsr_LIB_PATH} ${MSR_LIB_NAME})
+if(LIBMSR_PP_SUPPORTED)
+  target_compile_definitions(raplcap-libmsr PRIVATE LIBMSR_PP_SUPPORTED=1)
+endif()
 
 # pkg-config
 

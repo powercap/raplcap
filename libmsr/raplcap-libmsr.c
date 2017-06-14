@@ -199,14 +199,26 @@ static int msr_get_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit*
       }
       break;
     case RAPLCAP_ZONE_CORE:
+#ifdef LIBMSR_PP_SUPPORTED
       if ((ret = get_pp_rapl_limit(socket, ll, NULL)) != 0) {
         raplcap_perror(ERROR, "msr_get_limits: (libmsr_)get_pp_rapl_limit");
       }
+#else
+      raplcap_log(ERROR, "msr_get_limits: Core zone not supported by libmsr\n");
+      errno = ENOTSUP;
+      ret = -1;
+#endif
       break;
     case RAPLCAP_ZONE_UNCORE:
+#ifdef LIBMSR_PP_SUPPORTED
       if ((ret = get_pp_rapl_limit(socket, NULL, ll)) != 0) {
         raplcap_perror(ERROR, "msr_get_limits: (libmsr_)get_pp_rapl_limit");
       }
+#else
+      raplcap_log(ERROR, "msr_get_limits: Uncore zone not supported by libmsr\n");
+      errno = ENOTSUP;
+      ret = -1;
+#endif
       break;
     case RAPLCAP_ZONE_DRAM:
       if ((ret = get_dram_rapl_limit(socket, ll)) != 0) {
@@ -345,14 +357,26 @@ static int msr_set_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit*
       }
       break;
     case RAPLCAP_ZONE_CORE:
+#ifdef LIBMSR_PP_SUPPORTED
       if ((ret = set_pp_rapl_limit(socket, ll, NULL)) != 0) {
         raplcap_perror(ERROR, "msr_set_limits: (libmsr_)set_pp_rapl_limit");
       }
+#else
+      raplcap_log(ERROR, "msr_set_limits: Core zone not supported by libmsr\n");
+      errno = ENOTSUP;
+      ret = -1;
+#endif
       break;
     case RAPLCAP_ZONE_UNCORE:
+#ifdef LIBMSR_PP_SUPPORTED
       if ((ret = set_pp_rapl_limit(socket, NULL, ll)) != 0) {
         raplcap_perror(ERROR, "msr_set_limits: (libmsr_)set_pp_rapl_limit");
       }
+#else
+      raplcap_log(ERROR, "msr_set_limits: Core zone not supported by libmsr\n");
+      errno = ENOTSUP;
+      ret = -1;
+#endif
       break;
     case RAPLCAP_ZONE_DRAM:
       if ((ret = set_dram_rapl_limit(socket, ll)) != 0) {
