@@ -30,7 +30,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   add_subdirectory(msr)
 
   find_package(PkgConfig)
-  if(PkgConfig_FOUND)
+  if(PKG_CONFIG_FOUND)
     pkg_check_modules(POWERCAP powercap)
     if(POWERCAP_FOUND)
       add_subdirectory(powercap)
