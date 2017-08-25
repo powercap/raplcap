@@ -1,0 +1,60 @@
+.TH "rapl-configure-@RAPL_LIB@" "1" "0.1" "rapl-configure-@RAPL_LIB@" "rapl-configure-@RAPL_LIB@"
+.SH "NAME"
+.LP
+rapl\-configure\-@RAPL_LIB@ \- get or configure Intel RAPL
+.SH "SYNPOSIS"
+.LP
+\fBrapl\-configure\-@RAPL_LIB@\fB [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.LP
+Get or set RAPL configurations on the system.
+.SH "OPTIONS"
+.LP
+.TP
+\fB\-n,\fR \fB\-\-nsockets\fR
+Print the number of sockets found and exit
+.TP
+\fB\-c,\fR \fB\-\-socket=SOCKET\fR
+The processor socket (0 by default)
+.TP
+\fB\-z,\fR \fB\-\-zone=ZONE\fR
+Specify what to configure. Allowable values:
+.br
+PACKAGE \- a processor socket (default)
+.br
+CORE \- core power plane
+.br
+UNCORE \- uncore power plane (client systems only)
+.br
+DRAM \- main memory (server systems only)
+.br
+PSYS \- the entire SoC (Skylake and newer only)
+.TP
+\fB\-s,\fR \fB\-\-seconds0\fR
+long_term time window
+.TP
+\fB\-w,\fR \fB\-\-watts0\fR
+long_term power limit
+.TP
+\fB\-S,\fR \fB\-\-seconds1\fR
+short_term time window
+.TP
+\fB\-W,\fR \fB\-\-watts1\fR
+short_term power limit
+.TP
+\fB\-h,\fR \fB\-\-help\fR
+Prints out the help screen
+.SH "REMARKS"
+.LP
+Unless time or power limits are specified, current values will be printed.
+.br
+If the only values specified are 0, the zone will be disabled.
+.SH "FILES"
+.nf
+\fI/dev/cpu/*/msr\fP
+\fI/sys/class/powercap/intel\-rapl:*/\fP
+.fi
+.SH "AUTHORS"
+.nf
+Connor Imes <connor.k.imes@gmail.com>
+.fi
