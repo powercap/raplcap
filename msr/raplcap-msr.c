@@ -45,17 +45,17 @@ typedef struct raplcap_msr {
 
 static raplcap rc_default;
 
-static int open_msr(uint32_t core) {
+static int open_msr(uint32_t core, int flags) {
   char msr_filename[32];
   // first try using the msr_safe kernel module
   snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr_safe", core);
-  int fd = open(msr_filename, O_RDWR);
+  int fd = open(msr_filename, flags);
   if (fd < 0) {
     raplcap_perror(DEBUG, msr_filename);
     raplcap_log(INFO, "msr-safe not available, falling back on standard msr\n");
     // fall back on the standard msr kernel module
     snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr", core);
-    fd = open(msr_filename, O_RDWR);
+    fd = open(msr_filename, flags);
     if (fd < 0) {
       raplcap_perror(ERROR, msr_filename);
       if (errno == ENOENT) {
@@ -151,6 +151,8 @@ static int raplcap_open_msrs(uint32_t sockets, int* fds) {
   uint32_t core;
   int ret = 0;
   int err_save;
+  const char* env_ro = getenv(ENV_RAPLCAP_READ_ONLY);
+  int ro = env_ro == NULL ? 0 : atoi(env_ro);
   // hacky, but not as bad as before...
   FILE* fp = popen("egrep '^processor|^physical id' /proc/cpuinfo | cut -d : -f 2 | paste - - | sort -u -k 2", "r");
   if (fp == NULL) {
@@ -173,7 +175,7 @@ static int raplcap_open_msrs(uint32_t sockets, int* fds) {
       break;
     }
     // open the cpu MSR for this socket
-    if ((fds[socket] = open_msr(core)) < 0) {
+    if ((fds[socket] = open_msr(core, ro == 0 ? O_RDWR : O_RDONLY)) < 0) {
       ret = -1;
       break;
     }

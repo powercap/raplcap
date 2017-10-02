@@ -87,6 +87,8 @@ int raplcap_init(raplcap* rc) {
   powercap_rapl_pkg* pkgs;
   uint32_t i;
   int err_save;
+  const char* env_ro = getenv(ENV_RAPLCAP_READ_ONLY);
+  int ro = env_ro == NULL ? 0 : atoi(env_ro);
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -100,7 +102,7 @@ int raplcap_init(raplcap* rc) {
   }
   rc->state = pkgs;
   for (i = 0; i < rc->nsockets; i++) {
-    if (powercap_rapl_init(i, &pkgs[i], 0)) {
+    if (powercap_rapl_init(i, &pkgs[i], ro)) {
       raplcap_perror(ERROR, "raplcap_init: powercap_rapl_init");
       err_save = errno;
       raplcap_destroy(rc);

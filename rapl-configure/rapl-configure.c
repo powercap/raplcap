@@ -4,6 +4,8 @@
  * @author Connor Imes
  * @date 2016-05-13
  */
+// for setenv
+#define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -146,6 +148,7 @@ int main(int argc, char** argv) {
   int supported;
   uint32_t sockets;
   prog = argv[0];
+  int is_read_only;
 
   // parse parameters
   memset(&ctx, 0, sizeof(rapl_configure_ctx));
@@ -217,6 +220,13 @@ int main(int argc, char** argv) {
   }
 
   // initialize
+  is_read_only = !ctx.set_long && !ctx.set_short;
+#ifndef _WIN32
+  if (is_read_only) {
+    // request read-only access (not supported by all implementations, therefore not guaranteed)
+    setenv(ENV_RAPLCAP_READ_ONLY, "1", 0);
+  }
+#endif
   if (raplcap_init(NULL)) {
     perror("Init failed");
     return 1;
@@ -232,7 +242,7 @@ int main(int argc, char** argv) {
       fprintf(stderr, "Trying to proceed anyway...\n");
     }
     // perform requested action
-    if (!ctx.set_long && !ctx.set_short) {
+    if (is_read_only) {
       ret = get_limits(ctx.socket, ctx.zone);
     } else {
       ret = configure_limits(&ctx);

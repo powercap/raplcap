@@ -15,6 +15,10 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
+// Environment variable to request read-only access when the option is available
+// This is an undocumented capability and may be removed at any time
+#define ENV_RAPLCAP_READ_ONLY "RAPLCAP_READ_ONLY"
+
 typedef enum raplcap_loglevel {
   DEBUG = 0,
   INFO,
