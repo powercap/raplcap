@@ -4,6 +4,10 @@ if(APPLE)
   add_library(raplcap-ipg raplcap-ipg.c)
   set(IPG_LINKER_FLAGS "-framework IntelPowerGadget")
   target_link_libraries(raplcap-ipg ${IPG_LINKER_FLAGS})
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(raplcap-ipg PROPERTIES VERSION ${PROJECT_VERSION}
+                                                 SOVERSION ${VERSION_MAJOR})
+  endif()
 elseif(WIN32)
   # Always build static lib in Windows - can't seem to link against dll with rapl-configure
   add_library(raplcap-ipg STATIC raplcap-ipg.c)

@@ -18,6 +18,10 @@ target_link_libraries(raplcap-libmsr -L${libmsr_LIB_PATH} ${MSR_LIB_NAME})
 if(LIBMSR_PP_SUPPORTED)
   target_compile_definitions(raplcap-libmsr PRIVATE LIBMSR_PP_SUPPORTED=1)
 endif()
+if(BUILD_SHARED_LIBS)
+  set_target_properties(raplcap-libmsr PROPERTIES VERSION ${PROJECT_VERSION}
+                                                  SOVERSION ${VERSION_MAJOR})
+endif()
 
 # pkg-config
 
