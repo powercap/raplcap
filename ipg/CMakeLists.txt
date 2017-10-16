@@ -16,8 +16,8 @@ endif()
 # pkg-config
 
 set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
-set(PKG_CONFIG_LIBDIR "\${prefix}/lib")
-set(PKG_CONFIG_INCLUDEDIR "\${prefix}/include/${PROJECT_NAME}")
+set(PKG_CONFIG_LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set(PKG_CONFIG_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
 set(PKG_CONFIG_CFLAGS "-I\${includedir}")
 
 set(PKG_CONFIG_NAME "raplcap-ipg")
@@ -27,8 +27,9 @@ set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-ipg")
 set(PKG_CONFIG_LIBS_PRIVATE "${IPG_LINKER_FLAGS}")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
-  ${CMAKE_BINARY_DIR}/pkgconfig/raplcap-ipg.pc)
+  ${CMAKE_BINARY_DIR}/raplcap-ipg.pc)
 
 # Install
 
-install(TARGETS raplcap-ipg DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+install(TARGETS raplcap-ipg DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${CMAKE_BINARY_DIR}/raplcap-ipg.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

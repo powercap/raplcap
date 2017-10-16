@@ -4,6 +4,8 @@
 
  * Added VERSION and SOVERSION to shared object libraries
  * Updated license to use author as copyright holder
+ * Use GNU standard installation directories (multiarch support)
+ * Increased minimum CMake version to 2.8.5 to support GNUInstallDirs
 
 ## v0.1.1 - 2017-10-02
 

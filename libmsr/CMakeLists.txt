@@ -26,8 +26,8 @@ endif()
 # pkg-config
 
 set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
-set(PKG_CONFIG_LIBDIR "\${prefix}/lib")
-set(PKG_CONFIG_INCLUDEDIR "\${prefix}/include/${PROJECT_NAME}")
+set(PKG_CONFIG_LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set(PKG_CONFIG_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
 set(PKG_CONFIG_CFLAGS "-I\${includedir}")
 
 set(PKG_CONFIG_NAME "raplcap-libmsr")
@@ -39,9 +39,10 @@ set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-libmsr")
 set(PKG_CONFIG_LIBS_PRIVATE "-L${libmsr_LIB_PATH} -lmsr -lm")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
-  ${CMAKE_BINARY_DIR}/pkgconfig/raplcap-libmsr.pc)
+  ${CMAKE_BINARY_DIR}/raplcap-libmsr.pc)
 
 # Install
 
-install(FILES raplcap-libmsr.h DESTINATION include/${PROJECT_NAME})
-install(TARGETS raplcap-libmsr DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+install(TARGETS raplcap-libmsr DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${CMAKE_BINARY_DIR}/raplcap-libmsr.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(FILES raplcap-libmsr.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
