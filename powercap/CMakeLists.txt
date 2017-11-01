@@ -23,9 +23,9 @@ set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-powercap")
 set(PKG_CONFIG_LIBS_PRIVATE "")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
-  ${CMAKE_BINARY_DIR}/raplcap-powercap.pc)
+  ${CMAKE_CURRENT_BINARY_DIR}/raplcap-powercap.pc)
 
 # Install
 
 install(TARGETS raplcap-powercap DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/raplcap-powercap.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/raplcap-powercap.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

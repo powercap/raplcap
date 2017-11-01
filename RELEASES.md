@@ -1,20 +1,30 @@
 # Release Notes
 
-## Unreleased
+## [Unreleased]
+### Added
+ * VERSION and SOVERSION to shared object libraries
+ * Multiarch support (use GNU standard installation directories)
 
- * Added VERSION and SOVERSION to shared object libraries
+### Changed
+ * Increased minimum CMake version from 2.8 to 2.8.5 to support GNUInstallDirs
  * Updated license to use author as copyright holder
- * Use GNU standard installation directories (multiarch support)
- * Increased minimum CMake version to 2.8.5 to support GNUInstallDirs
+ * Refactor this RELEASES.md file
 
-## v0.1.1 - 2017-10-02
-
+## [v0.1.1] - 2017-10-02
+### Added
  * Added man page for rapl-configure binaries
- * Fixed possible crash with getopt in rapl-configure binaries
+
+### Changed
  * Upstream libmsr removed functionality for PP0/PP1 (core and uncore) zones, so we check for functions during build
  * Try to open files as read-only when possible, but no guarantees
  * Build improvements
 
-## v0.1.0 - 2017-06-09
+### Fixed
+ * Fixed possible crash with getopt in rapl-configure binaries
 
+## v0.1.0 - 2017-06-09
+### Added
  * Initial public release
+
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.1.1...HEAD
+[v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1

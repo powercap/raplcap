@@ -21,9 +21,9 @@ set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-msr")
 set(PKG_CONFIG_LIBS_PRIVATE "")
 configure_file(
   ${CMAKE_SOURCE_DIR}/pkgconfig.in
-  ${CMAKE_BINARY_DIR}/raplcap-msr.pc)
+  ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc)
 
 # Install
 
 install(TARGETS raplcap-msr DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/raplcap-msr.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
