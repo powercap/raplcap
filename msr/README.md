@@ -1,6 +1,6 @@
 # RAPLCap - msr
 
-This implementation of the `raplcap` interface reads directly from Intel Model Specific Registers on Linux platforms.
+This implementation of the `raplcap` interface reads directly from Model-Specific Registers on Linux platforms.
 
 ## Prerequisites
 

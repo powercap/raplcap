@@ -44,20 +44,20 @@ static const struct option long_options[] = {
 
 static void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
-          "Usage:\n"
-          "  %s [options]\n\n"
+          "Usage: %s [OPTION]...\n"
+          "Options:\n"
           "  -n, --nsockets           Print the number of sockets found and exit\n"
           "  -c, --socket=SOCKET      The processor socket (0 by default)\n"
-          "  -z, --zone=ZONE          Specify what to configure. Allowable values:\n"
+          "  -z, --zone=ZONE          Which zone/domain use. Allowable values:\n"
           "                           PACKAGE - a processor socket (default)\n"
           "                           CORE - core power plane\n"
           "                           UNCORE - uncore power plane (client systems only)\n"
           "                           DRAM - main memory (server systems only)\n"
-          "                           PSYS - the entire SoC (Skylake and newer only)\n"
-          "  -s, --seconds0=SECONDS   long_term time window\n"
-          "  -w, --watts0=WATTS       long_term power limit\n"
-          "  -S, --seconds1=SECONDS   short_term time window (PACKAGE & PSYS only)\n"
-          "  -W, --watts1=WATTS       short_term power limit (PACKAGE & PSYS only)\n"
+          "                           PSYS - the entire platform (Skylake and newer only)\n"
+          "  -s, --seconds0=SECONDS   long term time window\n"
+          "  -w, --watts0=WATTS       long term power limit\n"
+          "  -S, --seconds1=SECONDS   short term time window (PACKAGE & PSYS only)\n"
+          "  -W, --watts1=WATTS       short term power limit (PACKAGE & PSYS only)\n"
           "  -h, --help               Print this message and exit\n\n"
           "Unless time or power limits are specified, current values will be printed.\n"
           "If the only values specified are 0, the zone will be disabled.\n\n",

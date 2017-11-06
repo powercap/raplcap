@@ -1,24 +1,75 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "0.1" "rapl-configure-@RAPL_LIB@" "rapl-configure-@RAPL_LIB@"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2017-11-03" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
-rapl\-configure\-@RAPL_LIB@ \- get or configure Intel RAPL
+rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
 .SH "SYNPOSIS"
 .LP
-\fBrapl\-configure\-@RAPL_LIB@\fB [\fIOPTION\fP]...
+\fBrapl\-configure\-@RAPL_LIB@\fP [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .LP
-Get or set RAPL configurations on the system.
+Intel Running Average Power Limit (RAPL) configures \fIpower limits\fP on
+hardware that are respected on average over a \fItime window\fP.
+An Intel\*R Sandy Bridge (2nd generation Intel\*R Core) or newer processor is
+required.
+Users are expected to have some familiarity with RAPL before using this tool.
+Refer to the "Intel\*R 64 and IA-32 Architectures Software Developer Manual,
+Volume 3: System Programming Guide" for more technical information.
+This description is only a short summary.
+.LP
+Power limits are configured on a per-socket basis, although most client systems
+only have a single processor socket.
+Each socket supports \fIzones\fP, also known as \fIdomains\fP, to manage power
+at fine-grained levels.
+Hardware components other than the processor can sometimes also be configured
+as zones.
+Currently supported zones are:
+.IP \[bu] 2
+\fIPackage\fP: the entire processor die.
+.IP \[bu]
+\fICore\fP: the processor core, like compute components and private caches
+(often L1 and L2).
+Core is also known as \fIPP0\fP, or Power Plane 0.
+.IP \[bu]
+\fIUncore\fP: non-core processor components like shared/last-level caches
+(often L3) and any integrated graphics hardware.
+Uncore is also known as \fIPP1\fP, or Power Plane 1, and is typically only
+available on client processors like those for desktops and laptops.
+.IP \[bu]
+\fIDRAM\fP: directly-attached main memory.
+DRAM power capping is typically only available on server systems, but has been
+spotted on some client hardware.
+.IP \[bu]
+\fIPSys\fP: the entire platform/system.
+PSys is a known as \fIPlatform\fP, is only available on Intel\*R Skylake (6th
+generation Intel\*R Core) and newer processors, and requires additional BIOS
+support.
+.LP
+RAPL hardware enforces that the average power over a time window does not
+violate the configured limit.
+Package and PSys zones support two power limits, or \fIconstraints\fP - \fIlong
+term\fP and \fIshort term\fP.
+Other zones support a single constraint (long term).
+.LP
+Actual power limit and time window values are system-dependent.
+Refer to your hardware's technical documentation, particularly for the Thermal
+Design Power (TDP).
+.LP
+By default, rapl\-configure\-@RAPL_LIB@ uses the PACKAGE zone on socket 0.
+If no time windows or power limits are specified, current values are printed.
+If the only specified time or power limit values are 0, the zone will be
+disabled.
+Otherwise, specified values are set while other values remain unmodified.
 .SH "OPTIONS"
 .LP
 .TP
-\fB\-n,\fR \fB\-\-nsockets\fR
+\fB\-n,\fP \fB\-\-nsockets\fP
 Print the number of sockets found and exit
 .TP
-\fB\-c,\fR \fB\-\-socket=SOCKET\fR
+\fB\-c,\fP \fB\-\-socket\fP=\fISOCKET\fP
 The processor socket (0 by default)
 .TP
-\fB\-z,\fR \fB\-\-zone=ZONE\fR
-Specify what to configure. Allowable values:
+\fB\-z,\fP \fB\-\-zone\fP=\fIZONE\fP
+Which zone/domain use. Allowable values:
 .br
 PACKAGE \- a processor socket (default)
 .br
@@ -28,33 +79,74 @@ UNCORE \- uncore power plane (client systems only)
 .br
 DRAM \- main memory (server systems only)
 .br
-PSYS \- the entire SoC (Skylake and newer only)
+PSYS \- the entire platform (Skylake and newer only)
 .TP
-\fB\-s,\fR \fB\-\-seconds0\fR
-long_term time window
+\fB\-s,\fP \fB\-\-seconds0\fP=\fISECONDS\fP
+long term time window
 .TP
-\fB\-w,\fR \fB\-\-watts0\fR
-long_term power limit
+\fB\-w,\fP \fB\-\-watts0\fP=\fIWATTS\fP
+long term power limit
 .TP
-\fB\-S,\fR \fB\-\-seconds1\fR
-short_term time window
+\fB\-S,\fP \fB\-\-seconds1\fP=\fISECONDS\fP
+short term time window (PACKAGE & PSYS only)
 .TP
-\fB\-W,\fR \fB\-\-watts1\fR
-short_term power limit
+\fB\-W,\fP \fB\-\-watts1\fP=\fIWATTS\fP
+short term power limit (PACKAGE & PSYS only)
 .TP
-\fB\-h,\fR \fB\-\-help\fR
+\fB\-h,\fP \fB\-\-help\fP
 Prints out the help screen
+.SH "EXAMPLES"
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-n\fP
+Print the number of sockets found on the system.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@\fP
+Print PACKAGE zone information for socket 0.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-c 1\fP
+Print PACKAGE zone information for socket 1 (requires multi-socket system).
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-z CORE\fP
+Print CORE zone information for socket 0.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-c 1 \-z DRAM\fP
+Print DRAM zone information for socket 1 (requires multi-socket system).
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-w 20\fP
+Set 20 Watt long term power constraint on PACKAGE zone for socket 0 without
+changing time window.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-w 20 -s 30\fP
+Set 20 Watt long term power constraint with 30 second time window on PACKAGE
+zone for socket 0.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-W 30 -S 0.0025\fP
+Set 30 Watt short term power constraint with 2.5 millisecond time window on
+PACKAGE zone for socket 0.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 10\fP
+Set 10 Watt long term power constraint on UNCORE zone for socket 0 without
+changing time window (automatically enables zone if it is disabled).
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 0\fP
+Disable UNCORE zone for socket 0.
 .SH "REMARKS"
 .LP
-Unless time or power limits are specified, current values will be printed.
-.br
-If the only values specified are 0, the zone will be disabled.
+Administrative (root) privileges are usually needed to access RAPL settings.
+.LP
+Not all zones are supported by all systems.
+Some systems may not allow configuring or enabling/disabling supported zones,
+even if they expose the configurations.
+.LP
+Power and time window values are not always stored exactly as specified.
+This is a result of how values are encoded in the Model-Specific Registers.
+When using the powercap backend, some accuracy may also be lost as the
+interface forces rounding values to microJoule and microsecond precision.
+.SH "BUGS"
+.LP
+Report bugs upstream at <https://github.com/powercap/raplcap>
 .SH "FILES"
 .nf
 \fI/dev/cpu/*/msr\fP
 \fI/sys/class/powercap/intel\-rapl:*/\fP
-.fi
-.SH "AUTHORS"
-.nf
-Connor Imes <connor.k.imes@gmail.com>
 .fi

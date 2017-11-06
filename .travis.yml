@@ -27,8 +27,6 @@ install:
   - git clone https://github.com/LLNL/libmsr.git libmsr_src
   - cd libmsr_src
   - git checkout v0.3.0
-  # don't actually need cmake 2.8.11.2, and Travis containers only have 2.8.7
-  - sed -i '/cmake_minimum_required(VERSION 2.8.11.2)/d' ./test/CMakeLists.txt
   # libmsr only claims to support gcc, so don't let it build with clang
   - CC=gcc ./install.sh _install -f3E
   - cd ..

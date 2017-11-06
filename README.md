@@ -3,7 +3,7 @@
 This project provides a C interface for getting/setting power caps with Intel Running Average Power Limit (RAPL).
 It supports multiple implementations with different backends:
 
-* `libraplcap-msr`: Uses Intel [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the Linux `/dev` filesystem.
+* `libraplcap-msr`: Uses [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the Linux `/dev` filesystem.
 * `libraplcap-powercap`: Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the Linux `/sys` filesystem.
 * `libraplcap-libmsr`: Uses LLNL's [libmsr](https://software.llnl.gov/libmsr) interface.
 
@@ -17,10 +17,11 @@ Each provides the same command line interface, but use different RAPLCap library
 
 ## Prerequisites
 
-First, you must be using an Intel processor that supports RAPL.
+First, you must be using an Intel&reg; processor that supports RAPL - Sandy Bridge (2nd generation Intel&reg; Core) or newer.
+
 Currently only Linux systems are supported.
 
-This project depends on:
+This project optionally depends on:
 
 * [powercap](https://github.com/powercap/powercap) - backend required to compile and run the `powercap` implementation.
 * [libmsr](https://github.com/LLNL/libmsr/) (>= 2.1) - backend required to compile and run the `libmsr` implementation, most recently tested with release `v0.3.0`.
@@ -28,6 +29,8 @@ This project depends on:
 If dependencies are not found, CMake will not attempt to compile the implementations that use them.
 
 Users are expected to be familiar with basic RAPL capabilities and terminology, like zones (domains) and long/short term power constraints.
+Refer to Intel RAPL documentation for more technical information, especially the *Intel&reg; 64 and IA-32 Architectures Software Developer Manual, Volume 3: System Programming Guide.*
+
 Due to lack of portability in backends and data availability on some systems, the interface does not support discovering processor min/max power caps or thermal design power.
 Users should reference their hardware documentation or other system utilities to discover this information as needed.
 
@@ -105,7 +108,9 @@ pkg-config --cflags raplcap-libmsr
 
 ## Usage
 
-The [raplcap.h](inc/raplcap.h) header provides the C interface along with detailed function documentation.
+See the man pages for the `rapl-configure` binaries, or run them with the `-h` or `--help` option for instructions.
+
+The [raplcap.h](inc/raplcap.h) header provides the C interface along with detailed function documentation for using the libraries.
 
 For backend-specific runtime dependencies, see the README files in their implementation subdirectories:
 

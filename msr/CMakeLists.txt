@@ -1,7 +1,6 @@
 # Libraries
 
 add_library(raplcap-msr raplcap-msr.c)
-target_link_libraries(raplcap-msr)
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-msr PROPERTIES VERSION ${PROJECT_VERSION}
                                                SOVERSION ${VERSION_MAJOR})
