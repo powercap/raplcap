@@ -10,6 +10,11 @@
  * Updated license to use author as copyright holder
  * Refactor this RELEASES.md file
  * Expand man page for rapl-configure binaries
+ * Code optimizations
+
+### Fixed
+ * Sort packages in raplcap-powercap as sysfs entries may be out of order
+ * Minor fixes to some log messages
 
 
 ## [v0.1.1] - 2017-10-02

@@ -8,11 +8,14 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 #include "raplcap.h"
 #define RAPLCAP_IMPL "raplcap-powercap"
 #include "raplcap-common.h"
 // powercap header
 #include <powercap-rapl.h>
+
+#define MAX_PKG_NAME_SIZE 16
 
 static raplcap rc_default;
 
@@ -67,6 +70,23 @@ static uint32_t get_powercap_sockets(void) {
   return sockets;
 }
 
+static int sort_pkgs(const void* a, const void* b) {
+  char name_a[MAX_PKG_NAME_SIZE] = { 0 };
+  char name_b[MAX_PKG_NAME_SIZE] = { 0 };
+  int ret;
+  if (powercap_rapl_get_name((const powercap_rapl_pkg*) a, POWERCAP_RAPL_ZONE_PACKAGE, name_a, sizeof(name_a)) >= 0 &&
+      powercap_rapl_get_name((const powercap_rapl_pkg*) b, POWERCAP_RAPL_ZONE_PACKAGE, name_b, sizeof(name_b)) >= 0) {
+    // names should be of the form "package-N"
+    if ((ret = strncmp(name_a, name_b, sizeof(name_a))) > 0) {
+      raplcap_log(DEBUG, "sort_pkgs: Packages are out of order\n");
+    }
+  } else {
+    raplcap_perror(ERROR, "sort_pkgs: powercap_rapl_get_name");
+    ret = 0;
+  }
+  return ret;
+}
+
 int raplcap_init(raplcap* rc) {
   powercap_rapl_pkg* pkgs;
   uint32_t i;
@@ -93,6 +113,16 @@ int raplcap_init(raplcap* rc) {
       errno = err_save;
       return -1;
     }
+  }
+  // it's been observed that packages in sysfs may be numbered out of order; we must sort by name
+  errno = 0;
+  qsort(pkgs, rc->nsockets, sizeof(powercap_rapl_pkg), sort_pkgs);
+  if (errno) {
+    raplcap_log(ERROR, "raplcap_init: Failed to sort packages by name\n");
+    err_save = errno;
+    raplcap_destroy(rc);
+    errno = err_save;
+    return -1;
   }
   raplcap_log(DEBUG, "raplcap_init: Initialized\n");
   return 0;
