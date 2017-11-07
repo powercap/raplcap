@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "raplcap.h"
@@ -36,6 +35,8 @@
 /* Platform (PSys) Domain (Skylake and newer) */
 #define MSR_PLATFORM_POWER_LIMIT  0x65C
 
+#define HAS_SHORT_TERM(zone) (zone == RAPLCAP_ZONE_PACKAGE || zone == RAPLCAP_ZONE_PSYS)
+
 typedef struct raplcap_msr {
   int* fds;
   // assuming consistent unit values between sockets
@@ -47,16 +48,15 @@ static raplcap rc_default;
 
 static int open_msr(uint32_t core, int flags) {
   char msr_filename[32];
+  int fd;
   // first try using the msr_safe kernel module
   snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr_safe", core);
-  int fd = open(msr_filename, flags);
-  if (fd < 0) {
+  if ((fd = open(msr_filename, flags)) < 0) {
     raplcap_perror(DEBUG, msr_filename);
     raplcap_log(INFO, "msr-safe not available, falling back on standard msr\n");
     // fall back on the standard msr kernel module
     snprintf(msr_filename, sizeof(msr_filename), "/dev/cpu/%"PRIu32"/msr", core);
-    fd = open(msr_filename, flags);
-    if (fd < 0) {
+    if ((fd = open(msr_filename, flags)) < 0) {
       raplcap_perror(ERROR, msr_filename);
       if (errno == ENOENT) {
         raplcap_log(WARN, "Is the msr kernel module loaded?\n");
@@ -88,22 +88,19 @@ static int write_msr_by_offset(int fd, off_t msr, uint64_t data) {
 }
 
 static off_t zone_to_msr_offset(raplcap_zone zone) {
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-      return MSR_PKG_POWER_LIMIT;
-    case RAPLCAP_ZONE_CORE:
-      return MSR_PP0_POWER_LIMIT;
-    case RAPLCAP_ZONE_UNCORE:
-      return MSR_PP1_POWER_LIMIT;
-    case RAPLCAP_ZONE_DRAM:
-      return MSR_DRAM_POWER_LIMIT;
-    case RAPLCAP_ZONE_PSYS:
-      return MSR_PLATFORM_POWER_LIMIT;
-    default:
-      raplcap_log(ERROR, "zone_to_msr_offset: Unknown zone: %d\n", zone);
-      errno = EINVAL;
-      return -1;
+  static const off_t ZONE_OFFSETS[] = {
+    MSR_PKG_POWER_LIMIT,      // RAPLCAP_ZONE_PACKAGE
+    MSR_PP0_POWER_LIMIT,      // RAPLCAP_ZONE_CORE
+    MSR_PP1_POWER_LIMIT,      // RAPLCAP_ZONE_UNCORE
+    MSR_DRAM_POWER_LIMIT,     // RAPLCAP_ZONE_DRAM
+    MSR_PLATFORM_POWER_LIMIT  // RAPLCAP_ZONE_PSYS
+  };
+  if ((int) zone < 0 || (int) zone > RAPLCAP_ZONE_PSYS) {
+    raplcap_log(ERROR, "zone_to_msr_offset: Unknown zone: %d\n", zone);
+    errno = EINVAL;
+    return -1;
   }
+  return ZONE_OFFSETS[zone];
 }
 
 static uint32_t count_sockets(void) {
@@ -118,7 +115,7 @@ static uint32_t count_sockets(void) {
   }
   if (fgets(output, sizeof(output), fp) == NULL) {
     // got nothing back from the process? shouldn't happen...
-    raplcap_log(ERROR, "count_sockets: No data to parse from process output");
+    raplcap_log(ERROR, "count_sockets: No data to parse from process output\n");
     errno = ENODATA;
   } else {
     errno = 0;
@@ -128,7 +125,7 @@ static uint32_t count_sockets(void) {
       sockets = 0;
     } else if (sockets == 0) {
       // would occur if grep didn't find anything, which shouldn't happen, but we'll just say there's no such device
-      raplcap_log(ERROR, "count_sockets: no result from grep");
+      raplcap_log(ERROR, "count_sockets: no result from grep\n");
       errno = ENODEV;
     }
   }
@@ -263,7 +260,7 @@ int raplcap_destroy(raplcap* rc) {
     free(state);
     rc->state = NULL;
   }
-  raplcap_log(DEBUG, "raplcap_init: Destroyed\n");
+  raplcap_log(DEBUG, "raplcap_destroy: Destroyed\n");
   errno = err_save;
   return err_save ? -1 : 0;
 }
@@ -296,21 +293,6 @@ static raplcap_msr* get_state(uint32_t socket, const raplcap* rc) {
   return (raplcap_msr*) rc->state;
 }
 
-static int is_short_term_allowed(raplcap_zone zone) {
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-    case RAPLCAP_ZONE_PSYS:
-      return 1;
-    case RAPLCAP_ZONE_CORE:
-    case RAPLCAP_ZONE_UNCORE:
-    case RAPLCAP_ZONE_DRAM:
-      return 0;
-    default:
-      assert(0);
-      return 0;
-  }
-}
-
 // Get the bits requested and shift right if needed; first and last are inclusive
 static uint64_t get_bits(uint64_t msrval, uint8_t first, uint8_t last) {
   assert(first <= last);
@@ -334,8 +316,8 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
     return -1;
   }
-  ret = get_bits(msrval, 15, 16) == 0x3 && (is_short_term_allowed(zone) ? get_bits(msrval, 47, 48) == 0x3 : 1);
-  if (!ret && get_bits(msrval, 15, 15) == 0x1 && (is_short_term_allowed(zone) ? get_bits(msrval, 47, 47) == 0x1 : 1)) {
+  ret = get_bits(msrval, 15, 16) == 0x3 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 48) == 0x3 : 1);
+  if (!ret && get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 47) == 0x1 : 1)) {
     raplcap_log(WARN, "Zone is enabled but clamping is not - use raplcap_set_zone_enabled(...) to enable clamping\n");
     ret = 1;
   }
@@ -353,7 +335,7 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
     return -1;
   }
   msrval = replace_bits(msrval, enabled_bits, 15, 16);
-  if (is_short_term_allowed(zone)) {
+  if (HAS_SHORT_TERM(zone)) {
     msrval = replace_bits(msrval, enabled_bits, 47, 48);
   }
   raplcap_log(DEBUG, "raplcap_set_zone_enabled: socket=%"PRIu32", zone=%d, enabled=%d\n", socket, zone, enabled);
@@ -439,7 +421,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
     raplcap_log(DEBUG, "raplcap_get_limits: socket=%"PRIu32", zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 socket, zone, limit_long->seconds, limit_long->watts);
   }
-  if (limit_short != NULL && is_short_term_allowed(zone)) {
+  if (limit_short != NULL && HAS_SHORT_TERM(zone)) {
     // bits 46:32
     watts = state->power_units * get_bits(msrval, 32, 46);
     // Here "Y" is the unsigned integer value represented. by bits 53:49, "F" is an unsigned integer represented by
@@ -471,7 +453,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
       msrval = replace_bits(msrval, to_msr_time(limit_long->seconds, state->time_units), 17, 23);
     }
   }
-  if (limit_short != NULL && is_short_term_allowed(zone)) {
+  if (limit_short != NULL && HAS_SHORT_TERM(zone)) {
     raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 socket, zone, limit_short->seconds, limit_short->watts);
     if (limit_short->watts > 0) {

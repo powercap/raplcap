@@ -32,32 +32,15 @@ static void powercap_to_raplcap(uint64_t us, uint64_t uw, raplcap_limit* l) {
   l->watts = ((double) uw) / ONE_MILLION;
 }
 
-static int raplcap_zone_to_powercap(raplcap_zone zone, powercap_rapl_zone* z) {
-  assert(z != NULL);
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-      *z = POWERCAP_RAPL_ZONE_PACKAGE;
-      break;
-    case RAPLCAP_ZONE_CORE:
-      *z =  POWERCAP_RAPL_ZONE_CORE;
-      break;
-    case RAPLCAP_ZONE_UNCORE:
-      *z =  POWERCAP_RAPL_ZONE_UNCORE;
-      break;
-    case RAPLCAP_ZONE_DRAM:
-      *z =  POWERCAP_RAPL_ZONE_DRAM;
-      break;
-    case RAPLCAP_ZONE_PSYS:
-      *z =  POWERCAP_RAPL_ZONE_PSYS;
-      break;
-    default:
-      return -1;
-  }
-  return 0;
-}
-
 static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplcap_zone zone, powercap_rapl_zone* z) {
   assert(z != NULL);
+  static const powercap_rapl_zone POWERCAP_RAPL_ZONES[] = {
+    POWERCAP_RAPL_ZONE_PACKAGE, // RAPLCAP_ZONE_PACKAGE
+    POWERCAP_RAPL_ZONE_CORE,    // RAPLCAP_ZONE_CORE
+    POWERCAP_RAPL_ZONE_UNCORE,  // RAPLCAP_ZONE_UNCORE
+    POWERCAP_RAPL_ZONE_DRAM,    // RAPLCAP_ZONE_DRAM
+    POWERCAP_RAPL_ZONE_PSYS     // RAPLCAP_ZONE_PSYS
+  };
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -66,11 +49,12 @@ static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplc
     errno = EINVAL;
     return NULL;
   }
-  if (raplcap_zone_to_powercap(zone, z)) {
+  if ((int) zone < 0 || (int) zone > RAPLCAP_ZONE_PSYS) {
     raplcap_log(ERROR, "get_pkg_zone: Unknown zone: %d\n", *z);
     errno = EINVAL;
     return NULL;
   }
+  *z = POWERCAP_RAPL_ZONES[zone];
   return &((powercap_rapl_pkg*) rc->state)[socket];
 }
 
