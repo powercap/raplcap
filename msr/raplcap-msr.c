@@ -253,7 +253,7 @@ int raplcap_destroy(raplcap* rc) {
       raplcap_log(DEBUG, "raplcap_destroy: socket=%"PRIu32", fd=%d\n", i, state->fds[i]);
       if (state->fds[i] > 0 && close(state->fds[i])) {
         err_save = errno;
-        raplcap_perror(ERROR, "close");
+        raplcap_perror(ERROR, "raplcap_destroy: close");
       }
     }
     free(state->fds);
@@ -270,16 +270,6 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
     rc = &rc_default;
   }
   return rc->nsockets == 0 ? count_sockets() : rc->nsockets;
-}
-
-int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  int ret = raplcap_is_zone_enabled(socket, rc, zone);
-  // I/O error indicates zone is not supported, otherwise it's some other error (e.g. EINVAL)
-  if (ret == 0 || (ret < 0 && errno == EIO)) {
-    ret = 1;
-  }
-  raplcap_log(DEBUG, "raplcap_is_zone_supported: socket=%"PRIu32", zone=%d, supported=%d\n", socket, zone, ret);
-  return ret;
 }
 
 static raplcap_msr* get_state(uint32_t socket, const raplcap* rc) {
@@ -308,7 +298,7 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   return (msrval & ~mask) | ((data << first) & mask);
 }
 
-int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+static int is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int silent) {
   uint64_t msrval;
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
@@ -318,10 +308,26 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
   }
   ret = get_bits(msrval, 15, 16) == 0x3 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 48) == 0x3 : 1);
   if (!ret && get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 47) == 0x1 : 1)) {
-    raplcap_log(WARN, "Zone is enabled but clamping is not - use raplcap_set_zone_enabled(...) to enable clamping\n");
+    if (!silent) {
+      raplcap_log(WARN, "Zone is enabled but clamping is not - use raplcap_set_zone_enabled(...) to enable clamping\n");
+    }
     ret = 1;
   }
-  raplcap_log(DEBUG, "raplcap_is_zone_enabled: socket=%"PRIu32", zone=%d, enabled=%d\n", socket, zone, ret);
+  raplcap_log(DEBUG, "is_zone_enabled: socket=%"PRIu32", zone=%d, enabled=%d\n", socket, zone, ret);
+  return ret;
+}
+
+int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  return is_zone_enabled(socket, rc, zone, 0);
+}
+
+int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+  int ret = is_zone_enabled(socket, rc, zone, 1);
+  // I/O error indicates zone is not supported, otherwise it's some other error (e.g. EINVAL)
+  if (ret == 0 || (ret < 0 && errno == EIO)) {
+    ret = 1;
+  }
+  raplcap_log(DEBUG, "raplcap_is_zone_supported: socket=%"PRIu32", zone=%d, supported=%d\n", socket, zone, ret);
   return ret;
 }
 
