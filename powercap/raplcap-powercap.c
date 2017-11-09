@@ -19,22 +19,6 @@
 
 static raplcap rc_default;
 
-static void raplcap_limit_to_powercap(const raplcap_limit* l, uint64_t* us, uint64_t* uw) {
-  assert(l != NULL);
-  assert(us != NULL);
-  assert(uw != NULL);
-  static const uint64_t ONE_MILLION = 1000000;
-  *us = ONE_MILLION * l->seconds;
-  *uw = ONE_MILLION * l->watts;
-}
-
-static void powercap_to_raplcap(uint64_t us, uint64_t uw, raplcap_limit* l) {
-  assert(l != NULL);
-  static const double ONE_MILLION = 1000000.0;
-  l->seconds = ((double) us) / ONE_MILLION;
-  l->watts = ((double) uw) / ONE_MILLION;
-}
-
 static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplcap_zone zone, powercap_rapl_zone* z) {
   assert(z != NULL);
   static const powercap_rapl_zone POWERCAP_RAPL_ZONES[] = {
@@ -63,10 +47,10 @@ static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplc
 
 static uint32_t get_powercap_sockets(void) {
   uint32_t sockets = powercap_rapl_get_num_packages();
-  raplcap_log(DEBUG, "get_powercap_sockets: sockets=%"PRIu32"\n", sockets);
   if (sockets == 0) {
     raplcap_perror(ERROR, "get_powercap_sockets: powercap_rapl_get_num_packages");
   }
+  raplcap_log(DEBUG, "get_powercap_sockets: sockets=%"PRIu32"\n", sockets);
   return sockets;
 }
 
@@ -136,7 +120,7 @@ int raplcap_destroy(raplcap* rc) {
   }
   if (rc->state != NULL) {
     for (i = 0; i < rc->nsockets; i++) {
-      raplcap_log(DEBUG, "raplcap_destroy: destroying powercap context: socket=%"PRIu32"\n", i);
+      raplcap_log(DEBUG, "raplcap_destroy: socket=%"PRIu32"\n", i);
       if (powercap_rapl_destroy(&((powercap_rapl_pkg*) rc->state)[i])) {
         raplcap_perror(ERROR, "raplcap_destroy: powercap_rapl_destroy");
         err_save = errno;
@@ -199,80 +183,75 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
   return ret;
 }
 
+static int get_constraint(const powercap_rapl_pkg* pkg, powercap_rapl_zone z,
+                          powercap_rapl_constraint constraint, raplcap_limit* limit) {
+  assert(pkg != NULL);
+  assert(limit != NULL);
+  static const double ONE_MILLION = 1000000.0;
+  uint64_t us, uw;
+  if (powercap_rapl_get_time_window_us(pkg, z, constraint, &us)) {
+    raplcap_perror(ERROR, "get_constraint: powercap_rapl_get_time_window_us");
+    return -1;
+  }
+  if (powercap_rapl_get_power_limit_uw(pkg, z, constraint, &uw)) {
+    raplcap_perror(ERROR, "get_constraint: powercap_rapl_get_power_limit_uw");
+    return -1;
+  }
+  limit->seconds = ((double) us) / ONE_MILLION;
+  limit->watts = ((double) uw) / ONE_MILLION;
+  raplcap_log(DEBUG, "get_constraint: zone=%d, constraint=%d:\n"
+              "\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
+              z, constraint, limit->seconds, us, limit->watts, uw);
+  return 0;
+}
+
 int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
-  uint64_t time_window, power_limit;
   powercap_rapl_zone z;
   const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
   if (pkg == NULL) {
     return -1;
   }
-  if (limit_long != NULL) {
-    if (powercap_rapl_get_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, &time_window)) {
-      raplcap_perror(ERROR, "raplcap_get_limits: powercap_rapl_get_time_window_us (long_term)");
-      return -1;
-    }
-    if (powercap_rapl_get_power_limit_uw(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, &power_limit)) {
-      raplcap_perror(ERROR, "raplcap_get_limits: powercap_rapl_get_power_limit_uw (long_term)");
-      return -1;
-    }
-    powercap_to_raplcap(time_window, power_limit, limit_long);
-    raplcap_log(DEBUG, "raplcap_get_limits: socket=%"PRIu32", zone=%d, long_term:"
-                "\n\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
-                socket, zone, limit_long->seconds, time_window, limit_long->watts, power_limit);
+  raplcap_log(DEBUG, "raplcap_get_limits: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if ((limit_long != NULL && get_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, limit_long)) ||
+      (limit_short != NULL && get_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
+    return -1;
   }
-  if (limit_short != NULL) {
-    if (powercap_rapl_get_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, &time_window)) {
-      raplcap_perror(ERROR, "raplcap_get_limits: powercap_rapl_get_time_window_us (short_term)");
-      return -1;
-    }
-    if (powercap_rapl_get_power_limit_uw(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, &power_limit)) {
-      raplcap_perror(ERROR, "raplcap_get_limits: powercap_rapl_get_power_limit_uw (short_term)");
-      return -1;
-    }
-    powercap_to_raplcap(time_window, power_limit, limit_short);
-    raplcap_log(DEBUG, "raplcap_get_limits: socket=%"PRIu32", zone=%d, short_term:"
-                "\n\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
-                socket, zone, limit_short->seconds, time_window, limit_short->watts, power_limit);
+  return 0;
+}
+
+static int set_constraint(const powercap_rapl_pkg* pkg, powercap_rapl_zone z,
+                          powercap_rapl_constraint constraint, const raplcap_limit* limit) {
+  assert(pkg != NULL);
+  assert(limit != NULL);
+  static const uint64_t ONE_MILLION = 1000000;
+  uint64_t us = ONE_MILLION * limit->seconds;
+  uint64_t uw = ONE_MILLION * limit->watts;
+  raplcap_log(DEBUG, "set_constraint: zone=%d, constraint=%d:\n"
+              "\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
+              z, constraint, limit->seconds, us, limit->watts, uw);
+  if (us != 0 && powercap_rapl_set_time_window_us(pkg, z, constraint, us)) {
+    raplcap_perror(ERROR, "set_constraint: powercap_rapl_set_time_window_us");
+    return -1;
+  }
+  if (uw != 0 && powercap_rapl_set_power_limit_uw(pkg, z, constraint, uw)) {
+    raplcap_perror(ERROR, "set_constraint: powercap_rapl_set_power_limit_uw");
+    return -1;
   }
   return 0;
 }
 
 int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
-  uint64_t time_window, power_limit;
   powercap_rapl_zone z;
   const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
   if (pkg == NULL) {
     return -1;
   }
-  if (limit_long != NULL) {
-    raplcap_limit_to_powercap(limit_long, &time_window, &power_limit);
-    raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d, long_term:"
-                "\n\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
-                socket, zone, limit_long->seconds, time_window, limit_long->watts, power_limit);
-    if (time_window != 0 && powercap_rapl_set_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, time_window)) {
-      raplcap_perror(ERROR, "raplcap_set_limits: powercap_rapl_set_time_window_us (long_term)");
-      return -1;
-    }
-    if (power_limit != 0 && powercap_rapl_set_power_limit_uw(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, power_limit)) {
-      raplcap_perror(ERROR, "raplcap_set_limits: powercap_rapl_set_power_limit_uw (long_term)");
-      return -1;
-    }
-  }
-  if (limit_short != NULL) {
-    raplcap_limit_to_powercap(limit_short, &time_window, &power_limit);
-    raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d, short_term:"
-                "\n\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
-                socket, zone, limit_short->seconds, time_window, limit_short->watts, power_limit);
-    if (time_window != 0 && powercap_rapl_set_time_window_us(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, time_window)) {
-      raplcap_perror(ERROR, "raplcap_set_limits: powercap_rapl_set_time_window_us (short_term)");
-      return -1;
-    }
-    if (power_limit != 0 && powercap_rapl_set_power_limit_uw(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, power_limit)) {
-      raplcap_perror(ERROR, "raplcap_set_limits: powercap_rapl_set_power_limit_uw (short_term)");
-      return -1;
-    }
+  raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if ((limit_long != NULL && set_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, limit_long)) ||
+      (limit_short != NULL && set_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
+    return -1;
   }
   return 0;
 }
