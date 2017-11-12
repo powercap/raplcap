@@ -1,6 +1,9 @@
 # Release Notes
 
 ## [Unreleased]
+
+
+## [v0.1.2] - 2017-11-12
 ### Added
  * VERSION and SOVERSION to shared object libraries
  * Multiarch support (use GNU standard installation directories)
@@ -8,7 +11,6 @@
 ### Changed
  * Increased minimum CMake version from 2.8 to 2.8.5 to support GNUInstallDirs
  * Updated license to use author as copyright holder
- * Refactor this RELEASES.md file
  * Expand man page for rapl-configure binaries
  * Code optimizations
 
@@ -35,5 +37,6 @@
  * Initial public release
 
 
-[Unreleased]: https://github.com/powercap/raplcap/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.1.2...HEAD
+[v0.1.2]: https://github.com/powercap/raplcap/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1
