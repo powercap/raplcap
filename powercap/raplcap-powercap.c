@@ -60,7 +60,7 @@ static int sort_pkgs(const void* a, const void* b) {
   int ret;
   if (powercap_rapl_get_name((const powercap_rapl_pkg*) a, POWERCAP_RAPL_ZONE_PACKAGE, name_a, sizeof(name_a)) >= 0 &&
       powercap_rapl_get_name((const powercap_rapl_pkg*) b, POWERCAP_RAPL_ZONE_PACKAGE, name_b, sizeof(name_b)) >= 0) {
-    // names should be of the form "package-N"
+    // assumes names are in the form "package-N" and 0 <= N < 10 (N >= 10 would need more advanced parsing)
     if ((ret = strncmp(name_a, name_b, sizeof(name_a))) > 0) {
       raplcap_log(DEBUG, "sort_pkgs: Packages are out of order\n");
     }
