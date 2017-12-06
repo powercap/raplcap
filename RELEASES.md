@@ -1,6 +1,9 @@
 # Release Notes
 
 ## [Unreleased]
+### Changed
+ * MSR discovery now uses sysfs files instead of parsing /proc/cpuinfo
+ * Message about clamping in MSR reduced from warning to informational
 
 
 ## [v0.1.2] - 2017-11-12
