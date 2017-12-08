@@ -35,6 +35,17 @@ Due to lack of portability in backends and data availability on some systems, th
 Users should reference their hardware documentation or other system utilities to discover this information as needed.
 
 
+## Running Average Power Limit
+
+Intel RAPL allows software to configure power caps on hardware components, like processors or main memory.
+Components manage themselves to respect the power cap while attempting to optimize performance.
+Note that power caps are *NOT* the same as power consumption, they only specify an upper bound on power consumption over a time window.
+
+For example, processors use Dynamic Voltage and Frequency Scaling (DVFS) to trade performance and power consumption, where power `P` is proportional to capacitance `C`, the square of the voltage `V`, and clock frequency `f`: `P ~ C * V^2 * f`.
+An increase in frequency usually necessitates an increase in voltage, and vice versa, resulting in a non-linear tradeoff between performance (frequency) and power consumption.
+With RAPL, hardware manages voltage and frequency at finer-grained time intervals and with lower overhead than software-based DVFS controllers.
+
+
 ## Building
 
 This project uses CMake.

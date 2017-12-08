@@ -1,6 +1,9 @@
 # Release Notes
 
 ## [Unreleased]
+### Added
+ * Some high-level documentation on RAPL and power capping
+
 ### Changed
  * MSR discovery now uses sysfs files instead of parsing /proc/cpuinfo
  * Message about clamping in MSR reduced from warning to informational
