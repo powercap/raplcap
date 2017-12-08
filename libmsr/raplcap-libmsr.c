@@ -154,6 +154,7 @@ int raplcap_init(raplcap* rc) {
     return 0;
   }
   if ((rc->nsockets = get_libmsr_sockets()) == 0 || maybe_lifecycle_init()) {
+    rc->nsockets = 0;
     return -1;
   }
   rc->state = &global_state;
@@ -172,6 +173,7 @@ int raplcap_destroy(raplcap* rc) {
     return 0;
   }
   rc->state = NULL;
+  rc->nsockets = 0;
   ret = maybe_lifecycle_finish();
   raplcap_log(DEBUG, "raplcap_destroy: Destroyed\n");
   return ret;

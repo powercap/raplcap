@@ -286,6 +286,7 @@ int raplcap_init(raplcap* rc) {
 init_fail:
   free(state);
   free(cpu_to_socket);
+  rc->nsockets = 0;
   return -1;
 }
 
@@ -308,6 +309,7 @@ int raplcap_destroy(raplcap* rc) {
     free(state);
     rc->state = NULL;
   }
+  rc->nsockets = 0;
   raplcap_log(DEBUG, "raplcap_destroy: Destroyed\n");
   errno = err_save;
   return err_save ? -1 : 0;

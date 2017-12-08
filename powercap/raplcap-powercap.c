@@ -86,6 +86,7 @@ int raplcap_init(raplcap* rc) {
   }
   if ((pkgs = malloc(rc->nsockets * sizeof(powercap_rapl_pkg))) == NULL) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
+    rc->nsockets = 0;
     return -1;
   }
   rc->state = pkgs;
@@ -128,8 +129,8 @@ int raplcap_destroy(raplcap* rc) {
     }
     free(rc->state);
     rc->state = NULL;
-    rc->nsockets = 0;
   }
+  rc->nsockets = 0;
   raplcap_log(DEBUG, "raplcap_destroy: Destroyed\n");
   errno = err_save;
   return err_save ? -1 : 0;

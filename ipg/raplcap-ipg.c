@@ -147,7 +147,7 @@ int raplcap_init(raplcap* rc) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
-  if (getEnergyLib(rc->state) || initEnergyLib(rc->state, &nNodes)) {
+  if (getEnergyLib((raplcap_ipg*) rc->state) || initEnergyLib((raplcap_ipg*) rc->state, &nNodes)) {
     raplcap_destroy(rc);
     return -1;
   }
@@ -171,6 +171,7 @@ int raplcap_destroy(raplcap* rc) {
 #endif
   free(state);
   rc->state = NULL;
+  rc->nsockets = 0;
   raplcap_log(DEBUG, "raplcap_destroy: Destroyed\n");
   return 0;
 }
