@@ -144,7 +144,8 @@ static int get_cpu_to_socket_mapping(uint32_t* cpu_to_socket, uint32_t ncpus) {
 }
 
 static int cmp_u32(const void* a, const void* b) {
-  return *((uint32_t*) a) > *((uint32_t*) b) ? 1 : ((*((uint32_t*) a) < *((uint32_t*) b)) ? -1 : 0);
+  return *((const uint32_t*) a) > *((const uint32_t*) b) ? 1 :
+         ((*((const uint32_t*) a) < *((const uint32_t*) b)) ? -1 : 0);
 }
 
 // Count unique entries in arr. Sorts in place using arr if sort_buf is NULL; arr is untouched if sort_buf is not NULL
