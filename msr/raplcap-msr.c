@@ -77,13 +77,15 @@ static int read_msr_by_offset(int fd, off_t msr, uint64_t* data) {
   return -1;
 }
 
-static int write_msr_by_offset(int fd, off_t msr, uint64_t data) {
+static int write_msr_by_offset(int fd, off_t msr, uint64_t data, int silent) {
   assert(msr >= 0);
   raplcap_log(DEBUG, "write_msr_by_offset: msr=0x%lX, data=0x%016lX\n", msr, data);
   if (pwrite(fd, &data, sizeof(uint64_t), msr) == sizeof(uint64_t)) {
     return 0;
   }
-  raplcap_log(ERROR, "write_msr_by_offset(0x%lX): pwrite: %s\n", msr, strerror(errno));
+  if (!silent) {
+    raplcap_log(ERROR, "write_msr_by_offset(0x%lX): pwrite: %s\n", msr, strerror(errno));
+  }
   return -1;
 }
 
@@ -375,12 +377,10 @@ static int is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
     return -1;
   }
-  ret = get_bits(msrval, 15, 16) == 0x3 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 48) == 0x3 : 1);
-  if (!ret && get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 47) == 0x1 : 1)) {
-    if (!silent) {
-      raplcap_log(INFO, "Zone is enabled but clamping is not - use raplcap_set_zone_enabled(...) to enable clamping\n");
-    }
-    ret = 1;
+  ret = get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 47) == 0x1 : 1);
+  if (ret && !silent &&
+      (get_bits(msrval, 16, 16) == 0x0 || (HAS_SHORT_TERM(zone) && get_bits(msrval, 48, 48) == 0x0))) {
+    raplcap_log(INFO, "Zone is enabled but clamping is not\n");
   }
   raplcap_log(DEBUG, "is_zone_enabled: socket=%"PRIu32", zone=%d, enabled=%d\n", socket, zone, ret);
   return ret;
@@ -403,18 +403,29 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 // Enables or disables both the "enable" and "clamping" bits for all constraints
 int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
   uint64_t msrval;
-  const uint64_t enabled_bits = enabled ? 0x3 : 0x0;
+  const uint64_t enabled_bits = enabled ? 0x1 : 0x0;
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
+  int ret;
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
     return -1;
   }
-  msrval = replace_bits(msrval, enabled_bits, 15, 16);
+  msrval = replace_bits(msrval, enabled_bits, 15, 15);
   if (HAS_SHORT_TERM(zone)) {
-    msrval = replace_bits(msrval, enabled_bits, 47, 48);
+    msrval = replace_bits(msrval, enabled_bits, 47, 47);
   }
   raplcap_log(DEBUG, "raplcap_set_zone_enabled: socket=%"PRIu32", zone=%d, enabled=%d\n", socket, zone, enabled);
-  return write_msr_by_offset(state->fds[socket], msr, msrval);
+  if ((ret = write_msr_by_offset(state->fds[socket], msr, msrval, 0)) == 0) {
+    // try to enable clamping (not supported by all zones or all CPUs)
+    msrval = replace_bits(msrval, enabled_bits, 16, 16);
+    if (HAS_SHORT_TERM(zone)) {
+      msrval = replace_bits(msrval, enabled_bits, 48, 48);
+    }
+    if (write_msr_by_offset(state->fds[socket], msr, msrval, 1)) {
+      raplcap_log(INFO, "Clamping not available for this zone or platform\n");
+    }
+  }
+  return ret;
 }
 
 static void to_raplcap(raplcap_limit* limit, double seconds, double watts) {
@@ -538,5 +549,5 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
       msrval = replace_bits(msrval, to_msr_time(limit_short->seconds, state->time_units), 49, 55);
     }
   }
-  return write_msr_by_offset(state->fds[socket], msr, msrval);
+  return write_msr_by_offset(state->fds[socket], msr, msrval, 0);
 }

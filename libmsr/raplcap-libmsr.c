@@ -270,21 +270,21 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
     switch (zone) {
       case RAPLCAP_ZONE_PACKAGE:
       case RAPLCAP_ZONE_PSYS:
-        // check that enabled bits (15 and 47) and clamping bits (16 and 48) are set
-        ret = (l.bits & (0x1800000018000)) == 0x1800000018000;
-        if (!ret && (l.bits & 0x0800000018000) == 0x0800000018000) {
-          raplcap_log(INFO, "Zone is enabled but clamping is not - use raplcap_set_limits(...) to enable clamping\n");
-          ret = 1;
+        // check that enabled bits (15 and 47) are set
+        ret = (l.bits & (0x800000008000)) == 0x800000008000;
+        // check that clamping bits (16 and 48) are set
+        if (ret && (l.bits & 0x1000000010000) != 0x1000000010000) {
+          raplcap_log(INFO, "Zone is enabled but clamping is not\n");
         }
         break;
       case RAPLCAP_ZONE_CORE:
       case RAPLCAP_ZONE_UNCORE:
       case RAPLCAP_ZONE_DRAM:
-        // check that enabled bit 15 and clamping bit 16 are set
-        ret = (l.bits & 0x18000) == 0x18000;
-        if (!ret && (l.bits & 0x08000) == 0x08000) {
-          raplcap_log(INFO, "Zone is enabled but clamping is not - use raplcap_set_limits(...) to enable clamping\n");
-          ret = 1;
+        // check that enabled bit (15) is set
+        ret = (l.bits & 0x8000) == 0x8000;
+        // check that clamping bit (16) is set
+        if (ret && (l.bits & 0x10000) != 0x10000) {
+          raplcap_log(INFO, "Zone is enabled but clamping is not\n");
         }
         break;
       default:
