@@ -133,7 +133,7 @@ static void test(raplcap* rc, int ro) {
 
 int main(int argc, char** argv) {
   int ro = 0;
-  raplcap rc = { 0 };
+  raplcap rc;
   printf("Usage: %s [read_only_flag]\n", argv[0]);
   if (argc > 1) {
     ro = atoi(argv[1]);
