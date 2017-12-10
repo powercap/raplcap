@@ -17,6 +17,8 @@
 
 #define MAX_PKG_NAME_SIZE 16
 
+#define HAS_SHORT_TERM(zone) (zone == RAPLCAP_ZONE_PACKAGE || zone == RAPLCAP_ZONE_PSYS)
+
 static raplcap rc_default;
 
 static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplcap_zone zone, powercap_rapl_zone* z) {
@@ -215,7 +217,8 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   }
   raplcap_log(DEBUG, "raplcap_get_limits: socket=%"PRIu32", zone=%d\n", socket, zone);
   if ((limit_long != NULL && get_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, limit_long)) ||
-      (limit_short != NULL && get_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
+      (limit_short != NULL && HAS_SHORT_TERM(zone) &&
+       get_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
     return -1;
   }
   return 0;
@@ -251,7 +254,8 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   }
   raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d\n", socket, zone);
   if ((limit_long != NULL && set_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_LONG, limit_long)) ||
-      (limit_short != NULL && set_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
+      (limit_short != NULL && HAS_SHORT_TERM(zone) &&
+       set_constraint(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
     return -1;
   }
   return 0;

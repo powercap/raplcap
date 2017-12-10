@@ -16,6 +16,7 @@
 ### Fixed
  * Enable zones even if clamping can't be set (not available for all zones/platforms)
  * Fixed "raplcap_is_zone_supported" in MSR implementation
+ * Only operate on short term constraints in powercap implementation if zone supports it
 
 
 ## [v0.1.2] - 2017-11-12
