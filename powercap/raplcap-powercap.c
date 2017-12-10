@@ -39,7 +39,7 @@ static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplc
     return NULL;
   }
   if ((int) zone < 0 || (int) zone > RAPLCAP_ZONE_PSYS) {
-    raplcap_log(ERROR, "get_pkg_zone: Unknown zone: %d\n", *z);
+    raplcap_log(ERROR, "get_pkg_zone: Unknown zone: %d\n", zone);
     errno = EINVAL;
     return NULL;
   }
