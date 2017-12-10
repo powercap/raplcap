@@ -350,7 +350,14 @@ static raplcap_msr* get_state(uint32_t socket, const raplcap* rc) {
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->state == NULL || socket >= rc->nsockets) {
+  if (rc->nsockets == 0 || rc->state == NULL) {
+    // unfortunately can't detect if the context just contains garbage
+    raplcap_log(ERROR, "get_state: Context is not initialized\n");
+    errno = EINVAL;
+    return NULL;
+  }
+  if (socket >= rc->nsockets) {
+    raplcap_log(ERROR, "get_state: Socket %"PRIu32" not in range [0, %"PRIu32")\n", socket, rc->nsockets);
     errno = EINVAL;
     return NULL;
   }
