@@ -19,6 +19,10 @@ else()
   set(CMAKE_INSTALL_MANDIR share/man)
 endif()
 
+# Tests
+
+enable_testing()
+
 # Install
 
 install(FILES inc/raplcap.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})

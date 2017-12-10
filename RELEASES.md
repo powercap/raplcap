@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
  * Some high-level documentation on RAPL and power capping
+ * Simple unit and integration tests
 
 ### Changed
  * MSR discovery now uses sysfs files instead of parsing /proc/cpuinfo

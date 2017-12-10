@@ -6,6 +6,16 @@ if(BUILD_SHARED_LIBS)
                                                SOVERSION ${VERSION_MAJOR})
 endif()
 
+# Tests
+
+add_executable(raplcap-msr-unit-test ${CMAKE_SOURCE_DIR}/test/raplcap-unit-test.c)
+target_link_libraries(raplcap-msr-unit-test raplcap-msr)
+add_test(raplcap-msr-unit-test raplcap-msr-unit-test)
+
+# must be run manually
+add_executable(raplcap-msr-integration-test ${CMAKE_SOURCE_DIR}/test/raplcap-integration-test.c)
+target_link_libraries(raplcap-msr-integration-test raplcap-msr)
+
 # pkg-config
 
 set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")

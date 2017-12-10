@@ -9,6 +9,16 @@ if(BUILD_SHARED_LIBS)
                                                     SOVERSION ${VERSION_MAJOR})
 endif()
 
+# Tests
+
+add_executable(raplcap-powercap-unit-test ${CMAKE_SOURCE_DIR}/test/raplcap-unit-test.c)
+target_link_libraries(raplcap-powercap-unit-test raplcap-powercap)
+add_test(raplcap-powercap-unit-test raplcap-powercap-unit-test)
+
+# must be run manually
+add_executable(raplcap-powercap-integration-test ${CMAKE_SOURCE_DIR}/test/raplcap-integration-test.c)
+target_link_libraries(raplcap-powercap-integration-test raplcap-powercap)
+
 # pkg-config
 
 set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
