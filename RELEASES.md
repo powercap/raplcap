@@ -6,14 +6,16 @@
 
 ### Changed
  * MSR discovery now uses sysfs files instead of parsing /proc/cpuinfo
- * Clamping messages reduced from warning to informational
  * Consistently reset socket count to 0 on destroy or initialization failure
+ * Clamping messages reduced from warning to informational
+ * Silence error messages when errors are anticipated and handled
 
 ### Deprecated
  * The libmsr implementation is no longer a primary RAPLCap backend and may be removed in the future
 
 ### Fixed
  * Enable zones even if clamping can't be set (not available for all zones/platforms)
+ * Fixed "raplcap_is_zone_supported" in MSR implementation
 
 
 ## [v0.1.2] - 2017-11-12

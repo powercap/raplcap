@@ -66,14 +66,16 @@ static int open_msr(uint32_t core, int flags) {
   return fd;
 }
 
-static int read_msr_by_offset(int fd, off_t msr, uint64_t* data) {
+static int read_msr_by_offset(int fd, off_t msr, uint64_t* data, int silent) {
   assert(msr >= 0);
   assert(data != NULL);
   if (pread(fd, data, sizeof(uint64_t), msr) == sizeof(uint64_t)) {
     raplcap_log(DEBUG, "read_msr_by_offset: msr=0x%lX, data=0x%016lX\n", msr, *data);
     return 0;
   }
-  raplcap_log(ERROR, "read_msr_by_offset(0x%lX): pread: %s\n", msr, strerror(errno));
+  if (!silent) {
+    raplcap_log(ERROR, "read_msr_by_offset(0x%lX): pread: %s\n", msr, strerror(errno));
+  }
   return -1;
 }
 
@@ -273,7 +275,7 @@ int raplcap_init(raplcap* rc) {
   raplcap_log(DEBUG, "raplcap_init: normalized physical socket IDs to indexes, opening MSRs...\n");
   rc->state = state;
   if (open_msrs(state->fds, rc->nsockets, cpu_to_socket, ncpus) ||
-      read_msr_by_offset(state->fds[0], MSR_RAPL_POWER_UNIT, &msrval)) {
+      read_msr_by_offset(state->fds[0], MSR_RAPL_POWER_UNIT, &msrval, 0)) {
     err_save = errno;
     raplcap_destroy(rc);
     free(cpu_to_socket);
@@ -375,7 +377,7 @@ static int is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
   int ret;
-  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
+  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, silent)) {
     return -1;
   }
   ret = get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(zone) ? get_bits(msrval, 47, 47) == 0x1 : 1);
@@ -394,8 +396,14 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
 int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
   int ret = is_zone_enabled(socket, rc, zone, 1);
   // I/O error indicates zone is not supported, otherwise it's some other error (e.g. EINVAL)
-  if (ret == 0 || (ret < 0 && errno == EIO)) {
+  if (ret == 0) {
     ret = 1;
+  } else if (ret < 0) {
+    if (errno == EIO) {
+      ret = 0;
+    } else if (errno != EINVAL) {
+      raplcap_perror(ERROR, "raplcap_is_zone_supported: is_zone_enabled");
+    }
   }
   raplcap_log(DEBUG, "raplcap_is_zone_supported: socket=%"PRIu32", zone=%d, supported=%d\n", socket, zone, ret);
   return ret;
@@ -408,7 +416,7 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
   int ret;
-  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
+  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
   msrval = replace_bits(msrval, enabled_bits, 15, 15);
@@ -493,7 +501,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   uint64_t msrval;
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
-  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
+  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
   // power units specified by the "Power Units" field of MSR_RAPL_POWER_UNIT
@@ -527,7 +535,7 @@ int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   uint64_t msrval;
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
-  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval)) {
+  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
   if (limit_long != NULL) {
