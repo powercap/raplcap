@@ -9,6 +9,9 @@
  * Clamping messages reduced from warning to informational
  * Consistently reset socket count to 0 on destroy or initialization failure
 
+### Deprecated
+ * The libmsr implementation is no longer a primary RAPLCap backend and may be removed in the future
+
 ### Fixed
  * Enable zones even if clamping can't be set (not available for all zones/platforms)
 
