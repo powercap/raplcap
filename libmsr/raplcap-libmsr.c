@@ -99,7 +99,7 @@ static void msr_to_raplcap(const struct rapl_limit* rl, raplcap_limit* pl) {
   }
 }
 
-static int check_state(uint32_t socket, const raplcap* rc) {
+static int check_state(const raplcap* rc, uint32_t socket) {
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -250,17 +250,17 @@ static int msr_get_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit*
   return ret;
 }
 
-int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   // we have no way to check with libmsr without just trying operations
-  int ret = raplcap_is_zone_enabled(socket, rc, zone) < 0 ? 0 : 1;
+  int ret = raplcap_is_zone_enabled(rc, socket, zone) < 0 ? 0 : 1;
   raplcap_log(DEBUG, "raplcap_is_zone_supported: socket=%"PRIu32", zone=%d, supported=%d\n", socket, zone, ret);
   return ret;
 }
 
-int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   struct rapl_limit l;
   int ret;
-  if (check_state(socket, rc)) {
+  if (check_state(rc, socket)) {
     return -1;
   }
   // libmsr doesn't provide an interface to determine enabled/disabled, so we check the bits directly
@@ -297,7 +297,7 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
   return ret;
 }
 
-int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
+int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone, int enabled) {
   // TODO: We can enable a zone by simply writing back its current values, but there's no way to disable it...
   (void) socket;
   (void) rc;
@@ -309,11 +309,11 @@ int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zo
   return -1;
 }
 
-int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   struct rapl_limit ll, ls;
   int ret;
-  if (check_state(socket, rc)) {
+  if (check_state(rc, socket)) {
     return -1;
   }
   if ((ret = msr_get_limits(socket, zone, &ll, &ls)) == 0) {
@@ -398,11 +398,11 @@ static int msr_set_limits(uint32_t socket, raplcap_zone zone, struct rapl_limit*
   return ret;
 }
 
-int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   struct rapl_limit ll, ls;
   int ret = 0;
-  if (check_state(socket, rc)) {
+  if (check_state(rc, socket)) {
     return -1;
   }
   // first get values to fill any empty ones; no harm done if the zone doesn't actually use both constraints

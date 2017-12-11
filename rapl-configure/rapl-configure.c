@@ -116,12 +116,12 @@ static int configure_limits(const rapl_configure_ctx* c) {
   }
   if (disable) {
     // all given values were 0 - disable the zone
-    return raplcap_set_zone_enabled(c->socket, NULL, c->zone, 0);
+    return raplcap_set_zone_enabled(NULL, c->socket, c->zone, 0);
   }
-  if (raplcap_set_zone_enabled(c->socket, NULL, c->zone, 1)) {
+  if (raplcap_set_zone_enabled(NULL, c->socket, c->zone, 1)) {
     print_enable_error("raplcap_set_zone_enabled");
   }
-  return raplcap_set_limits(c->socket, NULL, c->zone, ll, ls);
+  return raplcap_set_limits(NULL, c->socket, c->zone, ll, ls);
 }
 
 static int get_limits(unsigned int socket, raplcap_zone zone) {
@@ -129,13 +129,13 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ls;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
-  int enabled = raplcap_is_zone_enabled(socket, NULL, zone);
+  int enabled = raplcap_is_zone_enabled(NULL, socket, zone);
   if (enabled < 0) {
     print_enable_error("raplcap_is_zone_enabled");
   }
   // short only allowed for package and psys zones
   raplcap_limit* s = (zone == RAPLCAP_ZONE_PACKAGE || zone == RAPLCAP_ZONE_PSYS) ? &ls : NULL;
-  if (raplcap_get_limits(socket, NULL, zone, &ll, s)) {
+  if (raplcap_get_limits(NULL, socket, zone, &ll, s)) {
     return -1;
   }
   print_limits(zone, enabled, ll.watts, ll.seconds, ls.watts, ls.seconds);
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  supported = raplcap_is_zone_supported(ctx.socket, NULL, ctx.zone);
+  supported = raplcap_is_zone_supported(NULL, ctx.socket, ctx.zone);
   if (supported == 0) {
     fprintf(stderr, "Zone not supported\n");
     ret = -1;

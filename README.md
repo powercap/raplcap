@@ -145,7 +145,7 @@ The following is a simple example of setting power caps.
   rl_long.watts = 50.0;
   rl_long.seconds = 0.0;
   for (i = 0; i < n; i++) {
-    if (raplcap_set_limits(i, &rc, RAPLCAP_ZONE_PACKAGE, &rl_long, &rl_short)) {
+    if (raplcap_set_limits(&rc, i, RAPLCAP_ZONE_PACKAGE, &rl_long, &rl_short)) {
       perror("raplcap_set_limits");
     }
   }

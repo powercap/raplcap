@@ -21,7 +21,7 @@
 
 static raplcap rc_default;
 
-static powercap_rapl_pkg* get_pkg_zone(uint32_t socket, const raplcap* rc, raplcap_zone zone, powercap_rapl_zone* z) {
+static powercap_rapl_pkg* get_pkg_zone(const raplcap* rc, uint32_t socket, raplcap_zone zone, powercap_rapl_zone* z) {
   assert(z != NULL);
   static const powercap_rapl_zone POWERCAP_RAPL_ZONES[] = {
     POWERCAP_RAPL_ZONE_PACKAGE, // RAPLCAP_ZONE_PACKAGE
@@ -151,9 +151,9 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
   return rc->nsockets == 0 ? get_powercap_sockets() : rc->nsockets;
 }
 
-int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
   int ret;
   if (pkg == NULL) {
     ret = -1;
@@ -164,9 +164,9 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
   return ret;
 }
 
-int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
+int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
   int ret;
   if (pkg == NULL) {
     ret = -1;
@@ -177,9 +177,9 @@ int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zon
   return ret;
 }
 
-int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
+int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone, int enabled) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
   int ret;
   if (pkg == NULL) {
     ret = -1;
@@ -214,10 +214,10 @@ static int get_constraint(const powercap_rapl_pkg* pkg, powercap_rapl_zone z,
   return 0;
 }
 
-int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
   if (pkg == NULL) {
     return -1;
   }
@@ -251,10 +251,10 @@ static int set_constraint(const powercap_rapl_pkg* pkg, powercap_rapl_zone z,
   return 0;
 }
 
-int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* pkg = get_pkg_zone(socket, rc, zone, &z);
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
   if (pkg == NULL) {
     return -1;
   }

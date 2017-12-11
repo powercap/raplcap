@@ -6,6 +6,7 @@
  * Simple unit and integration tests
 
 ### Changed
+ * API breakage: Normalized API functions so RAPLCap context is always the first parameter
  * MSR discovery now uses sysfs files instead of parsing /proc/cpuinfo
  * Consistently reset socket count to 0 on destroy or initialization failure
  * Clamping messages reduced from warning to informational

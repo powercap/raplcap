@@ -379,7 +379,7 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   return (msrval & ~mask) | ((data << first) & mask);
 }
 
-static int is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int silent) {
+static int is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone, int silent) {
   uint64_t msrval;
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone);
@@ -396,12 +396,12 @@ static int is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone
   return ret;
 }
 
-int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  return is_zone_enabled(socket, rc, zone, 0);
+int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  return is_zone_enabled(rc, socket, zone, 0);
 }
 
-int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone) {
-  int ret = is_zone_enabled(socket, rc, zone, 1);
+int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  int ret = is_zone_enabled(rc, socket, zone, 1);
   // I/O error indicates zone is not supported, otherwise it's some other error (e.g. EINVAL)
   if (ret == 0) {
     ret = 1;
@@ -417,7 +417,7 @@ int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone z
 }
 
 // Enables or disables both the "enable" and "clamping" bits for all constraints
-int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled) {
+int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone, int enabled) {
   uint64_t msrval;
   const uint64_t enabled_bits = enabled ? 0x1 : 0x0;
   const raplcap_msr* state = get_state(socket, rc);
@@ -501,7 +501,7 @@ static uint64_t to_msr_power(double watts, double power_units) {
   return p;
 }
 
-int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   double watts;
   double seconds;
@@ -537,7 +537,7 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
   return 0;
 }
 
-int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   uint64_t msrval;
   const raplcap_msr* state = get_state(socket, rc);

@@ -76,48 +76,48 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc);
 /**
  * Check if a zone is supported.
  *
- * @param socket
  * @param rc
+ * @param socket
  * @param zone
  * @return 0 if unsupported, 1 if supported, a negative value on error
  */
-int raplcap_is_zone_supported(uint32_t socket, const raplcap* rc, raplcap_zone zone);
+int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
  * Check if a zone is enabled.
  * Constraints can technically be enabled/disabled separately, but for simplicity and compatibility with lower-level
  * RAPL interfaces, we define a zone to be enabled only if all of its constraints are enabled (disabled otherwise).
  *
- * @param socket
  * @param rc
+ * @param socket
  * @param zone
  * @return 0 if disabled, 1 if enabled, a negative value on error
  */
-int raplcap_is_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone);
+int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
  * Enable/disable a zone by enabling/disabling all of its constraints.
  *
- * @param socket
  * @param rc
+ * @param socket
  * @param zone
  * @param enabled
  * @return 0 on success, a negative value on error
  */
-int raplcap_set_zone_enabled(uint32_t socket, const raplcap* rc, raplcap_zone zone, int enabled);
+int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone, int enabled);
 
 /**
  * Get the limits for a zone, if it is supported.
  * Not all zones use limit_short.
  *
- * @param socket
  * @param rc
+ * @param socket
  * @param zone
  * @param limit_long
  * @param limit_short
  * @return 0 on success, a negative value on error
  */
-int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short);
 
 /**
@@ -125,14 +125,14 @@ int raplcap_get_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
  * Not all zones use limit_short.
  * If the power or time window value is 0, it will not be written or the current value may be used.
  *
- * @param socket
  * @param rc
+ * @param socket
  * @param zone
  * @param limit_long
  * @param limit_short
  * @return 0 on success, a negative value on error
  */
-int raplcap_set_limits(uint32_t socket, const raplcap* rc, raplcap_zone zone,
+int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short);
 
 #ifdef __cplusplus

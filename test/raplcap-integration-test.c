@@ -40,18 +40,19 @@ static void test_set(const raplcap_limit* ll, const raplcap_limit* ls, raplcap* 
   ls_new.watts += 1.0;
   ls_new.seconds *= 2.0;
   printf("    Testing raplcap_set_limits(...)\n");
-  printf("    Setting (new): ll_w=%f, ll_s=%f, ls_w=%f, ls_s=%f\n", ll_new.watts, ll_new.seconds, ls_new.watts, ls_new.seconds);
-  assert(raplcap_set_limits(s, rc, (raplcap_zone) i, &ll_new, &ls_new) == 0);
+  printf("    Setting (new): ll_w=%f, ll_s=%f, ls_w=%f, ls_s=%f\n",
+         ll_new.watts, ll_new.seconds, ls_new.watts, ls_new.seconds);
+  assert(raplcap_set_limits(rc, s, (raplcap_zone) i, &ll_new, &ls_new) == 0);
   // verify set
-  assert(raplcap_get_limits(s, rc, (raplcap_zone) i, &ll_verify, &ls_verify) == 0);
+  assert(raplcap_get_limits(rc, s, (raplcap_zone) i, &ll_verify, &ls_verify) == 0);
   equal_dbl(ll_new.watts, ll_verify.watts);
   equal_dbl(ll_new.seconds, ll_verify.seconds);
   equal_dbl(ls_new.watts, ls_verify.watts);
   equal_dbl(ls_new.seconds, ls_verify.seconds);
   // reset to original values and verify
   printf("    Setting (old): ll_w=%f, ll_s=%f, ls_w=%f, ls_s=%f\n", ll->watts, ll->seconds, ls->watts, ls->seconds);
-  assert(raplcap_set_limits(s, rc, (raplcap_zone) i, ll, ls) == 0);
-  assert(raplcap_get_limits(s, rc, (raplcap_zone) i, &ll_verify, &ls_verify) == 0);
+  assert(raplcap_set_limits(rc, s, (raplcap_zone) i, ll, ls) == 0);
+  assert(raplcap_get_limits(rc, s, (raplcap_zone) i, &ll_verify, &ls_verify) == 0);
   equal_dbl(ll->watts, ll_verify.watts);
   equal_dbl(ll->seconds, ll_verify.seconds);
   equal_dbl(ls->watts, ls_verify.watts);
@@ -77,26 +78,26 @@ static void test(raplcap* rc, int ro) {
     for (i = 0; i < NZONES; i++) {
       printf("  Socket %d, zone %d (%s)...\n", s, i, ZONE_NAMES[i]);
       printf("    Testing raplcap_is_zone_supported(...)\n");
-      supported = raplcap_is_zone_supported(s, rc, (raplcap_zone) i);
+      supported = raplcap_is_zone_supported(rc, s, (raplcap_zone) i);
       assert(supported >= 0);
       if (supported) {
         printf("    Testing raplcap_is_zone_enabled(...)\n");
-        enabled = raplcap_is_zone_enabled(s, rc, (raplcap_zone) i);
+        enabled = raplcap_is_zone_enabled(rc, s, (raplcap_zone) i);
         assert(enabled >= 0);
         // PACKAGE zone cannot be disabled completely in some impls (e.g., powercap)
         if ((raplcap_zone) i != RAPLCAP_ZONE_PACKAGE) {
           printf("    Testing raplcap_set_zone_enabled(...)\n");
-          assert(raplcap_set_zone_enabled(s, rc, (raplcap_zone) i, !enabled) == 0);
-          assert(raplcap_is_zone_enabled(s, rc, (raplcap_zone) i) == !enabled);
-          assert(raplcap_set_zone_enabled(s, rc, (raplcap_zone) i, enabled) == 0);
-          assert(raplcap_is_zone_enabled(s, rc, (raplcap_zone) i) == enabled);
+          assert(raplcap_set_zone_enabled(rc, s, (raplcap_zone) i, !enabled) == 0);
+          assert(raplcap_is_zone_enabled(rc, s, (raplcap_zone) i) == !enabled);
+          assert(raplcap_set_zone_enabled(rc, s, (raplcap_zone) i, enabled) == 0);
+          assert(raplcap_is_zone_enabled(rc, s, (raplcap_zone) i) == enabled);
         }
         ll.seconds = -1;
         ll.watts = -1;
         ls.seconds = -1;
         ls.seconds = -1;
         printf("    Testing raplcap_get_limits(...)\n");
-        assert(raplcap_get_limits(s, rc, (raplcap_zone) i, &ll, &ls) == 0);
+        assert(raplcap_get_limits(rc, s, (raplcap_zone) i, &ll, &ls) == 0);
         switch (i) {
           case RAPLCAP_ZONE_PACKAGE:
           case RAPLCAP_ZONE_PSYS:
@@ -122,11 +123,11 @@ static void test(raplcap* rc, int ro) {
   }
   // test bad zone values
   printf("  Testing bad zone values\n");
-  assert(raplcap_is_zone_supported(0, rc, (raplcap_zone) NZONES) < 0);
-  assert(raplcap_is_zone_supported(0, rc, (raplcap_zone) -1) < 0);
+  assert(raplcap_is_zone_supported(rc, 0, (raplcap_zone) NZONES) < 0);
+  assert(raplcap_is_zone_supported(rc, 0, (raplcap_zone) -1) < 0);
   // test bad socket values
   printf("  Testing bad socket value\n");
-  assert(raplcap_is_zone_supported(nsockets, rc, RAPLCAP_ZONE_PACKAGE) < 0);
+  assert(raplcap_is_zone_supported(rc, s, RAPLCAP_ZONE_PACKAGE) < 0);
   printf("  Testing raplcap_destroy(...)\n");
   assert(raplcap_destroy(rc) == 0);
 }
