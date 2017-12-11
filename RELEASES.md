@@ -1,6 +1,9 @@
 # Release Notes
 
 ## [Unreleased]
+
+
+## [v0.2.0] - 2017-12-11
 ### Added
  * Some high-level documentation on RAPL and power capping
  * Simple unit and integration tests
@@ -55,6 +58,7 @@
  * Initial public release
 
 
-[Unreleased]: https://github.com/powercap/raplcap/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.2.0...HEAD
+[v0.2.0]: https://github.com/powercap/raplcap/compare/v0.1.2...v0.2.0
 [v0.1.2]: https://github.com/powercap/raplcap/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1
