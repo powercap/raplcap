@@ -1,0 +1,383 @@
+/**
+ * Common MSR functions, mostly for translating to/from bit fields.
+ *
+ * @author Connor Imes
+ * @date 2017-12-16
+ */
+#include <assert.h>
+#include <inttypes.h>
+#include <stdlib.h>
+#include "raplcap-common.h"
+#include "raplcap-cpuid.h"
+#include "raplcap-msr-common.h"
+
+// 2^y
+static uint64_t pow2_u64(uint64_t y) {
+  return ((uint64_t) 1) << y;
+}
+
+// log2(y); returns 0 for y = 0
+static uint64_t log2_u64(uint64_t y) {
+  uint64_t ret = 0;
+  while (y >>= 1) {
+    ret++;
+  }
+  return ret;
+}
+
+// Section 14.9.1
+static double from_msr_pu_default(uint64_t msrval) {
+  return 1.0 / pow2_u64(msrval & 0xF);
+}
+
+// Table 35-8
+static double from_msr_pu_atom(uint64_t msrval) {
+  return pow2_u64(msrval & 0xF) / 1000.0;
+}
+
+// Section 14.9.1
+static double from_msr_tu_default(uint64_t msrval) {
+  // For Atom, Table 35-8 specifies that field value is always 0x0, meaning 1 second, so this works still
+  return 1.0 / pow2_u64((msrval >> 16) & 0xF);
+}
+
+// Section 14.9.1
+static double from_msr_pl_default(uint64_t bits, double power_units) {
+  assert(power_units > 0);
+  double watts = power_units * bits;
+  raplcap_log(DEBUG, "from_msr_pl_default: bits=%04lX, power_units=%.12f, watts=%.12f\n", bits, power_units, watts);
+  return watts;
+}
+
+// Section 14.9.1
+static uint64_t to_msr_pl_default(double watts, double power_units) {
+  assert(watts >= 0);
+  assert(power_units > 0);
+  // Lower bound is 0, but upper bound is limited by what fits in 15 bits
+  static const uint64_t MSR_POWER_MAX = 0x7FFF;
+  uint64_t bits = (uint64_t) (watts / power_units);
+  if (bits > MSR_POWER_MAX) {
+    raplcap_log(WARN, "Power limit too large: %.12f W, using max: %.12f W\n", watts, MSR_POWER_MAX * power_units);
+    bits = MSR_POWER_MAX;
+  }
+  raplcap_log(DEBUG, "to_msr_pl_default: watts=%.12f, power_units=%.12f, bits=0x%04lX\n", watts, power_units, bits);
+  return bits;
+}
+
+/**
+ * Note: Intel's documentation (Section 14.9.3) specifies different conversions for Package and Power Planes.
+ * We use the Package equation for Power Planes as well, which the Linux kernel appears to agree with.
+ * Time window (seconds) = 2^Y * (1 + F/4) * Time_Unit
+ * See the Linux kernel: drivers/powercap/intel_rapl.c:rapl_compute_time_window_core
+ */
+// Section 14.9.3
+static double from_msr_tw_default(uint64_t bits, double time_units) {
+  assert(time_units > 0);
+  // "Y" is an unsigned integer value represented by lower 5 bits
+  // "F" is an unsigned integer value represented by upper 2 bits
+  uint64_t y = bits & 0x1F;
+  uint64_t f = (bits >> 5) & 0x3;
+  double seconds = pow2_u64(y) * ((4 + f) / 4.0) * time_units;
+  raplcap_log(DEBUG, "from_msr_tw_default: bits=0x%02lX, time_units=%.12f, y=0x%02lX, f=0x%lX, seconds=%.12f\n",
+              bits, time_units, y, f, seconds);
+  return seconds;
+}
+
+// Section 14.9.3
+static uint64_t to_msr_tw_default(double seconds, double time_units) {
+  assert(seconds > 0);
+  assert(time_units > 0);
+  // Seconds cannot be shorter than the smallest time unit - log2 would get a negative value and overflow "y".
+  // They also cannot be larger than 2^2^5-1 so that log2 doesn't produce a value that uses more than 5 bits for "y".
+  // Clamping prevents values outside the allowable range, but precision can still be lost in the conversion.
+  static const double MSR_TIME_MIN = 1.0;
+  static const double MSR_TIME_MAX = (double) 0xFFFFFFFF;
+  double t = seconds / time_units;
+  if (t < MSR_TIME_MIN) {
+    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %.12f sec\n", seconds, time_units);
+    t = MSR_TIME_MIN;
+  } else if (t > MSR_TIME_MAX) {
+    // "trying" instead of "using" because precision loss will definitely throw off the final value at this extreme
+    raplcap_log(WARN, "Time window too large: %.12f sec, trying max: %.12f sec\n", seconds, MSR_TIME_MAX * time_units);
+    t = MSR_TIME_MAX;
+  }
+  // y = log2((4*t)/(4+f)); we can ignore "f" since t >= 1 and 0 <= f <= 3; we can also drop the real part of "t"
+  const uint64_t y = log2_u64((uint64_t) t);
+  // f = (4*t)/(2^y)-4; the real part of "t" only matters for t < 4, otherwise it's insignificant in computing "f"
+  const uint64_t f = (((uint64_t) (4 * t)) / pow2_u64(y)) - 4;
+  uint64_t bits = ((y & 0x1F) | ((f & 0x3) << 5));
+  raplcap_log(DEBUG, "to_msr_tw_default: seconds=%.12f, time_units=%.12f, t=%.12f, y=0x%02lX, f=0x%lX, bits=0x%02lX\n",
+              seconds, time_units, t, y, f, bits);
+  return bits;
+}
+
+// Table 35-8
+static double from_msr_tw_atom(uint64_t bits, double time_units) {
+  (void) time_units;
+  // If 0 is specified in bits [23:17], defaults to 1 second window.
+  double seconds = bits ? bits : 1.0;
+  raplcap_log(DEBUG, "from_msr_tw_atom: bits=0x%02lX, seconds=%.12f\n", bits, seconds);
+  return seconds;
+}
+
+// Table 35-8
+static uint64_t to_msr_tw_atom(double seconds, double time_units) {
+  (void) time_units;
+  assert(seconds > 0);
+  // round to nearest second
+  static const uint64_t MSR_TIME_MIN = 1;
+  static const uint64_t MSR_TIME_MAX = 0x7F;
+  uint64_t bits;
+  if (seconds < MSR_TIME_MIN) {
+    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %"PRIu64" sec\n", seconds, MSR_TIME_MIN);
+    bits = MSR_TIME_MIN; // alternatively, could set to 0
+  } else if (seconds > MSR_TIME_MAX) {
+    raplcap_log(WARN, "Time window too large: %.12f sec, using max: %"PRIu64" sec\n", seconds, MSR_TIME_MAX);
+    bits = MSR_TIME_MAX;
+  } else {
+    bits = (uint64_t) (seconds + 0.5);
+  }
+  raplcap_log(DEBUG, "to_msr_tw_atom: seconds=%.12f, bits=0x%02lX\n", seconds, bits);
+  return bits;
+}
+
+// Table 35-11
+static double from_msr_tw_atom_airmont(uint64_t bits, double time_units) {
+  // Used only for Airmont PP0 (CORE) zone
+  (void) time_units;
+  // If 0 is specified in bits [23:17], defaults to 1 second window.
+  double seconds = bits ? bits * 5.0 : 1.0;
+  raplcap_log(DEBUG, "from_msr_tw_atom_airmont: bits=0x%02lX, seconds=%.12f\n", bits, seconds);
+  return seconds;
+}
+
+// Table 35-11
+static uint64_t to_msr_tw_atom_airmont(double seconds, double time_units) {
+  // Used only for Airmont PP0 (CORE) zone
+  (void) time_units;
+  assert(seconds > 0);
+  static const uint64_t MSR_TIME_WINDOW_MIN = 0x0; // 1 second
+  static const uint64_t MSR_TIME_WINDOW_MAX = 0xA; // 50 seconds
+  uint64_t bits;
+  if (seconds < 1) {
+    raplcap_log(WARN, "Time window too small: %.12f sec, using min: 1 sec\n", seconds);
+    bits = MSR_TIME_WINDOW_MIN;
+  } else if (seconds > 50) {
+    raplcap_log(WARN, "Time window too large: %.12f sec, using max: 50 sec\n", seconds);
+    bits = MSR_TIME_WINDOW_MAX;
+  } else {
+    // round to nearest multiple of 5
+    bits = (uint64_t) ((seconds + 2.5) / 5.0);
+  }
+  raplcap_log(DEBUG, "to_msr_tw_atom_airmont: seconds=%.12f, time_units=%.12f, bits=0x%02lX\n",
+              seconds, time_units, bits);
+  return bits;
+}
+
+#define CFG_STATIC_INIT(ttw, ftw, tpl, fpl, c) { \
+  .to_msr_tw = ttw, \
+  .from_msr_tw = ftw, \
+  .to_msr_pl = tpl, \
+  .from_msr_pl = fpl, \
+  .constraints = c }
+
+static const raplcap_msr_zone_cfg CFG_DEFAULT[RAPLCAP_NZONES] = {
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2)  // PSYS
+};
+
+static const raplcap_msr_zone_cfg CFG_ATOM[RAPLCAP_NZONES] = {
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2), // PSYS
+};
+
+// only the CORE time window is different from other ATOM CPUs
+static const raplcap_msr_zone_cfg CFG_ATOM_AIRMONT[RAPLCAP_NZONES] = {
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_atom_airmont, from_msr_tw_atom_airmont, to_msr_pl_default, from_msr_pl_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2), // PSYS
+};
+
+uint32_t msr_get_supported_cpu_model(void) {
+  uint32_t cpu_family;
+  uint32_t cpu_model;
+  cpuid_get_family_model(&cpu_family, &cpu_model);
+  if (!cpuid_is_vendor_intel() || !cpuid_is_cpu_supported(cpu_family, cpu_model)) {
+    raplcap_log(ERROR, "CPU not supported: Family=%"PRIu32", Model=%02X\n", cpu_family, cpu_model);
+    return 0;
+  }
+  return cpu_model;
+}
+
+void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_msrval) {
+  assert(ctx != NULL);
+  assert(cpu_model > 0);
+  ctx->cpu_model = cpu_model;
+  switch (cpu_model) {
+    case CPUID_MODEL_SANDYBRIDGE:
+    case CPUID_MODEL_SANDYBRIDGE_X:
+    //
+    case CPUID_MODEL_IVYBRIDGE:
+    case CPUID_MODEL_IVYBRIDGE_X:
+    //
+    case CPUID_MODEL_HASWELL_CORE:
+    case CPUID_MODEL_HASWELL_X:
+    case CPUID_MODEL_HASWELL_ULT:
+    case CPUID_MODEL_HASWELL_GT3E:
+    //
+    case CPUID_MODEL_BROADWELL_CORE:
+    case CPUID_MODEL_BROADWELL_GT3E:
+    case CPUID_MODEL_BROADWELL_X:
+    case CPUID_MODEL_BROADWELL_XEON_D:
+    //
+    case CPUID_MODEL_SKYLAKE_MOBILE:
+    case CPUID_MODEL_SKYLAKE_DESKTOP:
+    case CPUID_MODEL_SKYLAKE_X:
+    //
+    case CPUID_MODEL_KABYLAKE_MOBILE:
+    case CPUID_MODEL_KABYLAKE_DESKTOP:
+    //
+    case CPUID_MODEL_ATOM_GOLDMONT:
+    case CPUID_MODEL_ATOM_GEMINI_LAKE:
+    case CPUID_MODEL_ATOM_DENVERTON:
+    //
+    case CPUID_MODEL_XEON_PHI_KNL:
+    case CPUID_MODEL_XEON_PHI_KNM:
+      ctx->power_units = from_msr_pu_default(units_msrval);
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_DEFAULT;
+      break;
+    //----
+    case CPUID_MODEL_ATOM_SILVERMONT1:
+    case CPUID_MODEL_ATOM_MERRIFIELD:
+    case CPUID_MODEL_ATOM_MOOREFIELD:
+      ctx->power_units = from_msr_pu_atom(units_msrval);
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_ATOM;
+      break;
+    case CPUID_MODEL_ATOM_AIRMONT:
+      ctx->power_units = from_msr_pu_atom(units_msrval);
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_ATOM_AIRMONT;
+      break;
+    //----
+    default:
+      raplcap_log(ERROR, "Unknown architecture\n");
+      raplcap_log(ERROR, "Please report a bug if you see this message, it should never occur!\n");
+      assert(0);
+      break;
+  }
+  raplcap_log(DEBUG, "msr_get_context: model=%02X, power_units=%.12f, time_units=%.12f\n",
+              ctx->cpu_model, ctx->power_units, ctx->time_units);
+}
+
+// Get the bits requested and shift right if needed; first and last are inclusive
+static uint64_t get_bits(uint64_t msrval, uint8_t first, uint8_t last) {
+  assert(first <= last);
+  assert(last < 64);
+  return (msrval >> first) & (((uint64_t) 1 << (last - first + 1)) - 1);
+}
+
+// Replace the requested msrval bits with data the data in situ; first and last are inclusive
+static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint8_t last) {
+  assert(first <= last);
+  assert(last < 64);
+  const uint64_t mask = (((uint64_t) 1 << (last - first + 1)) - 1) << first;
+  return (msrval & ~mask) | ((data << first) & mask);
+}
+
+int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  int ret = get_bits(msrval, 15, 15) == 0x1 && (ctx->cfg[zone].constraints > 1 ? get_bits(msrval, 47, 47) == 0x1 : 1);
+  raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, enabled=%d\n", zone, ret);
+  return ret;
+}
+
+uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int enabled) {
+  assert(ctx != NULL);
+  const uint64_t enabled_bits = enabled ? 0x1 : 0x0;
+  raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, enabled=%d\n", zone, enabled);
+  msrval = replace_bits(msrval, enabled_bits, 15, 15);
+  if (ctx->cfg[zone].constraints > 1) {
+    msrval = replace_bits(msrval, enabled_bits, 47, 47);
+  }
+  return msrval;
+}
+
+int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  int ret = get_bits(msrval, 16, 16) == 0x1 && (ctx->cfg[zone].constraints > 1 ? get_bits(msrval, 48, 48) == 0x1 : 1);
+  raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, clamp=%d\n", zone, ret);
+  return ret;
+}
+
+uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int clamp) {
+  assert(ctx != NULL);
+  const uint64_t clamp_bits = clamp ? 0x1 : 0x0;
+  raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, clamp=%d\n", zone, clamp);
+  msrval = replace_bits(msrval, clamp_bits, 16, 16);
+  if (ctx->cfg[zone].constraints > 1) {
+    msrval = replace_bits(msrval, clamp_bits, 48, 48);
+  }
+  return msrval;
+}
+
+void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                    raplcap_limit* limit_long, raplcap_limit* limit_short) {
+  assert(ctx != NULL);
+  if (limit_long != NULL) {
+    limit_long->watts = ctx->cfg[zone].from_msr_pl(get_bits(msrval, 0, 14), ctx->power_units);
+    limit_long->seconds = ctx->cfg[zone].from_msr_tw(get_bits(msrval, 17, 23), ctx->time_units);
+    raplcap_log(DEBUG, "msr_get_limits: zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
+                zone, limit_long->seconds, limit_long->watts);
+  }
+  if (limit_short != NULL && ctx->cfg[zone].constraints > 1) {
+    limit_short->watts = ctx->cfg[zone].from_msr_pl(get_bits(msrval, 32, 46), ctx->power_units);
+    if (zone == RAPLCAP_ZONE_PSYS) {
+      raplcap_log(DEBUG, "msr_get_limits: Documentation does not specify PSys/Platform short term time window\n");
+    }
+    limit_short->seconds = ctx->cfg[zone].from_msr_tw(get_bits(msrval, 49, 55), ctx->time_units);
+    raplcap_log(DEBUG, "msr_get_limits: zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
+                zone, limit_short->seconds, limit_short->watts);
+  }
+}
+
+uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
+  assert(ctx != NULL);
+  if (limit_long != NULL) {
+    raplcap_log(DEBUG, "msr_set_limits: zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
+                zone, limit_long->seconds, limit_long->watts);
+    if (limit_long->watts > 0) {
+      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_long->watts, ctx->power_units), 0, 14);
+    }
+    if (limit_long->seconds > 0) {
+      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_long->seconds, ctx->time_units), 17, 23);
+    }
+  }
+  if (limit_short != NULL && ctx->cfg[zone].constraints > 1) {
+    raplcap_log(DEBUG, "msr_set_limits: zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
+                zone, limit_short->seconds, limit_short->watts);
+    if (limit_short->watts > 0) {
+      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_short->watts, ctx->power_units), 32, 46);
+    }
+    if (limit_short->seconds > 0) {
+      // 14.9.3: This field may have a hard-coded value in hardware and ignores values written by software.
+      if (zone == RAPLCAP_ZONE_PSYS) {
+        // Table 35-37: PSYS has power limit #2, but time window #2 is not specified
+        raplcap_log(WARN, "Not allowed to set PSys/Platform short term time window\n");
+      } else {
+        msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_short->seconds, ctx->time_units), 49, 55);
+      }
+    }
+  }
+  return msrval;
+}

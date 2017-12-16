@@ -25,7 +25,7 @@ static void asm_cpuid(asm_cpuid_data* data, uint32_t leaf) {
                         "a" (leaf));
 }
 
-int raplcap_cpuid_is_vendor_intel(void) {
+int cpuid_is_vendor_intel(void) {
   asm_cpuid_data cpudata;
   union {
     char c[16];
@@ -36,11 +36,11 @@ int raplcap_cpuid_is_vendor_intel(void) {
   vendor_id.i[0] = cpudata.ebx;
   vendor_id.i[1] = cpudata.edx;
   vendor_id.i[2] = cpudata.ecx;
-  raplcap_log(DEBUG, "raplcap_cpuid_is_vendor_intel: vendor_id=%s\n", vendor_id.c);
+  raplcap_log(DEBUG, "cpuid_is_vendor_intel: vendor_id=%s\n", vendor_id.c);
   return !strncmp(vendor_id.c, CPUID_VENDOR_ID_GENUINE_INTEL, sizeof(CPUID_VENDOR_ID_GENUINE_INTEL));
 }
 
-void raplcap_cpuid_get_family_model(uint32_t* family, uint32_t* model) {
+void cpuid_get_family_model(uint32_t* family, uint32_t* model) {
   assert(family != NULL);
   assert(model != NULL);
   asm_cpuid_data cpudata;
@@ -49,10 +49,10 @@ void raplcap_cpuid_get_family_model(uint32_t* family, uint32_t* model) {
   *family = ((cpudata.eax >> 8) & 0xF) | ((cpudata.eax >> 16) & 0xF0);
   // model | processor type (plus two more bits 14:15?)
   *model = ((cpudata.eax >> 4) & 0xF) | ((cpudata.eax >> 12) & 0xF0);
-  raplcap_log(DEBUG, "raplcap_cpuid_get_family_model: cpu_family=%02X, cpu_model=%02X\n", *family, *model);
+  raplcap_log(DEBUG, "cpuid_get_family_model: cpu_family=%02X, cpu_model=%02X\n", *family, *model);
 }
 
-int raplcap_cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
+int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
   if (family == 6) {
     switch (model) {
       case CPUID_MODEL_SANDYBRIDGE:

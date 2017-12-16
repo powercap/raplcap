@@ -74,7 +74,7 @@ extern "C" {
  *
  * @return 1 if Intel, 0 otherwise
  */
-int raplcap_cpuid_is_vendor_intel(void);
+int cpuid_is_vendor_intel(void);
 
 /**
  * Get the CPU family and model.
@@ -83,7 +83,7 @@ int raplcap_cpuid_is_vendor_intel(void);
  * @param family not NULL
  * @param model not NULL
  */
-void raplcap_cpuid_get_family_model(uint32_t* family, uint32_t* model);
+void cpuid_get_family_model(uint32_t* family, uint32_t* model);
 
 /**
  * Check that family=6 and model is one of those listed above.
@@ -92,7 +92,7 @@ void raplcap_cpuid_get_family_model(uint32_t* family, uint32_t* model);
  * @param model
  * @return 1 if supported, 0 otherwise
  */
-int raplcap_cpuid_is_cpu_supported(uint32_t family, uint32_t model);
+int cpuid_is_cpu_supported(uint32_t family, uint32_t model);
 
 #pragma GCC visibility pop
 

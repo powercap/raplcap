@@ -1,6 +1,9 @@
 # Libraries
 
-add_library(raplcap-msr raplcap-msr.c raplcap-cpuid.c)
+add_library(raplcap-msr raplcap-msr.c
+                        raplcap-msr-common.c
+                        raplcap-cpuid.c)
+target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr")
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-msr PROPERTIES VERSION ${PROJECT_VERSION}
                                                SOVERSION ${VERSION_MAJOR})
@@ -11,6 +14,11 @@ endif()
 add_executable(raplcap-msr-unit-test ${CMAKE_SOURCE_DIR}/test/raplcap-unit-test.c)
 target_link_libraries(raplcap-msr-unit-test raplcap-msr)
 add_test(raplcap-msr-unit-test raplcap-msr-unit-test)
+
+add_executable(raplcap-msr-common-unit-test test/raplcap-msr-common-test.c
+                                            raplcap-msr-common.c
+                                            raplcap-cpuid.c)
+add_test(raplcap-msr-common-unit-test raplcap-msr-common-unit-test)
 
 # must be run manually
 add_executable(raplcap-msr-integration-test ${CMAKE_SOURCE_DIR}/test/raplcap-integration-test.c)
