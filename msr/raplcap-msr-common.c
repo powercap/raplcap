@@ -11,6 +11,8 @@
 #include "raplcap-cpuid.h"
 #include "raplcap-msr-common.h"
 
+#define HAS_SHORT_TERM(ctx, zone) (ctx->cfg[zone].constraints > 1)
+
 // 2^y
 static uint64_t pow2_u64(uint64_t y) {
   return ((uint64_t) 1) << y;
@@ -296,7 +298,7 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
 
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  int ret = get_bits(msrval, 15, 15) == 0x1 && (ctx->cfg[zone].constraints > 1 ? get_bits(msrval, 47, 47) == 0x1 : 1);
+  int ret = get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(ctx, zone) ? get_bits(msrval, 47, 47) == 0x1 : 1);
   raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, enabled=%d\n", zone, ret);
   return ret;
 }
@@ -306,7 +308,7 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
   const uint64_t enabled_bits = enabled ? 0x1 : 0x0;
   raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, enabled=%d\n", zone, enabled);
   msrval = replace_bits(msrval, enabled_bits, 15, 15);
-  if (ctx->cfg[zone].constraints > 1) {
+  if (HAS_SHORT_TERM(ctx, zone)) {
     msrval = replace_bits(msrval, enabled_bits, 47, 47);
   }
   return msrval;
@@ -314,7 +316,7 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
 
 int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  int ret = get_bits(msrval, 16, 16) == 0x1 && (ctx->cfg[zone].constraints > 1 ? get_bits(msrval, 48, 48) == 0x1 : 1);
+  int ret = get_bits(msrval, 16, 16) == 0x1 && (HAS_SHORT_TERM(ctx, zone) ? get_bits(msrval, 48, 48) == 0x1 : 1);
   raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, clamp=%d\n", zone, ret);
   return ret;
 }
@@ -324,7 +326,7 @@ uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, ui
   const uint64_t clamp_bits = clamp ? 0x1 : 0x0;
   raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, clamp=%d\n", zone, clamp);
   msrval = replace_bits(msrval, clamp_bits, 16, 16);
-  if (ctx->cfg[zone].constraints > 1) {
+  if (HAS_SHORT_TERM(ctx, zone)) {
     msrval = replace_bits(msrval, clamp_bits, 48, 48);
   }
   return msrval;
@@ -339,7 +341,7 @@ void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrv
     raplcap_log(DEBUG, "msr_get_limits: zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_long->seconds, limit_long->watts);
   }
-  if (limit_short != NULL && ctx->cfg[zone].constraints > 1) {
+  if (limit_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
     limit_short->watts = ctx->cfg[zone].from_msr_pl(get_bits(msrval, 32, 46), ctx->power_units);
     if (zone == RAPLCAP_ZONE_PSYS) {
       raplcap_log(DEBUG, "msr_get_limits: Documentation does not specify PSys/Platform short term time window\n");
@@ -363,7 +365,7 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
       msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_long->seconds, ctx->time_units), 17, 23);
     }
   }
-  if (limit_short != NULL && ctx->cfg[zone].constraints > 1) {
+  if (limit_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
     raplcap_log(DEBUG, "msr_set_limits: zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_short->seconds, limit_short->watts);
     if (limit_short->watts > 0) {

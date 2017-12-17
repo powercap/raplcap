@@ -98,20 +98,12 @@ static void test(raplcap* rc, int ro) {
         ls.seconds = -1;
         printf("    Testing raplcap_get_limits(...)\n");
         assert(raplcap_get_limits(rc, s, (raplcap_zone) i, &ll, &ls) == 0);
-        switch (i) {
-          case RAPLCAP_ZONE_PACKAGE:
-          case RAPLCAP_ZONE_PSYS:
-            assert(ls.seconds >= 0);
-            assert(ls.watts >= 0);
-            // fall through, no break
-          case RAPLCAP_ZONE_CORE:
-          case RAPLCAP_ZONE_UNCORE:
-          case RAPLCAP_ZONE_DRAM:
-            assert(ll.seconds >= 0);
-            assert(ll.watts >= 0);
-            break;
-          default:
-            assert(0);
+        assert(ll.seconds > 0);
+        assert(ll.watts >= 0);
+        // can't assert anything about short term for PACKAGE, it's not always present, e.g. on some Atom CPUs
+        if (i == RAPLCAP_ZONE_PSYS) {
+          assert(ls.seconds > 0);
+          assert(ls.watts >= 0);
         }
         if (!ro) {
           test_set(&ll, &ls, rc, s, i);

@@ -65,28 +65,22 @@ static void print_usage(int exit_code) {
   exit(exit_code);
 }
 
-static void print_limits(raplcap_zone zone, int enabled,
+static void print_limits(int enabled,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short) {
   // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-    case RAPLCAP_ZONE_PSYS:
-      printf("%13s: %s\n", "enabled", en);
-      printf("%13s: %.12f\n", "watts_long", watts_long);
-      printf("%13s: %.12f\n", "seconds_long", seconds_long);
-      printf("%13s: %.12f\n", "watts_short", watts_short);
-      printf("%13s: %.12f\n", "seconds_short", seconds_short);
-      break;
-    case RAPLCAP_ZONE_CORE:
-    case RAPLCAP_ZONE_UNCORE:
-    case RAPLCAP_ZONE_DRAM:
-    default:
-      printf("%7s: %s\n", "enabled", en);
-      printf("%7s: %.12f\n", "watts", watts_long);
-      printf("%7s: %.12f\n", "seconds", seconds_long);
-      break;
+  // time window can never be 0, so if it's > 0, the short term constraint exists
+  if (seconds_short > 0) {
+    printf("%13s: %s\n", "enabled", en);
+    printf("%13s: %.12f\n", "watts_long", watts_long);
+    printf("%13s: %.12f\n", "seconds_long", seconds_long);
+    printf("%13s: %.12f\n", "watts_short", watts_short);
+    printf("%13s: %.12f\n", "seconds_short", seconds_short);
+  } else {
+    printf("%7s: %s\n", "enabled", en);
+    printf("%7s: %.12f\n", "watts", watts_long);
+    printf("%7s: %.12f\n", "seconds", seconds_long);
   }
 }
 
@@ -133,12 +127,10 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   if (enabled < 0) {
     print_enable_error("raplcap_is_zone_enabled");
   }
-  // short only allowed for package and psys zones
-  raplcap_limit* s = (zone == RAPLCAP_ZONE_PACKAGE || zone == RAPLCAP_ZONE_PSYS) ? &ls : NULL;
-  if (raplcap_get_limits(NULL, socket, zone, &ll, s)) {
+  if (raplcap_get_limits(NULL, socket, zone, &ll, &ls)) {
     return -1;
   }
-  print_limits(zone, enabled, ll.watts, ll.seconds, ls.watts, ls.seconds);
+  print_limits(enabled, ll.watts, ll.seconds, ls.watts, ls.seconds);
   return 0;
 }
 
