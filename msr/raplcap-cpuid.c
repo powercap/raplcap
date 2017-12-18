@@ -18,11 +18,15 @@ typedef struct asm_cpuid_data {
   uint32_t edx;
 } asm_cpuid_data;
 
-static void asm_cpuid(asm_cpuid_data* data, uint32_t leaf) {
+static void asm_cpuid(uint32_t leaf, asm_cpuid_data* data) {
   assert(data != NULL);
+#if defined(__x86_64__) || defined(__i386__)
   __asm__ __volatile__ ("cpuid" :
                         "=a" (data->eax), "=b" (data->ebx), "=c" (data->ecx), "=d" (data->edx) :
                         "a" (leaf));
+#else
+  #error x86 architecture is required
+#endif
 }
 
 int cpuid_is_vendor_intel(void) {
@@ -32,7 +36,7 @@ int cpuid_is_vendor_intel(void) {
     int i[16 / sizeof(int)];
   } vendor_id;
   memset(&vendor_id.c, 0, sizeof(vendor_id));
-  asm_cpuid(&cpudata, 0);
+  asm_cpuid(0, &cpudata);
   vendor_id.i[0] = cpudata.ebx;
   vendor_id.i[1] = cpudata.edx;
   vendor_id.i[2] = cpudata.ecx;
@@ -44,7 +48,7 @@ void cpuid_get_family_model(uint32_t* family, uint32_t* model) {
   assert(family != NULL);
   assert(model != NULL);
   asm_cpuid_data cpudata;
-  asm_cpuid(&cpudata, 1);
+  asm_cpuid(1, &cpudata);
   // family | extended family (upper 4 bits only) -- must be "6"
   *family = ((cpudata.eax >> 8) & 0xF) | ((cpudata.eax >> 16) & 0xF0);
   // model | processor type (plus two more bits 14:15?)

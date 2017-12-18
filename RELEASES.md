@@ -1,6 +1,12 @@
 # Release Notes
 
 ## [Unreleased]
+### Added
+ * MSR implementation support for Atom processors
+ * More units tests
+
+### Changed
+ * MSR implementation will now only compile on x86 (required for RAPL anyway)
 
 
 ## [v0.2.0] - 2017-12-11
