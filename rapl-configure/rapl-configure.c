@@ -67,7 +67,8 @@ static void print_usage(int exit_code) {
 
 static void print_limits(int enabled,
                          double watts_long, double seconds_long,
-                         double watts_short, double seconds_short) {
+                         double watts_short, double seconds_short,
+                         double joules, double joules_max) {
   // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
   // time window can never be 0, so if it's > 0, the short term constraint exists
@@ -77,10 +78,22 @@ static void print_limits(int enabled,
     printf("%13s: %.12f\n", "seconds_long", seconds_long);
     printf("%13s: %.12f\n", "watts_short", watts_short);
     printf("%13s: %.12f\n", "seconds_short", seconds_short);
+    if (joules >= 0) {
+      printf("%13s: %.12f\n", "joules", joules);
+    }
+    if (joules_max >= 0) {
+      printf("%13s: %.12f\n", "joules_max", joules_max);
+    }
   } else {
     printf("%7s: %s\n", "enabled", en);
     printf("%7s: %.12f\n", "watts", watts_long);
     printf("%7s: %.12f\n", "seconds", seconds_long);
+    if (joules >= 0) {
+      printf("%7s: %.12f\n", "joules", joules);
+    }
+    if (joules_max >= 0) {
+      printf("%7s: %.12f\n", "joules_max", joules_max);
+    }
   }
 }
 
@@ -121,6 +134,8 @@ static int configure_limits(const rapl_configure_ctx* c) {
 static int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ll;
   raplcap_limit ls;
+  double joules;
+  double joules_max;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
   int enabled = raplcap_is_zone_enabled(NULL, socket, zone);
@@ -130,7 +145,10 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   if (raplcap_get_limits(NULL, socket, zone, &ll, &ls)) {
     return -1;
   }
-  print_limits(enabled, ll.watts, ll.seconds, ls.watts, ls.seconds);
+  // we'll consider energy counter information to be optional
+  joules = raplcap_get_energy_counter(NULL, socket, zone);
+  joules_max = raplcap_get_energy_counter_max(NULL, socket, zone);
+  print_limits(enabled, ll.watts, ll.seconds, ls.watts, ls.seconds, joules, joules_max);
   return 0;
 }
 

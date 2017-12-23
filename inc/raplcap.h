@@ -135,6 +135,27 @@ int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
 int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short);
 
+/**
+ * Get the current energy counter value for a zone in Joules.
+ * Note that the counter rolls over - check the max value.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return Joules on success, a negative value on error
+ */
+double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
+/**
+ * Get the maximum energy counter value for a zone in Joules.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return Joules on success, a negative value on error
+ */
+double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
 #ifdef __cplusplus
 }
 #endif

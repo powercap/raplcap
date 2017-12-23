@@ -13,14 +13,19 @@ extern "C" {
 #define MSR_RAPL_POWER_UNIT       0x606
 /* Package RAPL Domain */
 #define MSR_PKG_POWER_LIMIT       0x610
+#define MSR_PKG_ENERGY_STATUS     0x611
 /* PP0 RAPL Domain */
 #define MSR_PP0_POWER_LIMIT       0x638
+#define MSR_PP0_ENERGY_STATUS     0x639
 /* PP1 RAPL Domain, may reflect to uncore devices */
 #define MSR_PP1_POWER_LIMIT       0x640
+#define MSR_PP1_ENERGY_STATUS     0x641
 /* DRAM RAPL Domain */
 #define MSR_DRAM_POWER_LIMIT      0x618
+#define MSR_DRAM_ENERGY_STATUS    0x619
 /* Platform (PSys) Domain (Skylake and newer) */
 #define MSR_PLATFORM_POWER_LIMIT  0x65C
+#define MSR_PLATFORM_ENERGY_COUNTER 0x64D
 
 #define RAPLCAP_NZONES (RAPLCAP_ZONE_PSYS + 1)
 
@@ -38,6 +43,7 @@ typedef struct raplcap_msr_zone_cfg {
 typedef struct raplcap_msr_ctx {
   const raplcap_msr_zone_cfg* cfg;
   double power_units;
+  double energy_units;
   double time_units;
   uint32_t cpu_model;
 } raplcap_msr_ctx;
@@ -83,6 +89,16 @@ void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrv
  */
 uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         const raplcap_limit* limit_long, const raplcap_limit* limit_short);
+
+/**
+ * Get the energy counter value in Joules.
+ */
+double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval);
+
+/**
+ * Get the max energy counter value in Joules.
+ */
+double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx);
 
 #pragma GCC visibility pop
 

@@ -266,3 +266,33 @@ int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   }
   return 0;
 }
+
+double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  powercap_rapl_zone z;
+  uint64_t uj;
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
+  if (pkg == NULL) {
+    return -1;
+  }
+  if (powercap_rapl_get_energy_uj(pkg, z, &uj)) {
+    raplcap_perror(ERROR, "raplcap_get_energy_counter: powercap_rapl_get_energy_uj");
+    return -1;
+  }
+  raplcap_log(DEBUG, "raplcap_get_energy_counter: socket=%"PRIu32", zone=%d, uj=%"PRIu64"\n", socket, zone, uj);
+  return uj / 1000000.0;
+}
+
+double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  powercap_rapl_zone z;
+  uint64_t uj;
+  const powercap_rapl_pkg* pkg = get_pkg_zone(rc, socket, zone, &z);
+  if (pkg == NULL) {
+    return -1;
+  }
+  if (powercap_rapl_get_max_energy_range_uj(pkg, z, &uj)) {
+    raplcap_perror(ERROR, "raplcap_get_energy_counter_max: powercap_rapl_get_max_energy_range_uj");
+    return -1;
+  }
+  raplcap_log(DEBUG, "raplcap_get_energy_counter_max: socket=%"PRIu32", zone=%d, uj=%"PRIu64"\n", socket, zone, uj);
+  return uj / 1000000.0;
+}

@@ -63,6 +63,7 @@ static void test(raplcap* rc, int ro) {
   raplcap_limit ll, ls;
   uint32_t i, s;
   int supported, enabled;
+  double joules;
   printf("  Testing raplcap_get_num_sockets(NULL)\n");
   uint32_t nsockets = raplcap_get_num_sockets(NULL);
   assert(nsockets > 0);
@@ -105,6 +106,12 @@ static void test(raplcap* rc, int ro) {
           assert(ls.seconds > 0);
           assert(ls.watts >= 0);
         }
+        printf("    Testing raplcap_get_energy_counter(...)\n");
+        joules = raplcap_get_energy_counter(rc, s, (raplcap_zone) i);
+        assert(joules >= 0);
+        printf("    Testing raplcap_get_energy_counter_max(...)\n");
+        joules = raplcap_get_energy_counter_max(rc, s, (raplcap_zone) i);
+        assert(joules >= 0);
         if (!ro) {
           test_set(&ll, &ls, rc, s, i);
         }

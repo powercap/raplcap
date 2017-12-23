@@ -10,6 +10,8 @@
 #include "../raplcap-msr-common.h"
 #include "../raplcap-cpuid.h"
 
+// TODO: Test additional functions (cpu_model, enabled, clamping, energy...)
+
 static double abs_dbl(double a) {
   return a >= 0 ? a : -a;
 }

@@ -16,6 +16,7 @@
 #ifdef _WIN32
 #include <wchar.h>
 #include <Windows.h>
+#define MSR_FUNC_POWER_ENERGY 1
 #define MSR_FUNC_LIMIT 3
 #if _M_X64
   #define WIN_ENERGY_LIB_NAME "EnergyLib64"
@@ -25,6 +26,14 @@
 #else // OSX
 #include <IntelPowerGadget/EnergyLib.h>
 #endif
+
+#define MSR_FUNC_N_RESULTS_MAX 3
+#define MSR_FUNC_N_RESULTS_POWER_ENERGY 3
+#define MSR_FUNC_N_RESULTS_POWER_LIMIT 1
+#define POWER_IDX_AVERAGE_POWER 0
+#define POWER_IDX_ENERGY_JOULES 1
+#define POWER_IDX_ENERGY_MWH 2
+#define POWER_LIMIT_IDX_POWER_WATTS 0
 
 // Use function pointers - In Windows, can't link with DLL before runtime
 typedef bool (*IPGInitialize) ();
@@ -44,6 +53,7 @@ typedef struct raplcap_ipg {
   IPGGetMsrFunc pGetMsrFunc;
   IPGReadSample pReadSample;
   IPGGetPowerData pGetPowerData;
+  int msr_pkg_power_energy;
   int msr_pkg_power_limit;
 } raplcap_ipg;
 
@@ -118,13 +128,14 @@ static int initEnergyLib(raplcap_ipg* state, int* nNodes) {
       raplcap_log(ERROR, "initEnergyLib: GetMsrFunc\n");
       return -1;
     }
-    if (funcID == MSR_FUNC_LIMIT) {
+    if (funcID == MSR_FUNC_POWER_ENERGY) {
+      state->msr_pkg_power_energy = i;
+    } else if (funcID == MSR_FUNC_LIMIT) {
       state->msr_pkg_power_limit = i;
-      break;
     }
   }
-  if (state->msr_pkg_power_limit < 0) {
-    raplcap_log(ERROR, "initEnergyLib: Failed to locate Package Power Limit MSR\n");
+  if (state->msr_pkg_power_energy < 0 || state->msr_pkg_power_limit < 0) {
+    raplcap_log(ERROR, "initEnergyLib: Failed to locate 'Power' or 'Package Power Limit' MSRs\n");
     return -1;
   }
   raplcap_log(DEBUG, "initEnergyLib: Found Package Power Limit MSR: %d\n", state->msr_pkg_power_limit);
@@ -246,7 +257,7 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zo
 int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   int nResult = 0;
-  double data[3] = { 0 };
+  double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
   raplcap_ipg* state;
   if (raplcap_is_zone_supported(rc, socket, zone) <= 0) {
     return -1;
@@ -259,15 +270,16 @@ int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_get_limits: Read sample from MSR\n");
-  if (!state->pGetPowerData((int) socket, state->msr_pkg_power_limit, data, &nResult) || nResult != 1) {
+  if (!state->pGetPowerData((int) socket, state->msr_pkg_power_limit, data, &nResult) ||
+      nResult != MSR_FUNC_N_RESULTS_POWER_LIMIT) {
     raplcap_log(ERROR, "raplcap_get_limits: GetPowerData\n");
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_limits: Got package power limit: %.12f\n", data[0]);
+  raplcap_log(DEBUG, "raplcap_get_limits: Got package power limit: %.12f\n", data[POWER_LIMIT_IDX_POWER_WATTS]);
   // TODO: assuming this is long_term data
   // TODO: What about data we can't collect, like long term seconds or any short term data? Currently setting to 0.
   if (limit_long != NULL) {
-    limit_long->watts = data[0];
+    limit_long->watts = data[POWER_LIMIT_IDX_POWER_WATTS];
     limit_long->seconds = 0;
   }
   if (limit_short != NULL) {
@@ -285,6 +297,38 @@ int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   (void) zone;
   (void) limit_long;
   (void) limit_short;
+  errno = ENOSYS;
+  return -1;
+}
+
+double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  int nResult = 0;
+  double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
+  raplcap_ipg* state;
+  if (raplcap_is_zone_supported(rc, socket, zone) <= 0) {
+    return -1;
+  }
+  // will not be NULL if zone is supported
+  state = get_state(rc, socket);
+  // try twice to work around overflow
+  if (!state->pReadSample() || !state->pReadSample()) {
+    raplcap_log(ERROR, "raplcap_get_energy_counter: ReadSample\n");
+    return -1;
+  }
+  raplcap_log(DEBUG, "raplcap_get_energy_counter: Read sample from MSR\n");
+  if (!state->pGetPowerData((int) socket, state->msr_pkg_power_energy, data, &nResult) ||
+      nResult != MSR_FUNC_N_RESULTS_POWER_ENERGY) {
+    raplcap_log(ERROR, "raplcap_get_energy_counter: GetPowerData\n");
+    return -1;
+  }
+  return data[POWER_IDX_ENERGY_JOULES];
+}
+
+double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  (void) socket;
+  (void) rc;
+  (void) zone;
+  raplcap_log(ERROR, "raplcap_get_energy_counter_max: Getting energy counter max is not supported\n");
   errno = ENOSYS;
   return -1;
 }

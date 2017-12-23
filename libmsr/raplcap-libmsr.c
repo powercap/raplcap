@@ -417,3 +417,21 @@ int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   }
   return ret;
 }
+
+double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  (void) rc;
+  (void) socket;
+  (void) zone;
+  raplcap_log(ERROR, "raplcap_get_energy_counter: No libmsr function to get energy counters\n");
+  errno = ENOSYS;
+  return -1;
+}
+
+double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  (void) rc;
+  (void) socket;
+  (void) zone;
+  raplcap_log(ERROR, "raplcap_get_energy_counter_max: No libmsr function to get energy counters\n");
+  errno = ENOSYS;
+  return -1;
+}

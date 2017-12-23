@@ -38,6 +38,16 @@ static double from_msr_pu_atom(uint64_t msrval) {
 }
 
 // Section 14.9.1
+static double from_msr_eu_default(uint64_t msrval) {
+  return 1.0 / pow2_u64((msrval >> 8) & 0x1F);
+}
+
+// Table 35-8
+static double from_msr_eu_atom(uint64_t msrval) {
+  return pow2_u64((msrval >> 8) & 0x1F) / 1000000.0;
+}
+
+// Section 14.9.1
 static double from_msr_tu_default(uint64_t msrval) {
   // For Atom, Table 35-8 specifies that field value is always 0x0, meaning 1 second, so this works still
   return 1.0 / pow2_u64((msrval >> 16) & 0xF);
@@ -254,6 +264,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_XEON_PHI_KNL:
     case CPUID_MODEL_XEON_PHI_KNM:
       ctx->power_units = from_msr_pu_default(units_msrval);
+      ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT;
       break;
@@ -262,11 +273,13 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_ATOM_MERRIFIELD:
     case CPUID_MODEL_ATOM_MOOREFIELD:
       ctx->power_units = from_msr_pu_atom(units_msrval);
+      ctx->energy_units = from_msr_eu_atom(units_msrval);
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_ATOM;
       break;
     case CPUID_MODEL_ATOM_AIRMONT:
       ctx->power_units = from_msr_pu_atom(units_msrval);
+      ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_ATOM_AIRMONT;
       break;
@@ -382,4 +395,18 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
     }
   }
   return msrval;
+}
+
+double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval) {
+  assert(ctx != NULL);
+  double joules = get_bits(msrval, 0, 31) * ctx->energy_units;
+  raplcap_log(DEBUG, "msr_get_energy_counter: energy_units=%.12f, joules=%.12f\n", ctx->energy_units, joules);
+  return joules;
+}
+
+double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx) {
+  assert(ctx != NULL);
+  double joules = pow2_u64(32) * ctx->energy_units;
+  raplcap_log(DEBUG, "msr_get_energy_counter_max: energy_units=%.12f, joules=%.12f\n", ctx->energy_units, joules);
+  return joules;
 }

@@ -27,6 +27,12 @@ int main(void) {
   errno = 0;
   assert(raplcap_set_limits(NULL, 0, RAPLCAP_ZONE_PACKAGE, NULL, NULL) < 0);
   assert(errno == EINVAL);
+  errno = 0;
+  assert(raplcap_get_energy_counter(NULL, 0, RAPLCAP_ZONE_PACKAGE) < 0);
+  assert(errno == EINVAL);
+  errno = 0;
+  assert(raplcap_get_energy_counter_max(NULL, 0, RAPLCAP_ZONE_PACKAGE) < 0);
+  assert(errno == EINVAL);
   // just verify that it doesn't crash (API doesn't specify what to return or whether to set errno in this case)
   raplcap_destroy(NULL);
   // also verifying that it doesn't crash
