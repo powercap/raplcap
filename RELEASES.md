@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
  * MSR implementation support for Atom processors
+ * Functions for reading energy counters
  * More units tests
 
 ### Changed
