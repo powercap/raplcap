@@ -55,10 +55,11 @@ Refer to your hardware's technical documentation, particularly for the Thermal
 Design Power (TDP).
 .LP
 By default, rapl\-configure\-@RAPL_LIB@ uses the PACKAGE zone on socket 0.
-If no time windows or power limits are specified, current values are printed.
-If the only specified time or power limit values are 0, the zone will be
-disabled.
+Current values are printed if no flags, or only socket and/or zone flags, are
+specified.
 Otherwise, specified values are set while other values remain unmodified.
+When setting values, zones are automatically enabled unless \-e/\-\-enabled is
+explicitly set to 0.
 .SH "OPTIONS"
 .LP
 .TP
@@ -81,17 +82,20 @@ DRAM \- main memory (server systems only)
 .br
 PSYS \- the entire platform (Skylake and newer only)
 .TP
+\fB\-e,\fP \fB\-\-enabled\fP=\fI1|0\fP
+Enable/disable a zone
+.TP
 \fB\-s,\fP \fB\-\-seconds0\fP=\fISECONDS\fP
-long term time window
+Long term time window
 .TP
 \fB\-w,\fP \fB\-\-watts0\fP=\fIWATTS\fP
-long term power limit
+Long term power limit
 .TP
 \fB\-S,\fP \fB\-\-seconds1\fP=\fISECONDS\fP
-short term time window (PACKAGE & PSYS only)
+Short term time window (PACKAGE & PSYS only)
 .TP
 \fB\-W,\fP \fB\-\-watts1\fP=\fIWATTS\fP
-short term power limit (PACKAGE & PSYS only)
+Short term power limit (PACKAGE & PSYS only)
 .TP
 \fB\-h,\fP \fB\-\-help\fP
 Prints out the help screen
