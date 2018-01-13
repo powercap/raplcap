@@ -18,10 +18,15 @@ If using the `msr-safe` module, ensure that your user has read/write privileges 
 
 * `MSR_RAPL_POWER_UNIT`
 * `MSR_PKG_POWER_LIMIT`
+* `MSR_PKG_ENERGY_STATUS`
 * `MSR_PP0_POWER_LIMIT`
+* `MSR_PP0_ENERGY_STATUS`
 * `MSR_PP1_POWER_LIMIT`
+* `MSR_PP1_ENERGY_STATUS`
 * `MSR_DRAM_POWER_LIMIT`
+* `MSR_DRAM_ENERGY_STATUS`
 * `MSR_PLATFORM_POWER_LIMIT`
+* `MSR_PLATFORM_ENERGY_COUNTER`
 
 You can add these registers to the whitelist by running from this directory:
 
