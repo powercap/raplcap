@@ -17,6 +17,10 @@ Experimental backends, which are not documented here in any further detail and m
 * `libraplcap-ipg` ([README](ipg/README.md)): Uses Intel&reg; Power Gadget (OSX and Windows).
 * `libraplcap-libmsr` ([README](libmsr/README.md)): Uses LLNL's [libmsr](https://software.llnl.gov/libmsr) interface (Linux).
 
+If using this project for other scientific works or publications, please reference:
+
+* Connor Imes, Huazhe Zhang, Kevin Zhao, Henry Hoffmann. "Handing DVFS to Hardware: Using Power Capping to Control Software Performance". Technical Report [TR-2018-03](https://cs.uchicago.edu/research/publications/techreports/TR-2018-03). University of Chicago, Department of Computer Science. 2018.
+
 
 ## Prerequisites
 
