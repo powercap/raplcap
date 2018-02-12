@@ -82,6 +82,8 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       case CPUID_MODEL_KABYLAKE_MOBILE:
       case CPUID_MODEL_KABYLAKE_DESKTOP:
       //
+      case CPUID_MODEL_CANNONLAKE_MOBILE:
+      //
       case CPUID_MODEL_ATOM_SILVERMONT1:
       case CPUID_MODEL_ATOM_AIRMONT:
       case CPUID_MODEL_ATOM_MERRIFIELD:

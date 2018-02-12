@@ -18,6 +18,8 @@ extern "C" {
  * See Linux kernel:
  * arch/x86/include/asm/intel-family.h
  * drivers/powercap/intel_rapl.c
+ *
+ * See: https://en.wikichip.org/wiki/intel/cpuid
  */
 
 // Processors recognized and used in Linux kernel and Software Developer's Manual
@@ -56,6 +58,8 @@ extern "C" {
 //----
 #define CPUID_MODEL_KABYLAKE_MOBILE   0x8E
 #define CPUID_MODEL_KABYLAKE_DESKTOP  0x9E
+
+#define CPUID_MODEL_CANNONLAKE_MOBILE 0x66
 
 #define CPUID_MODEL_ATOM_DENVERTON    0x5F
 #define CPUID_MODEL_ATOM_GEMINI_LAKE  0x7A
