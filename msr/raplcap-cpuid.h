@@ -10,19 +10,10 @@ extern "C" {
 #define CPUID_VENDOR_ID_GENUINE_INTEL "GenuineIntel"
 
 /* 
- * See Software Developer's Manual, Volume 3
- * Last updated: September 2016
- * See: Table 35-1
- * See: Section 35.23 MSR INDEX (model listings don't account for inheritance through other tables though)
- *
- * See Linux kernel:
- * arch/x86/include/asm/intel-family.h
- * drivers/powercap/intel_rapl.c
- *
+ * See: Software Developer's Manual, Volume 4 (March 2018)
  * See: https://en.wikichip.org/wiki/intel/cpuid
  */
 
-// Processors recognized and used in Linux kernel and Software Developer's Manual
 //----
 // Sandy Bridge is the first to support RAPL
 #define CPUID_MODEL_SANDYBRIDGE       0x2A
@@ -42,36 +33,31 @@ extern "C" {
 #define CPUID_MODEL_BROADWELL_XEON_D  0x56
 
 #define CPUID_MODEL_SKYLAKE_MOBILE    0x4E
-#define CPUID_MODEL_SKYLAKE_DESKTOP   0x5E
 #define CPUID_MODEL_SKYLAKE_X         0x55
+#define CPUID_MODEL_SKYLAKE_DESKTOP   0x5E
 
-#define CPUID_MODEL_ATOM_SILVERMONT1  0x37
-#define CPUID_MODEL_ATOM_AIRMONT      0x4C
-#define CPUID_MODEL_ATOM_MERRIFIELD   0x4A
-#define CPUID_MODEL_ATOM_MOOREFIELD   0x5A
-#define CPUID_MODEL_ATOM_GOLDMONT     0x5C
-
-#define CPUID_MODEL_XEON_PHI_KNL      0x57
-//----
-
-// Processors used in kernel but not documented in Software Developer's Manual
-//----
 #define CPUID_MODEL_KABYLAKE_MOBILE   0x8E
 #define CPUID_MODEL_KABYLAKE_DESKTOP  0x9E
 
 #define CPUID_MODEL_CANNONLAKE_MOBILE 0x66
 
+#define CPUID_MODEL_XEON_PHI_KNL      0x57
+#define CPUID_MODEL_XEON_PHI_KNM      0x85
+
+#define CPUID_MODEL_ATOM_SILVERMONT1  0x37 // Bay Trail
+#define CPUID_MODEL_ATOM_MERRIFIELD   0x4A // Tangier
+// "SILVERMONT2" is specified in, but not used by, the Linux kernel
+// Disabled SILVERMONT2 b/c it's documentation is strange; no use supporting an apparently non-existent CPU
+// #define CPUID_MODEL_ATOM_SILVERMONT2  0x4D // Avoton, Rangeley;
+#define CPUID_MODEL_ATOM_AIRMONT      0x4C // Cherry Trail, Braswell
+#define CPUID_MODEL_ATOM_MOOREFIELD   0x5A // Anniedale
+// "SoFIA" does not appear to have Linux kernel support
+#define CPUID_MODEL_ATOM_SOFIA        0x5D
+
+#define CPUID_MODEL_ATOM_GOLDMONT     0x5C
 #define CPUID_MODEL_ATOM_DENVERTON    0x5F
 #define CPUID_MODEL_ATOM_GEMINI_LAKE  0x7A
-
-#define CPUID_MODEL_XEON_PHI_KNM      0x85
 //----
-
-// Processors specified in, but not used by, the kernel
-// #define CPUID_MODEL_ATOM_SILVERMONT2  0x4D
-
-// Processors not specified in the kernel but documented in Software Developer's Manual
-// 0x5D (an Atom Silvermont processor)
 
 /**
  * Check that the CPU vendor is GenuineIntel.

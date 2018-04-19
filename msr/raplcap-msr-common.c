@@ -32,7 +32,7 @@ static double from_msr_pu_default(uint64_t msrval) {
   return 1.0 / pow2_u64(msrval & 0xF);
 }
 
-// Table 35-8
+// Table 2-8
 static double from_msr_pu_atom(uint64_t msrval) {
   return pow2_u64(msrval & 0xF) / 1000.0;
 }
@@ -42,14 +42,14 @@ static double from_msr_eu_default(uint64_t msrval) {
   return 1.0 / pow2_u64((msrval >> 8) & 0x1F);
 }
 
-// Table 35-8
+// Table 2-8
 static double from_msr_eu_atom(uint64_t msrval) {
   return pow2_u64((msrval >> 8) & 0x1F) / 1000000.0;
 }
 
 // Section 14.9.1
 static double from_msr_tu_default(uint64_t msrval) {
-  // For Atom, Table 35-8 specifies that field value is always 0x0, meaning 1 second, so this works still
+  // For Atom, Table 2-8 specifies that field value is always 0x0, meaning 1 second, so this works still
   return 1.0 / pow2_u64((msrval >> 16) & 0xF);
 }
 
@@ -123,7 +123,7 @@ static uint64_t to_msr_tw_default(double seconds, double time_units) {
   return bits;
 }
 
-// Table 35-8
+// Table 2-8
 static double from_msr_tw_atom(uint64_t bits, double time_units) {
   (void) time_units;
   // If 0 is specified in bits [23:17], defaults to 1 second window.
@@ -132,7 +132,7 @@ static double from_msr_tw_atom(uint64_t bits, double time_units) {
   return seconds;
 }
 
-// Table 35-8
+// Table 2-8
 static uint64_t to_msr_tw_atom(double seconds, double time_units) {
   (void) time_units;
   assert(seconds > 0);
@@ -153,7 +153,7 @@ static uint64_t to_msr_tw_atom(double seconds, double time_units) {
   return bits;
 }
 
-// Table 35-11
+// Table 2-11
 static double from_msr_tw_atom_airmont(uint64_t bits, double time_units) {
   // Used only for Airmont PP0 (CORE) zone
   (void) time_units;
@@ -163,7 +163,7 @@ static double from_msr_tw_atom_airmont(uint64_t bits, double time_units) {
   return seconds;
 }
 
-// Table 35-11
+// Table 2-11
 static uint64_t to_msr_tw_atom_airmont(double seconds, double time_units) {
   // Used only for Airmont PP0 (CORE) zone
   (void) time_units;
@@ -251,20 +251,20 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_BROADWELL_XEON_D:
     //
     case CPUID_MODEL_SKYLAKE_MOBILE:
-    case CPUID_MODEL_SKYLAKE_DESKTOP:
     case CPUID_MODEL_SKYLAKE_X:
+    case CPUID_MODEL_SKYLAKE_DESKTOP:
     //
     case CPUID_MODEL_KABYLAKE_MOBILE:
     case CPUID_MODEL_KABYLAKE_DESKTOP:
     //
     case CPUID_MODEL_CANNONLAKE_MOBILE:
     //
-    case CPUID_MODEL_ATOM_GOLDMONT:
-    case CPUID_MODEL_ATOM_GEMINI_LAKE:
-    case CPUID_MODEL_ATOM_DENVERTON:
-    //
     case CPUID_MODEL_XEON_PHI_KNL:
     case CPUID_MODEL_XEON_PHI_KNM:
+    //
+    case CPUID_MODEL_ATOM_GOLDMONT:
+    case CPUID_MODEL_ATOM_DENVERTON:
+    case CPUID_MODEL_ATOM_GEMINI_LAKE:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->time_units = from_msr_tu_default(units_msrval);
@@ -274,11 +274,13 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_ATOM_SILVERMONT1:
     case CPUID_MODEL_ATOM_MERRIFIELD:
     case CPUID_MODEL_ATOM_MOOREFIELD:
+    case CPUID_MODEL_ATOM_SOFIA:
       ctx->power_units = from_msr_pu_atom(units_msrval);
       ctx->energy_units = from_msr_eu_atom(units_msrval);
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_ATOM;
       break;
+    //----
     case CPUID_MODEL_ATOM_AIRMONT:
       ctx->power_units = from_msr_pu_atom(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
@@ -389,7 +391,7 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
     if (limit_short->seconds > 0) {
       // 14.9.3: This field may have a hard-coded value in hardware and ignores values written by software.
       if (zone == RAPLCAP_ZONE_PSYS) {
-        // Table 35-37: PSYS has power limit #2, but time window #2 is not specified
+        // Table 2-38: PSYS has power limit #2, but time window #2 is chosen by the processor
         raplcap_log(WARN, "Not allowed to set PSys/Platform short term time window\n");
       } else {
         msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_short->seconds, ctx->time_units), 49, 55);
