@@ -57,7 +57,7 @@ static void test_translate_default(void) {
 }
 
 static void test_translate_atom(void) {
-  static const double TU = 0; // time unit
+  static const double TU = 1.0; // time unit
   static const double PU = 0.032; // power unit
   raplcap_msr_ctx ctx;
   msr_get_context(&ctx, CPUID_MODEL_ATOM_SILVERMONT1, 0x5);
@@ -75,8 +75,8 @@ static void test_translate_atom(void) {
   assert(equal_dbl(ctx.cfg[RAPLCAP_ZONE_PACKAGE].from_msr_tw(0x1, TU), 1.0));
   assert(equal_dbl(ctx.cfg[RAPLCAP_ZONE_PACKAGE].from_msr_tw(0x2, TU), 2.0));
   assert(equal_dbl(ctx.cfg[RAPLCAP_ZONE_PACKAGE].from_msr_tw(0x7F, TU), 127.0));
-  // to low
-  assert(ctx.cfg[RAPLCAP_ZONE_PACKAGE].to_msr_tw(0.01, TU) == 0x1);
+  // too low
+  assert(ctx.cfg[RAPLCAP_ZONE_PACKAGE].to_msr_tw(0.99, TU) == 0x0);
   // within range
   assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(1.0, TU) == 0x1);
   assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(1.49, TU) == 0x1);
@@ -88,7 +88,7 @@ static void test_translate_atom(void) {
 }
 
 static void test_translate_atom_airmont(void) {
-  static const double TU = 0; // time unit
+  static const double TU = 0; // dummy time unit
   raplcap_msr_ctx ctx;
   msr_get_context(&ctx, CPUID_MODEL_ATOM_AIRMONT, 0x0);
   // constraints
@@ -110,7 +110,7 @@ static void test_translate_atom_airmont(void) {
   assert(equal_dbl(ctx.cfg[RAPLCAP_ZONE_CORE].from_msr_tw(0x9, TU), 45.0));
   assert(equal_dbl(ctx.cfg[RAPLCAP_ZONE_CORE].from_msr_tw(0xA, TU), 50.0));
   // too low
-  assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(0.01, TU) == 0x0);
+  assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(0.99, TU) == 0x0);
   // within range
   assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(1.0, TU) == 0x0);
   assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(2.49, TU) == 0x0);

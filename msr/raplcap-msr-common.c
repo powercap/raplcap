@@ -106,7 +106,7 @@ static uint64_t to_msr_tw_default(double seconds, double time_units) {
   static const double MSR_TIME_MAX = (double) 0xFFFFFFFF;
   double t = seconds / time_units;
   if (t < MSR_TIME_MIN) {
-    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %.12f sec\n", seconds, time_units);
+    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %.12f sec\n", seconds, MSR_TIME_MIN * time_units);
     t = MSR_TIME_MIN;
   } else if (t > MSR_TIME_MAX) {
     // "trying" instead of "using" because precision loss will definitely throw off the final value at this extreme
@@ -125,29 +125,30 @@ static uint64_t to_msr_tw_default(double seconds, double time_units) {
 
 // Table 2-8
 static double from_msr_tw_atom(uint64_t bits, double time_units) {
-  (void) time_units;
-  // If 0 is specified in bits [23:17], defaults to 1 second window.
-  double seconds = bits ? bits : 1.0;
+  assert(time_units > 0);
+  // If 0 is specified in bits [23:17], defaults to 1 second window, which should be the same as time_units.
+  double seconds = bits ? (bits * time_units) : time_units;
   raplcap_log(DEBUG, "from_msr_tw_atom: bits=0x%02lX, seconds=%.12f\n", bits, seconds);
   return seconds;
 }
 
 // Table 2-8
 static uint64_t to_msr_tw_atom(double seconds, double time_units) {
-  (void) time_units;
   assert(seconds > 0);
-  // round to nearest second
-  static const uint64_t MSR_TIME_MIN = 1;
+  assert(time_units > 0);
+  // time_units should be 1.0, but conceivably could be any whole number in 4 bit range: [1, 15]
   static const uint64_t MSR_TIME_MAX = 0x7F;
+  double t = seconds / time_units;
   uint64_t bits;
-  if (seconds < MSR_TIME_MIN) {
-    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %"PRIu64" sec\n", seconds, MSR_TIME_MIN);
-    bits = MSR_TIME_MIN; // alternatively, could set to 0
-  } else if (seconds > MSR_TIME_MAX) {
-    raplcap_log(WARN, "Time window too large: %.12f sec, using max: %"PRIu64" sec\n", seconds, MSR_TIME_MAX);
+  if (seconds < 1) {
+    raplcap_log(WARN, "Time window too small: %.12f sec, using min: %.12f sec\n", seconds, 1.0);
+    bits = 0x0; // interpreted as 1 second
+  } else if (t > (double) MSR_TIME_MAX) {
+    raplcap_log(WARN, "Time window too large: %.12f sec, using max: %.12f sec\n", seconds, MSR_TIME_MAX * time_units);
     bits = MSR_TIME_MAX;
   } else {
-    bits = (uint64_t) (seconds + 0.5);
+    // round to nearest MSR value ((s + u/2) / u)
+    bits = (uint64_t) (t + 0.5);
   }
   raplcap_log(DEBUG, "to_msr_tw_atom: seconds=%.12f, bits=0x%02lX\n", seconds, bits);
   return bits;
@@ -168,18 +169,18 @@ static uint64_t to_msr_tw_atom_airmont(double seconds, double time_units) {
   // Used only for Airmont PP0 (CORE) zone
   (void) time_units;
   assert(seconds > 0);
-  static const uint64_t MSR_TIME_WINDOW_MIN = 0x0; // 1 second
-  static const uint64_t MSR_TIME_WINDOW_MAX = 0xA; // 50 seconds
+  static const uint64_t MSR_TIME_MIN = 0x0; // 1 second
+  static const uint64_t MSR_TIME_MAX = 0xA; // 50 seconds
   uint64_t bits;
   if (seconds < 1) {
     raplcap_log(WARN, "Time window too small: %.12f sec, using min: 1 sec\n", seconds);
-    bits = MSR_TIME_WINDOW_MIN;
+    bits = MSR_TIME_MIN;
   } else if (seconds > 50) {
     raplcap_log(WARN, "Time window too large: %.12f sec, using max: 50 sec\n", seconds);
-    bits = MSR_TIME_WINDOW_MAX;
+    bits = MSR_TIME_MAX;
   } else {
     // round to nearest multiple of 5
-    bits = (uint64_t) ((seconds + 2.5) / 5.0);
+    bits = (uint64_t) ((seconds / 5.0) + 0.5);
   }
   raplcap_log(DEBUG, "to_msr_tw_atom_airmont: seconds=%.12f, time_units=%.12f, bits=0x%02lX\n",
               seconds, time_units, bits);
@@ -255,6 +256,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     //
     case CPUID_MODEL_CANNONLAKE_MOBILE:
     //
+    // TODO: Indications are that KNL/KNM should be grouped with the _X CPUs below, but the SDM doesn't back that up
     case CPUID_MODEL_XEON_PHI_KNL:
     case CPUID_MODEL_XEON_PHI_KNM:
     //
