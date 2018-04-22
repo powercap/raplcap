@@ -154,12 +154,12 @@ if __name__ == "__main__":
     BROADWELL_CORE.print_line()
     BROADWELL_GT3E = CPU("0x47", "BROADWELL_GT3E", [TBL_19, TBL_20, TBL_24, TBL_28, TBL_29, TBL_34])
     BROADWELL_GT3E.print_line()
-    # BROADWELL_XEON_D: See 2.15.1 for mention of Tables 19 and 28
-    BROADWELL_XEON_D = CPU("0x56", "BROADWELL_XEON_D", [TBL_19, TBL_28, TBL_35])
-    BROADWELL_XEON_D.print_line()
     # BROADWELL_X: Section 2.5.12 specifies the prior tables for this architecture
     BROADWELL_X = CPU("0x4F", "BROADWELL_X", [TBL_19, TBL_20, TBL_28, TBL_35])
     BROADWELL_X.print_line()
+    # BROADWELL_XEON_D: See 2.15.1 for mention of Tables 19 and 28
+    BROADWELL_XEON_D = CPU("0x56", "BROADWELL_XEON_D", [TBL_19, TBL_28, TBL_35])
+    BROADWELL_XEON_D.print_line()
 
     TBL_38 = {MSR_PP0_ENERGY_STATUS: PP0_DEFAULT,
               MSR_PLATFORM_ENERGY_COUNTER: PLATFORM_DEFAULT,
