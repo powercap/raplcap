@@ -2,6 +2,8 @@
 
 This implementation of the `raplcap` interface reads directly from Model-Specific Registers on Linux platforms.
 
+It supports processors described beginning with the Sandy Bridge microarchitecture through the latest documented in the [Intel Software Developer's Manual](https://software.intel.com/en-us/articles/intel-sdm), Volume 4 as of March 2018.
+
 ## Prerequisites
 
 The implementation first checks for the [msr-safe](https://github.com/LLNL/msr-safe) kernel module, otherwise it falls back on the `msr` kernel module.
