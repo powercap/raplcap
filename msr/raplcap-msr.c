@@ -437,7 +437,7 @@ double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zo
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
-  return msr_get_energy_counter(&state->ctx, msrval);
+  return msr_get_energy_counter(&state->ctx, msrval, zone);
 }
 
 double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
@@ -448,5 +448,5 @@ double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplca
   if (state == NULL || msr < 0) {
     return -1;
   }
-  return msr_get_energy_counter_max(&state->ctx);
+  return msr_get_energy_counter_max(&state->ctx, zone);
 }

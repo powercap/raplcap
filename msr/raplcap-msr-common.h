@@ -44,6 +44,7 @@ typedef struct raplcap_msr_ctx {
   const raplcap_msr_zone_cfg* cfg;
   double power_units;
   double energy_units;
+  double energy_units_dram;
   double time_units;
   uint32_t cpu_model;
 } raplcap_msr_ctx;
@@ -93,12 +94,12 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 /**
  * Get the energy counter value in Joules.
  */
-double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval);
+double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone);
 
 /**
  * Get the max energy counter value in Joules.
  */
-double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx);
+double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx, raplcap_zone zone);
 
 #pragma GCC visibility pop
 

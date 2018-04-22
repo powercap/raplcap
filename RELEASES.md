@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
  * MSR implementation support for Atom processors
+ * MSR implementation support for Cannon Lake mobile processors
  * Functions for reading energy counters (also added output to rapl-configure binaries)
  * New -e/--enabled flag for rapl-configure binaries
  * More units tests
@@ -10,6 +11,10 @@
 ### Changed
  * MSR implementation will now only compile on x86 (required for RAPL anyway)
  * Cannot disable zones by setting time window or power limit values to 0 in rapl-configure binaries (use -e/--enabled=0 instead)
+ * Improved runtime checking for short term constraint support
+
+### Fixed
+ * Some server processors have DRAM energy units distinct from those specified in the power unit register
 
 
 ## [v0.2.0] - 2017-12-11

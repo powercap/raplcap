@@ -241,17 +241,13 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_IVYBRIDGE_X:
     //
     case CPUID_MODEL_HASWELL_CORE:
-    case CPUID_MODEL_HASWELL_X:
     case CPUID_MODEL_HASWELL_ULT:
     case CPUID_MODEL_HASWELL_GT3E:
     //
     case CPUID_MODEL_BROADWELL_CORE:
     case CPUID_MODEL_BROADWELL_GT3E:
-    case CPUID_MODEL_BROADWELL_X:
-    case CPUID_MODEL_BROADWELL_XEON_D:
     //
     case CPUID_MODEL_SKYLAKE_MOBILE:
-    case CPUID_MODEL_SKYLAKE_X:
     case CPUID_MODEL_SKYLAKE_DESKTOP:
     //
     case CPUID_MODEL_KABYLAKE_MOBILE:
@@ -267,6 +263,18 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_ATOM_GEMINI_LAKE:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
+      ctx->energy_units_dram = ctx->energy_units;
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_DEFAULT;
+      break;
+    //----
+    case CPUID_MODEL_HASWELL_X:
+    case CPUID_MODEL_BROADWELL_X:
+    case CPUID_MODEL_BROADWELL_XEON_D:
+    case CPUID_MODEL_SKYLAKE_X:
+      ctx->power_units = from_msr_pu_default(units_msrval);
+      ctx->energy_units = from_msr_eu_default(units_msrval);
+      ctx->energy_units_dram = 0.0000153;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT;
       break;
@@ -277,6 +285,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_ATOM_SOFIA:
       ctx->power_units = from_msr_pu_atom(units_msrval);
       ctx->energy_units = from_msr_eu_atom(units_msrval);
+      ctx->energy_units_dram = ctx->energy_units;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_ATOM;
       break;
@@ -284,6 +293,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_ATOM_AIRMONT:
       ctx->power_units = from_msr_pu_atom(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
+      ctx->energy_units_dram = ctx->energy_units;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_ATOM_AIRMONT;
       break;
@@ -294,8 +304,9 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       assert(0);
       break;
   }
-  raplcap_log(DEBUG, "msr_get_context: model=%02X, power_units=%.12f, time_units=%.12f\n",
-              ctx->cpu_model, ctx->power_units, ctx->time_units);
+  raplcap_log(DEBUG, "msr_get_context: model=%02X, "
+              "power_units=%.12f, energy_units=%.12f, energy_units_dram=%.12f, time_units=%.12f\n",
+              ctx->cpu_model, ctx->power_units, ctx->energy_units, ctx->energy_units_dram, ctx->time_units);
 }
 
 // Get the bits requested and shift right if needed; first and last are inclusive
@@ -401,16 +412,16 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
   return msrval;
 }
 
-double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval) {
+double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone) {
   assert(ctx != NULL);
-  double joules = get_bits(msrval, 0, 31) * ctx->energy_units;
+  double joules = get_bits(msrval, 0, 31) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
   raplcap_log(DEBUG, "msr_get_energy_counter: energy_units=%.12f, joules=%.12f\n", ctx->energy_units, joules);
   return joules;
 }
 
-double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx) {
+double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
   assert(ctx != NULL);
-  double joules = pow2_u64(32) * ctx->energy_units;
+  double joules = pow2_u64(32) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
   raplcap_log(DEBUG, "msr_get_energy_counter_max: energy_units=%.12f, joules=%.12f\n", ctx->energy_units, joules);
   return joules;
 }
