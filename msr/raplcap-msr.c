@@ -442,7 +442,6 @@ double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zo
 
 double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   const raplcap_msr* state = get_state(socket, rc);
-  // we don't need zone, but we'll verify that it's valid anyway
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
   raplcap_log(DEBUG, "raplcap_get_energy_counter_max: socket=%"PRIu32", zone=%d\n", socket, zone);
   if (state == NULL || msr < 0) {

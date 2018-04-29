@@ -417,13 +417,14 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone) {
   assert(ctx != NULL);
   double joules = get_bits(msrval, 0, 31) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
-  raplcap_log(DEBUG, "msr_get_energy_counter: energy_units=%.12f, joules=%.12f\n", ctx->energy_units, joules);
+  raplcap_log(DEBUG, "msr_get_energy_counter: joules=%.12f\n", joules);
   return joules;
 }
 
 double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
   assert(ctx != NULL);
+  // Get actual rollover value (2^32 * units) rather than max value that can be read ((2^32 - 1) * units)
   double joules = pow2_u64(32) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
-  raplcap_log(DEBUG, "msr_get_energy_counter_max: energy_units=%.12f, joules=%.12f\n", ctx->energy_units, joules);
+  raplcap_log(DEBUG, "msr_get_energy_counter_max: joules=%.12f\n", joules);
   return joules;
 }
