@@ -13,6 +13,27 @@
 
 #define HAS_SHORT_TERM(ctx, zone) (ctx->cfg[zone].constraints > 1)
 
+#define PU_MASK   0xF
+#define PU_SHIFT  0
+#define EU_MASK   0x1F
+#define EU_SHIFT  8
+#define TU_MASK   0xF
+#define TU_SHIFT  16
+#define PL_MASK   0x7FF
+#define PL1_SHIFT 0
+#define PL2_SHIFT 32
+#define TL_MASK   0x7F
+#define TL1_SHIFT 17
+#define TL2_SHIFT 49
+#define EN_MASK   0x1
+#define EN1_SHIFT 15
+#define EN2_SHIFT 47
+#define CL_MASK   0x1
+#define CL1_SHIFT 16
+#define CL2_SHIFT 48
+#define EY_MASK   0xFFFFFFFF
+#define EY_SHIFT  0
+
 // 2^y
 static uint64_t pow2_u64(uint64_t y) {
   return ((uint64_t) 1) << y;
@@ -29,28 +50,28 @@ static uint64_t log2_u64(uint64_t y) {
 
 // Section 14.9.1
 static double from_msr_pu_default(uint64_t msrval) {
-  return 1.0 / pow2_u64(msrval & 0xF);
+  return 1.0 / pow2_u64((msrval >> PU_SHIFT) & PU_MASK);
 }
 
 // Table 2-8
 static double from_msr_pu_atom(uint64_t msrval) {
-  return pow2_u64(msrval & 0xF) / 1000.0;
+  return pow2_u64((msrval >> PU_SHIFT) & PU_MASK) / 1000.0;
 }
 
 // Section 14.9.1
 static double from_msr_eu_default(uint64_t msrval) {
-  return 1.0 / pow2_u64((msrval >> 8) & 0x1F);
+  return 1.0 / pow2_u64((msrval >> EU_SHIFT) & EU_MASK);
 }
 
 // Table 2-8
 static double from_msr_eu_atom(uint64_t msrval) {
-  return pow2_u64((msrval >> 8) & 0x1F) / 1000000.0;
+  return pow2_u64((msrval >> EU_SHIFT) & EU_MASK) / 1000000.0;
 }
 
 // Section 14.9.1
 static double from_msr_tu_default(uint64_t msrval) {
   // For Atom, Table 2-8 specifies that field value is always 0x0, meaning 1 second, so this works still
-  return 1.0 / pow2_u64((msrval >> 16) & 0xF);
+  return 1.0 / pow2_u64((msrval >> TU_SHIFT) & TU_MASK);
 }
 
 // Section 14.9.1
@@ -311,13 +332,6 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
               ctx->cpu_model, ctx->power_units, ctx->energy_units, ctx->energy_units_dram, ctx->time_units);
 }
 
-// Get the bits requested and shift right if needed; first and last are inclusive
-static uint64_t get_bits(uint64_t msrval, uint8_t first, uint8_t last) {
-  assert(first <= last);
-  assert(last < 64);
-  return (msrval >> first) & (((uint64_t) 1 << (last - first + 1)) - 1);
-}
-
 // Replace the requested msrval bits with data the data in situ; first and last are inclusive
 static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint8_t last) {
   assert(first <= last);
@@ -328,7 +342,8 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
 
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  int ret = get_bits(msrval, 15, 15) == 0x1 && (HAS_SHORT_TERM(ctx, zone) ? get_bits(msrval, 47, 47) == 0x1 : 1);
+  int ret = ((msrval >> EN1_SHIFT) & EN_MASK) == 0x1 &&
+            (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> EN2_SHIFT) & EN_MASK) == 0x1 : 1);
   raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, enabled=%d\n", zone, ret);
   return ret;
 }
@@ -346,7 +361,8 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
 
 int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  int ret = get_bits(msrval, 16, 16) == 0x1 && (HAS_SHORT_TERM(ctx, zone) ? get_bits(msrval, 48, 48) == 0x1 : 1);
+  int ret = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1 &&
+            (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1 : 1);
   raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, clamp=%d\n", zone, ret);
   return ret;
 }
@@ -366,17 +382,17 @@ void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrv
                     raplcap_limit* limit_long, raplcap_limit* limit_short) {
   assert(ctx != NULL);
   if (limit_long != NULL) {
-    limit_long->watts = ctx->cfg[zone].from_msr_pl(get_bits(msrval, 0, 14), ctx->power_units);
-    limit_long->seconds = ctx->cfg[zone].from_msr_tw(get_bits(msrval, 17, 23), ctx->time_units);
+    limit_long->watts = ctx->cfg[zone].from_msr_pl((msrval >> PL1_SHIFT) & PL_MASK, ctx->power_units);
+    limit_long->seconds = ctx->cfg[zone].from_msr_tw((msrval >> TL1_SHIFT) & TL_MASK, ctx->time_units);
     raplcap_log(DEBUG, "msr_get_limits: zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_long->seconds, limit_long->watts);
   }
   if (limit_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
-    limit_short->watts = ctx->cfg[zone].from_msr_pl(get_bits(msrval, 32, 46), ctx->power_units);
+    limit_short->watts = ctx->cfg[zone].from_msr_pl((msrval >> PL2_SHIFT) & PL_MASK, ctx->power_units);
     if (zone == RAPLCAP_ZONE_PSYS) {
       raplcap_log(DEBUG, "msr_get_limits: Documentation does not specify PSys/Platform short term time window\n");
     }
-    limit_short->seconds = ctx->cfg[zone].from_msr_tw(get_bits(msrval, 49, 55), ctx->time_units);
+    limit_short->seconds = ctx->cfg[zone].from_msr_tw((msrval >> TL2_SHIFT) & TL_MASK, ctx->time_units);
     raplcap_log(DEBUG, "msr_get_limits: zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_short->seconds, limit_short->watts);
   }
@@ -416,7 +432,7 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 
 double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone) {
   assert(ctx != NULL);
-  double joules = get_bits(msrval, 0, 31) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
+  double joules = ((msrval >> EY_SHIFT) & EY_MASK) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
   raplcap_log(DEBUG, "msr_get_energy_counter: joules=%.12f\n", joules);
   return joules;
 }
