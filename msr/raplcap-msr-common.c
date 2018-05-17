@@ -277,10 +277,6 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     //
     case CPUID_MODEL_CANNONLAKE_MOBILE:
     //
-    // TODO: Indications are that KNL/KNM should be grouped with the _X CPUs below, but the SDM doesn't back that up
-    case CPUID_MODEL_XEON_PHI_KNL:
-    case CPUID_MODEL_XEON_PHI_KNM:
-    //
     case CPUID_MODEL_ATOM_GOLDMONT:
     case CPUID_MODEL_ATOM_DENVERTON:
     case CPUID_MODEL_ATOM_GEMINI_LAKE:
@@ -295,6 +291,10 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_BROADWELL_X:
     case CPUID_MODEL_BROADWELL_XEON_D:
     case CPUID_MODEL_SKYLAKE_X:
+    // As of May 2018, the SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
+    // However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
+    case CPUID_MODEL_XEON_PHI_KNL:
+    case CPUID_MODEL_XEON_PHI_KNM:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = 0.0000153;
