@@ -4,6 +4,19 @@ This implementation of the `raplcap` interface reads directly from Model-Specifi
 
 It supports processors described beginning with the Sandy Bridge microarchitecture through the latest documented in the [Intel Software Developer's Manual](https://software.intel.com/en-us/articles/intel-sdm), Volume 4 as of March 2018.
 
+To see if your processor is compatible, first check that the CPU is a `GenuineIntel`:
+
+```sh
+cat /proc/cpuinfo | grep vendor | uniq | awk '{print $3}'
+```
+
+Then check if the model is listed in [raplcap-cpuid.h](./raplcap-cpuid.h):
+
+```sh
+printf "0x%X\n" $(cat /proc/cpuinfo | grep model | grep -v name | uniq | cut -d: -f2)
+```
+
+
 ## Prerequisites
 
 The implementation first checks for the [msr-safe](https://github.com/LLNL/msr-safe) kernel module, otherwise it falls back on the `msr` kernel module.
