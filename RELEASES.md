@@ -5,6 +5,7 @@
  * MSR implementation support for Atom processors
  * MSR implementation support for Cannon Lake mobile processors
  * Functions for reading energy counters (also added output to rapl-configure binaries)
+ * MSR implementation functions to expose time, power, and energy units
  * New -e/--enabled flag for rapl-configure binaries
  * More units tests
 

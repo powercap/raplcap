@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include "raplcap.h"
 #include "raplcap-common.h"
+#include "raplcap-msr.h"
 #include "raplcap-msr-common.h"
 
 typedef struct raplcap_msr {
@@ -448,4 +449,34 @@ double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplca
     return -1;
   }
   return msr_get_energy_counter_max(&state->ctx, zone);
+}
+
+double raplcap_msr_get_time_units(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  const raplcap_msr* state = get_state(socket, rc);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
+  raplcap_log(DEBUG, "raplcap_msr_get_time_units: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  return msr_get_time_units(&state->ctx, zone);
+}
+
+double raplcap_msr_get_power_units(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  const raplcap_msr* state = get_state(socket, rc);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
+  raplcap_log(DEBUG, "raplcap_msr_get_power_units: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  return msr_get_power_units(&state->ctx, zone);
+}
+
+double raplcap_msr_get_energy_units(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  const raplcap_msr* state = get_state(socket, rc);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
+  raplcap_log(DEBUG, "raplcap_msr_get_energy_units: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  return msr_get_energy_units(&state->ctx, zone);
 }

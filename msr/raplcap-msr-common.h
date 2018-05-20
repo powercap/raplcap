@@ -86,7 +86,7 @@ void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrv
                     raplcap_limit* limit_long, raplcap_limit* limit_short);
 
 /**
- * Set bit fields on msrval based on limit values > 0..
+ * Set bit fields on msrval based on limit values > 0.
  */
 uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         const raplcap_limit* limit_long, const raplcap_limit* limit_short);
@@ -100,6 +100,21 @@ double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplc
  * Get the max energy counter value in Joules.
  */
 double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx, raplcap_zone zone);
+
+/**
+ * Get the time units in seconds.
+ */
+double msr_get_time_units(const raplcap_msr_ctx* ctx, raplcap_zone zone);
+
+/**
+ * Get the power units in Watts.
+ */
+double msr_get_power_units(const raplcap_msr_ctx* ctx, raplcap_zone zone);
+
+/**
+ * Get the energy units in Joules.
+ */
+double msr_get_energy_units(const raplcap_msr_ctx* ctx, raplcap_zone zone);
 
 #pragma GCC visibility pop
 

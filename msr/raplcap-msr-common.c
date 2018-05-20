@@ -77,7 +77,7 @@ static double from_msr_tu_default(uint64_t msrval) {
 // Section 14.9.1
 static double from_msr_pl_default(uint64_t bits, double power_units) {
   assert(power_units > 0);
-  double watts = power_units * bits;
+  const double watts = power_units * bits;
   raplcap_log(DEBUG, "from_msr_pl_default: bits=%04lX, power_units=%.12f, watts=%.12f\n", bits, power_units, watts);
   return watts;
 }
@@ -108,9 +108,9 @@ static double from_msr_tw_default(uint64_t bits, double time_units) {
   assert(time_units > 0);
   // "Y" is an unsigned integer value represented by lower 5 bits
   // "F" is an unsigned integer value represented by upper 2 bits
-  uint64_t y = bits & 0x1F;
-  uint64_t f = (bits >> 5) & 0x3;
-  double seconds = pow2_u64(y) * ((4 + f) / 4.0) * time_units;
+  const uint64_t y = bits & 0x1F;
+  const uint64_t f = (bits >> 5) & 0x3;
+  const double seconds = pow2_u64(y) * ((4 + f) / 4.0) * time_units;
   raplcap_log(DEBUG, "from_msr_tw_default: bits=0x%02lX, time_units=%.12f, y=0x%02lX, f=0x%lX, seconds=%.12f\n",
               bits, time_units, y, f, seconds);
   return seconds;
@@ -138,7 +138,7 @@ static uint64_t to_msr_tw_default(double seconds, double time_units) {
   const uint64_t y = log2_u64((uint64_t) t);
   // f = (4*t)/(2^y)-4; the real part of "t" only matters for t < 4, otherwise it's insignificant in computing "f"
   const uint64_t f = (((uint64_t) (4 * t)) / pow2_u64(y)) - 4;
-  uint64_t bits = ((y & 0x1F) | ((f & 0x3) << 5));
+  const uint64_t bits = ((y & 0x1F) | ((f & 0x3) << 5));
   raplcap_log(DEBUG, "to_msr_tw_default: seconds=%.12f, time_units=%.12f, t=%.12f, y=0x%02lX, f=0x%lX, bits=0x%02lX\n",
               seconds, time_units, t, y, f, bits);
   return bits;
@@ -148,7 +148,7 @@ static uint64_t to_msr_tw_default(double seconds, double time_units) {
 static double from_msr_tw_atom(uint64_t bits, double time_units) {
   assert(time_units > 0);
   // If 0 is specified in bits [23:17], defaults to 1 second window, which should be the same as time_units.
-  double seconds = bits ? (bits * time_units) : time_units;
+  const double seconds = bits ? (bits * time_units) : time_units;
   raplcap_log(DEBUG, "from_msr_tw_atom: bits=0x%02lX, seconds=%.12f\n", bits, seconds);
   return seconds;
 }
@@ -159,7 +159,7 @@ static uint64_t to_msr_tw_atom(double seconds, double time_units) {
   assert(time_units > 0);
   // time_units should be 1.0, but conceivably could be any whole number in 4 bit range: [1, 15]
   static const uint64_t MSR_TIME_MAX = 0x7F;
-  double t = seconds / time_units;
+  const double t = seconds / time_units;
   uint64_t bits;
   if (seconds < 1) {
     raplcap_log(WARN, "Time window too small: %.12f sec, using min: %.12f sec\n", seconds, 1.0);
@@ -180,7 +180,7 @@ static double from_msr_tw_atom_airmont(uint64_t bits, double time_units) {
   // Used only for Airmont PP0 (CORE) zone
   (void) time_units;
   // If 0 is specified in bits [23:17], defaults to 1 second window.
-  double seconds = bits ? bits * 5.0 : 1.0;
+  const double seconds = bits ? bits * 5.0 : 1.0;
   raplcap_log(DEBUG, "from_msr_tw_atom_airmont: bits=0x%02lX, seconds=%.12f\n", bits, seconds);
   return seconds;
 }
@@ -342,8 +342,8 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
 
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  int ret = ((msrval >> EN1_SHIFT) & EN_MASK) == 0x1 &&
-            (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> EN2_SHIFT) & EN_MASK) == 0x1 : 1);
+  const int ret = ((msrval >> EN1_SHIFT) & EN_MASK) == 0x1 &&
+                  (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> EN2_SHIFT) & EN_MASK) == 0x1 : 1);
   raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, enabled=%d\n", zone, ret);
   return ret;
 }
@@ -361,8 +361,8 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
 
 int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  int ret = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1 &&
-            (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1 : 1);
+  const int ret = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1 &&
+                  (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1 : 1);
   raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, clamp=%d\n", zone, ret);
   return ret;
 }
@@ -432,7 +432,8 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 
 double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone) {
   assert(ctx != NULL);
-  double joules = ((msrval >> EY_SHIFT) & EY_MASK) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
+  const double joules = ((msrval >> EY_SHIFT) & EY_MASK) *
+                        (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
   raplcap_log(DEBUG, "msr_get_energy_counter: joules=%.12f\n", joules);
   return joules;
 }
@@ -440,7 +441,29 @@ double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplc
 double msr_get_energy_counter_max(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
   assert(ctx != NULL);
   // Get actual rollover value (2^32 * units) rather than max value that can be read ((2^32 - 1) * units)
-  double joules = pow2_u64(32) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
+  const double joules = pow2_u64(32) * (zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units);
   raplcap_log(DEBUG, "msr_get_energy_counter_max: joules=%.12f\n", joules);
+  return joules;
+}
+
+double msr_get_time_units(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
+  assert(ctx != NULL);
+  // Airmont PACKAGE domain doesn't use normal time units
+  const double sec = ctx->cfg[zone].to_msr_tw == to_msr_tw_atom_airmont ? 5.0 : ctx->time_units;
+  raplcap_log(DEBUG, "msr_get_time_units: sec=%.12f\n", sec);
+  return sec;
+}
+
+double msr_get_power_units(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
+  assert(ctx != NULL);
+  const double watts = ctx->power_units;
+  raplcap_log(DEBUG, "msr_get_power_units: watts=%.12f\n", watts);
+  return watts;
+}
+
+double msr_get_energy_units(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
+  assert(ctx != NULL);
+  const double joules = zone == RAPLCAP_ZONE_DRAM ? ctx->energy_units_dram : ctx->energy_units;
+  raplcap_log(DEBUG, "msr_get_energy_units: joules=%.12f\n", joules);
   return joules;
 }
