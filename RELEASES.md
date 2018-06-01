@@ -1,6 +1,8 @@
 # Release Notes
 
 ## [Unreleased]
+
+## [v0.3.0] - 2018-06-01
 ### Added
  * MSR implementation support for Atom processors
  * MSR implementation support for Cannon Lake mobile processors
@@ -73,7 +75,8 @@
  * Initial public release
 
 
-[Unreleased]: https://github.com/powercap/raplcap/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.3.0...HEAD
+[v0.3.0]: https://github.com/powercap/raplcap/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/powercap/raplcap/compare/v0.1.2...v0.2.0
 [v0.1.2]: https://github.com/powercap/raplcap/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1
