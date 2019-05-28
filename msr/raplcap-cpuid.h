@@ -10,7 +10,7 @@ extern "C" {
 #define CPUID_VENDOR_ID_GENUINE_INTEL "GenuineIntel"
 
 /* 
- * See: Software Developer's Manual, Volume 4 (March 2018)
+ * See: Software Developer's Manual, Volume 4 (May 2019)
  * See: https://en.wikichip.org/wiki/intel/cpuid
  */
 
@@ -41,13 +41,15 @@ extern "C" {
 
 #define CPUID_MODEL_CANNONLAKE_MOBILE 0x66
 
+// TODO: Not enough info yet for ICELAKE microarchitecture: 0x7D, 0x7E, 0x6A, 0x6C
+
 #define CPUID_MODEL_XEON_PHI_KNL      0x57
 #define CPUID_MODEL_XEON_PHI_KNM      0x85
 
 #define CPUID_MODEL_ATOM_SILVERMONT     0x37 // Bay Trail, Valleyview
 #define CPUID_MODEL_ATOM_SILVERMONT_MID 0x4A // Merriefield
-// "SILVERMONT2" is specified in, but not used by, the Linux kernel
-// Disabled SILVERMONT2 b/c it's documentation is strange; no use supporting an apparently non-existent CPU
+// "ATOM_SILVERMONT_X" is specified in, but not used by, the Linux kernel
+// Disabled ATOM_SILVERMONT_X b/c it's documentation is strange; no use supporting an apparently non-existent CPU
 // #define CPUID_MODEL_ATOM_SILVERMONT_X  0x4D // Avaton, Rangeley
 #define CPUID_MODEL_ATOM_AIRMONT        0x4C // Cherry Trail, Braswell
 #define CPUID_MODEL_ATOM_AIRMONT_MID    0x5A // Moorefield
@@ -57,6 +59,8 @@ extern "C" {
 #define CPUID_MODEL_ATOM_GOLDMONT       0x5C // Apollo Lake
 #define CPUID_MODEL_ATOM_GOLDMONT_X     0x5F // Denverton
 #define CPUID_MODEL_ATOM_GOLDMONT_PLUS  0x7A // Gemini Lake
+
+#define CPUID_MODEL_ATOM_TREMONT_X      0x86 // Jacobsville
 //----
 
 /**

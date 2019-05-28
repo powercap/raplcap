@@ -94,6 +94,7 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       case CPUID_MODEL_ATOM_GOLDMONT:
       case CPUID_MODEL_ATOM_GOLDMONT_X:
       case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
+      case CPUID_MODEL_ATOM_TREMONT_X:
         return 1;
     }
   }
