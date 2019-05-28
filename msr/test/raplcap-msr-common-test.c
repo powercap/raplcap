@@ -60,7 +60,7 @@ static void test_translate_atom(void) {
   static const double TU = 1.0; // time unit
   static const double PU = 0.032; // power unit
   raplcap_msr_ctx ctx;
-  msr_get_context(&ctx, CPUID_MODEL_ATOM_SILVERMONT1, 0x5);
+  msr_get_context(&ctx, CPUID_MODEL_ATOM_SILVERMONT, 0x5);
   // units - power units only, time unit is always 0, meaning 1 second
   // default value is 0101b, meaning 32 mW
   assert(equal_dbl(ctx.power_units, PU));

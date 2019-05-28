@@ -278,8 +278,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_CANNONLAKE_MOBILE:
     //
     case CPUID_MODEL_ATOM_GOLDMONT:
-    case CPUID_MODEL_ATOM_DENVERTON:
-    case CPUID_MODEL_ATOM_GEMINI_LAKE:
+    case CPUID_MODEL_ATOM_GOLDMONT_X:
+    case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
@@ -302,9 +302,9 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->cfg = CFG_DEFAULT;
       break;
     //----
-    case CPUID_MODEL_ATOM_SILVERMONT1:
-    case CPUID_MODEL_ATOM_MERRIFIELD:
-    case CPUID_MODEL_ATOM_MOOREFIELD:
+    case CPUID_MODEL_ATOM_SILVERMONT:
+    case CPUID_MODEL_ATOM_SILVERMONT_MID:
+    case CPUID_MODEL_ATOM_AIRMONT_MID:
     case CPUID_MODEL_ATOM_SOFIA:
       ctx->power_units = from_msr_pu_atom(units_msrval);
       ctx->energy_units = from_msr_eu_atom(units_msrval);

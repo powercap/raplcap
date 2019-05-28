@@ -84,16 +84,16 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       //
       case CPUID_MODEL_CANNONLAKE_MOBILE:
       //
-      case CPUID_MODEL_ATOM_SILVERMONT1:
-      case CPUID_MODEL_ATOM_AIRMONT:
-      case CPUID_MODEL_ATOM_MERRIFIELD:
-      case CPUID_MODEL_ATOM_MOOREFIELD:
-      case CPUID_MODEL_ATOM_GOLDMONT:
-      case CPUID_MODEL_ATOM_GEMINI_LAKE:
-      case CPUID_MODEL_ATOM_DENVERTON:
-      //
       case CPUID_MODEL_XEON_PHI_KNL:
       case CPUID_MODEL_XEON_PHI_KNM:
+      //
+      case CPUID_MODEL_ATOM_SILVERMONT:
+      case CPUID_MODEL_ATOM_SILVERMONT_MID:
+      case CPUID_MODEL_ATOM_AIRMONT:
+      case CPUID_MODEL_ATOM_AIRMONT_MID:
+      case CPUID_MODEL_ATOM_GOLDMONT:
+      case CPUID_MODEL_ATOM_GOLDMONT_X:
+      case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
         return 1;
     }
   }
