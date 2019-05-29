@@ -103,7 +103,7 @@ if __name__ == "__main__":
     TBL_13 = {}
     ATOM_GOLDMONT = CPU("0x5C", "ATOM_GOLDMONT", [TBL_6, TBL_12])
     ATOM_GOLDMONT.print_line()
-    ATOM_GOLDMONT_X = CPU("0x5F", "ATOM_GOLDMONT_X", [])
+    ATOM_GOLDMONT_X = CPU("0x5F", "ATOM_GOLDMONT_X", []) # not documented? kernel uses standard RAPL conversions
     ATOM_GOLDMONT_X.print_line()
     ATOM_GOLDMONT_PLUS = CPU("0x7A", "ATOM_GOLDMONT_PLUS", [TBL_6, TBL_12, TBL_13])
     ATOM_GOLDMONT_PLUS.print_line()
@@ -214,7 +214,7 @@ if __name__ == "__main__":
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
-              MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT,
+              MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT, # community consensus is that Xeon Phi should be DRAM_15_3
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
     TBL_47 = {}
