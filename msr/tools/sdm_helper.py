@@ -77,7 +77,8 @@ if __name__ == "__main__":
              MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
     TBL_9 = {}
     TBL_10 = {MSR_RAPL_POWER_UNIT: "Table 2-10 (Same as 2-8)",
-              MSR_PKG_POWER_LIMIT: PKG_DEFAULT}
+              MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
+              MSR_PKG_ENERGY_STATUS: PKG_DEFAULT}
     TBL_11 = {MSR_PP0_POWER_LIMIT: "Table 2-11"}
     ATOM_SILVERMONT = CPU("0x37", "ATOM_SILVERMONT", [TBL_6, TBL_7, TBL_8, TBL_9])
     ATOM_SILVERMONT.print_line()
