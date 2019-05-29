@@ -278,6 +278,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_CANNONLAKE_MOBILE:
     //
     case CPUID_MODEL_ATOM_GOLDMONT:
+    // As of May 2019, the SDM doesn't document ATOM_GOLDMONT_X (Denverton) MSRs
+    // However, the linux kernel indicates that it uses standard RAPL conversions
     case CPUID_MODEL_ATOM_GOLDMONT_X:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
     case CPUID_MODEL_ATOM_TREMONT_X:
