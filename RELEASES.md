@@ -1,6 +1,12 @@
 # Release Notes
 
 ## [Unreleased]
+### Added
+ * [msr] Support for Atom Tremont ("Jacobsville"), Model 0x86
+
+### Changed
+ * [msr] Updated for the Intel Software Developer's Manual, May 2019 release
+
 
 ## [v0.3.0] - 2018-06-01
 ### Added
