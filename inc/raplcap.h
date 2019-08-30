@@ -84,6 +84,16 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc);
 int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
+ * Check if a zone is locked.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return 0 if locked, 1 if locked, a negative value on error
+ */
+int raplcap_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
+/**
  * Check if a zone is enabled.
  * Constraints can technically be enabled/disabled separately, but for simplicity and compatibility with lower-level
  * RAPL interfaces, we define a zone to be enabled only if all of its constraints are enabled (disabled otherwise).

@@ -31,6 +31,8 @@
 #define CL_MASK   0x1
 #define CL1_SHIFT 16
 #define CL2_SHIFT 48
+#define LCK_MASK  0x1
+#define LCK_SHIFT(ctx, zone) (ctx->cfg[zone].lck_shift)
 #define EY_MASK   0xFFFFFFFF
 #define EY_SHIFT  0
 
@@ -208,36 +210,37 @@ static uint64_t to_msr_tw_atom_airmont(double seconds, double time_units) {
   return bits;
 }
 
-#define CFG_STATIC_INIT(ttw, ftw, tpl, fpl, c) { \
+#define CFG_STATIC_INIT(ttw, ftw, tpl, fpl, c, ls) {   \
   .to_msr_tw = ttw, \
   .from_msr_tw = ftw, \
   .to_msr_pl = tpl, \
   .from_msr_pl = fpl, \
-  .constraints = c }
+  .constraints = c, \
+  .lck_shift=ls }
 
 static const raplcap_msr_zone_cfg CFG_DEFAULT[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2)  // PSYS
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2, 63), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1, 31), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1, 31), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1, 31), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2, 63)  // PSYS
 };
 
 static const raplcap_msr_zone_cfg CFG_ATOM[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2), // PSYS
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 63), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 31), // CORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 31), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 31), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2, 63), // PSYS
 };
 
 // only the CORE time window is different from other ATOM CPUs
 static const raplcap_msr_zone_cfg CFG_ATOM_AIRMONT[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_atom_airmont, from_msr_tw_atom_airmont, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2), // PSYS
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 63), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_atom_airmont, from_msr_tw_atom_airmont, to_msr_pl_default, from_msr_pl_default, 1, 31), // CORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 31), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1, 31), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2, 63), // PSYS
 };
 
 uint32_t msr_get_supported_cpu_model(void) {
@@ -341,6 +344,13 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   assert(last < 64);
   const uint64_t mask = (((uint64_t) 1 << (last - first + 1)) - 1) << first;
   return (msrval & ~mask) | ((data << first) & mask);
+}
+
+int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  const int ret = ((msrval >> LCK_SHIFT(ctx, zone)) & LCK_MASK) == 0x1;
+  raplcap_log(DEBUG, "msr_is_zone_locked: zone=%d, locked=%d\n", zone, ret);
+  return ret;
 }
 
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {

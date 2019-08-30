@@ -38,6 +38,7 @@ typedef struct raplcap_msr_zone_cfg {
   fn_to_msr* to_msr_pl;
   fn_from_msr* from_msr_pl;
   uint8_t constraints;
+  uint8_t lck_shift;
 } raplcap_msr_zone_cfg;
 
 typedef struct raplcap_msr_ctx {
@@ -58,6 +59,11 @@ uint32_t msr_get_supported_cpu_model(void);
  * Populate the context.
  */
 void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_msrval);
+
+/**
+ * Parse msrval to determine if zone is locked.
+ */
+int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
 
 /**
  * Parse msrval to determine if zone is enabled.
