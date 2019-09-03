@@ -15,7 +15,8 @@
 // powercap header
 #include <powercap-rapl.h>
 
-#define MAX_PKG_NAME_SIZE 16
+// format is expected to be: "package-%d" or "package-%d-die-%d"
+#define MAX_PKG_NAME_SIZE 64
 
 #define HAS_SHORT_TERM(pkg, z) (powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT) > 0)
 
@@ -68,7 +69,8 @@ static int sort_pkgs(const void* a, const void* b) {
   int ret;
   if (powercap_rapl_get_name((const powercap_rapl_pkg*) a, POWERCAP_RAPL_ZONE_PACKAGE, name_a, sizeof(name_a)) >= 0 &&
       powercap_rapl_get_name((const powercap_rapl_pkg*) b, POWERCAP_RAPL_ZONE_PACKAGE, name_b, sizeof(name_b)) >= 0) {
-    // assumes names are in the form "package-N" and 0 <= N < 10 (N >= 10 would need more advanced parsing)
+    // assumes names are in the form "package-X" or "package-X-die-Y" and 0 <= X, Y < 10
+    // X, Y >= 10 would need more advanced parsing
     if ((ret = strncmp(name_a, name_b, sizeof(name_a))) > 0) {
       raplcap_log(DEBUG, "sort_pkgs: Packages are out of order\n");
     }

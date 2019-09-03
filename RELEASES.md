@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
  * [msr] Support for Atom Tremont ("Jacobsville"), Model 0x86
+ * [powercap] Support for new "package-X-die-Y" Package zone naming convention in sysfs
 
 ### Changed
  * [msr] Updated for the Intel Software Developer's Manual, May 2019 release
