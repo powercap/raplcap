@@ -369,6 +369,22 @@ int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zon
   return ret;
 }
 
+int raplcap_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+  uint64_t msrval;
+  int ret;
+  const raplcap_msr* state = get_state(socket, rc);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  raplcap_log(DEBUG, "raplcap_is_zone_locked: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
+    return -1;
+  }
+  ret = msr_is_zone_locked(&state->ctx, zone, msrval);
+  if (ret) {
+    raplcap_log(INFO, "Zone is locked\n");
+  }
+  return ret;
+}
+
 int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   uint64_t msrval;
   const raplcap_msr* state = get_state(socket, rc);
