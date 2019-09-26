@@ -3,9 +3,14 @@
 ## [Unreleased]
 ### Added
  * [msr] Support for Atom Tremont ("Jacobsville"), Model 0x86
+ * [powercap] Support for new "package-X-die-Y" Package zone naming convention in sysfs
+ * [powercap] Support for systems with more than 10 packages or dies
 
 ### Changed
  * [msr] Updated for the Intel Software Developer's Manual, May 2019 release
+
+### Fixed
+ * [msr] Fixed [#6]: Use correct power limit mask (credit: Marc Girard)
 
 
 ## [v0.3.0] - 2018-06-01
@@ -86,3 +91,4 @@
 [v0.2.0]: https://github.com/powercap/raplcap/compare/v0.1.2...v0.2.0
 [v0.1.2]: https://github.com/powercap/raplcap/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1
+[#6]: https://github.com/powercap/raplcap/issues/6

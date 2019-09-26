@@ -5,6 +5,7 @@
  * @date 2016-05-13
  */
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -15,7 +16,8 @@
 // powercap header
 #include <powercap-rapl.h>
 
-#define MAX_PKG_NAME_SIZE 16
+// format is expected to be: "package-%d" or "package-%d-die-%d"
+#define MAX_PKG_NAME_SIZE 64
 
 #define HAS_SHORT_TERM(pkg, z) (powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT) > 0)
 
@@ -62,14 +64,62 @@ static uint32_t get_powercap_sockets(void) {
   return sockets;
 }
 
+// compare strings that may contain substrings of natural numbers (values >= 0)
+static int strcmp_nat_lu(const char* l, const char* r) {
+  unsigned long l_val;
+  unsigned long r_val;
+  long diff;
+  char* endptr;
+  int is_num_block = 0;
+  while (*l && *r) {
+    if (is_num_block) {
+      // parse numeric values
+      l_val = strtoul(l, &endptr, 0);
+      l = endptr;
+      r_val = strtoul(r, &endptr, 0);
+      r = endptr;
+      diff = l_val - r_val;
+      if (diff > 0) {
+        return 1;
+      }
+      if (diff < 0) {
+        return -1;
+      }
+      is_num_block = 0;
+    } else {
+      // compare non-numerically until both strings are digits at same index
+      for (; *l && *r; l++, r++) {
+        if (isdigit(*l) && isdigit(*r)) {
+          is_num_block = 1;
+          break;
+        }
+        if (isdigit(*l)) {
+          return -1;
+        }
+        if (isdigit(*r)) {
+          return 1;
+        }
+        diff = *l - *r;
+        if (diff > 0) {
+          return 1;
+        }
+        if (diff < 0) {
+          return -1;
+        }
+      }
+    }
+  }
+  return *r ? -1 : (*l ? 1 : 0);
+}
+
 static int sort_pkgs(const void* a, const void* b) {
   char name_a[MAX_PKG_NAME_SIZE] = { 0 };
   char name_b[MAX_PKG_NAME_SIZE] = { 0 };
   int ret;
   if (powercap_rapl_get_name((const powercap_rapl_pkg*) a, POWERCAP_RAPL_ZONE_PACKAGE, name_a, sizeof(name_a)) >= 0 &&
       powercap_rapl_get_name((const powercap_rapl_pkg*) b, POWERCAP_RAPL_ZONE_PACKAGE, name_b, sizeof(name_b)) >= 0) {
-    // assumes names are in the form "package-N" and 0 <= N < 10 (N >= 10 would need more advanced parsing)
-    if ((ret = strncmp(name_a, name_b, sizeof(name_a))) > 0) {
+    // assumes names are in the form "package-X" or "package-X-die-Y"
+    if ((ret = strcmp_nat_lu(name_a, name_b)) > 0) {
       raplcap_log(DEBUG, "sort_pkgs: Packages are out of order\n");
     }
   } else {

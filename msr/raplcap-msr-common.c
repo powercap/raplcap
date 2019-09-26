@@ -19,7 +19,7 @@
 #define EU_SHIFT  8
 #define TU_MASK   0xF
 #define TU_SHIFT  16
-#define PL_MASK   0x7FF
+#define PL_MASK   0x7FFF
 #define PL1_SHIFT 0
 #define PL2_SHIFT 32
 #define TL_MASK   0x7F
