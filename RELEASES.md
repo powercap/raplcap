@@ -5,6 +5,8 @@
  * [msr] Support for Atom Tremont ("Jacobsville"), Model 0x86
  * [powercap] Support for new "package-X-die-Y" Package zone naming convention in sysfs
  * [powercap] Support for systems with more than 10 packages or dies
+ * [rapl-configure] MSR-only support for locked bit status
+ * [rapl-configure] MSR-only support for clamping bit status
 
 ### Changed
  * [msr] Updated for the Intel Software Developer's Manual, May 2019 release
