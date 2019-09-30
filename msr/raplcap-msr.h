@@ -25,6 +25,16 @@ extern "C" {
 int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
+ * Check if a zone is clamping.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return 0 if not clamping, 1 if clamping, a negative value on error
+ */
+int raplcap_msr_is_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
+/**
  * Get the time units for a zone in seconds.
  *
  * @param rc
