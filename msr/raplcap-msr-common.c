@@ -31,6 +31,7 @@
 #define CL_MASK   0x1
 #define CL1_SHIFT 16
 #define CL2_SHIFT 48
+#define LCK_MASK  0x1
 #define EY_MASK   0xFFFFFFFF
 #define EY_SHIFT  0
 
@@ -341,6 +342,13 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   assert(last < 64);
   const uint64_t mask = (((uint64_t) 1 << (last - first + 1)) - 1) << first;
   return (msrval & ~mask) | ((data << first) & mask);
+}
+
+int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  const int ret = (msrval >> (HAS_SHORT_TERM(ctx, zone) ? 63 : 31) & LCK_MASK) == 0x1;
+  raplcap_log(DEBUG, "msr_is_zone_locked: zone=%d, locked=%d\n", zone, ret);
+  return ret;
 }
 
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {

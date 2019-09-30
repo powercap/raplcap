@@ -15,6 +15,16 @@ extern "C" {
 #include <raplcap.h>
 
 /**
+ * Check if a zone is locked.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return 0 if unlocked, 1 if locked, a negative value on error
+ */
+int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
+/**
  * Get the time units for a zone in seconds.
  *
  * @param rc
