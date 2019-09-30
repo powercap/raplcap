@@ -73,6 +73,9 @@ static void print_usage(int exit_code) {
   exit(exit_code);
 }
 
+// something reasonably outside of errno range
+#define PRINT_LIMIT_IGNORE -1000
+
 static void print_limits(int enabled, int locked, int clamping,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short,
@@ -84,10 +87,10 @@ static void print_limits(int enabled, int locked, int clamping,
   // time window can never be 0, so if it's > 0, the short term constraint exists
   if (seconds_short > 0) {
     printf("%13s: %s\n", "enabled", en);
-    if (locked != -ENOTSUP) {
+    if (locked != PRINT_LIMIT_IGNORE) {
       printf("%13s: %s\n", "locked", lck);
     }
-    if (clamping != -ENOTSUP) {
+    if (clamping != PRINT_LIMIT_IGNORE) {
       printf("%13s: %s\n", "clamped", clmp);
     }
     printf("%13s: %.12f\n", "watts_long", watts_long);
@@ -102,10 +105,10 @@ static void print_limits(int enabled, int locked, int clamping,
     }
   } else {
     printf("%7s: %s\n", "enabled", en);
-    if (locked != -ENOTSUP) {
+    if (locked != PRINT_LIMIT_IGNORE) {
       printf("%7s: %s\n", "locked", lck);
     }
-    if (clamping != -ENOTSUP) {
+    if (clamping != PRINT_LIMIT_IGNORE) {
       printf("%7s: %s\n", "clamped", clmp);
     }
     printf("%7s: %.12f\n", "watts", watts_long);
@@ -165,8 +168,8 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ls;
   double joules;
   double joules_max;
-  int locked = -ENOTSUP;
-  int clamping = -ENOTSUP;
+  int locked = PRINT_LIMIT_IGNORE;
+  int clamping = PRINT_LIMIT_IGNORE;
   int ret;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
