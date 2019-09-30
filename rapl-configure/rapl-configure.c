@@ -14,6 +14,9 @@
 #include <getopt.h>
 #include "raplcap.h"
 #include "raplcap-common.h"
+#ifdef RAPLCAP_msr
+#include "raplcap-msr.h"
+#endif // RAPLCAP_msr
 
 typedef struct rapl_configure_ctx {
   int get_sockets;
@@ -70,15 +73,19 @@ static void print_usage(int exit_code) {
   exit(exit_code);
 }
 
-static void print_limits(int enabled,
+static void print_limits(int enabled, int locked,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short,
                          double joules, double joules_max) {
   // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
+  const char* lck = locked < 0 ? "unknown" : (locked ? "true" : "false");
   // time window can never be 0, so if it's > 0, the short term constraint exists
   if (seconds_short > 0) {
     printf("%13s: %s\n", "enabled", en);
+    if (locked != -ENOTSUP) {
+      printf("%13s: %s\n", "locked", lck);
+    }
     printf("%13s: %.12f\n", "watts_long", watts_long);
     printf("%13s: %.12f\n", "seconds_long", seconds_long);
     printf("%13s: %.12f\n", "watts_short", watts_short);
@@ -91,6 +98,9 @@ static void print_limits(int enabled,
     }
   } else {
     printf("%7s: %s\n", "enabled", en);
+    if (locked != -ENOTSUP) {
+      printf("%7s: %s\n", "locked", lck);
+    }
     printf("%7s: %.12f\n", "watts", watts_long);
     printf("%7s: %.12f\n", "seconds", seconds_long);
     if (joules >= 0) {
@@ -148,6 +158,7 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   raplcap_limit ls;
   double joules;
   double joules_max;
+  int locked = -ENOTSUP;
   int ret;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
@@ -155,6 +166,12 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   if (enabled < 0) {
     print_error_continue("Failed to determine if zone is enabled");
   }
+#ifdef RAPLCAP_msr
+  locked = raplcap_msr_is_zone_locked(NULL, socket, zone);
+  if (locked < 0) {
+    print_error_continue("Failed to determine if zone is locked");
+  }
+#endif // RAPLCAP_msr
   if ((ret = raplcap_get_limits(NULL, socket, zone, &ll, &ls))) {
     perror("Failed to get limits");
     return ret;
@@ -162,7 +179,7 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   // we'll consider energy counter information to be optional
   joules = raplcap_get_energy_counter(NULL, socket, zone);
   joules_max = raplcap_get_energy_counter_max(NULL, socket, zone);
-  print_limits(enabled, ll.watts, ll.seconds, ls.watts, ls.seconds, joules, joules_max);
+  print_limits(enabled, locked, ll.watts, ll.seconds, ls.watts, ls.seconds, joules, joules_max);
   return ret;
 }
 
