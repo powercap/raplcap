@@ -351,40 +351,64 @@ int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t m
   return ret;
 }
 
-int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                        int* en_long, int* en_short) {
   assert(ctx != NULL);
-  const int ret = ((msrval >> EN1_SHIFT) & EN_MASK) == 0x1 &&
-                  (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> EN2_SHIFT) & EN_MASK) == 0x1 : 1);
-  raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, enabled=%d\n", zone, ret);
+  int ret = 0;
+  if (en_long != NULL) {
+    *en_long = ((msrval >> EN1_SHIFT) & EN_MASK) == 0x1;
+    raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, long_term: enabled=%d\n", zone, *en_long);
+    ret++;
+  }
+  if (en_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
+    *en_short = ((msrval >> EN2_SHIFT) & EN_MASK) == 0x1;
+    raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, short_term: enabled=%d\n", zone, *en_short);
+    ret++;
+  }
   return ret;
 }
 
-uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int enabled) {
+uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                              const int* en_long, const int* en_short) {
   assert(ctx != NULL);
-  const uint64_t enabled_bits = enabled ? 0x1 : 0x0;
-  raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, enabled=%d\n", zone, enabled);
-  msrval = replace_bits(msrval, enabled_bits, 15, 15);
-  if (HAS_SHORT_TERM(ctx, zone)) {
-    msrval = replace_bits(msrval, enabled_bits, 47, 47);
+  if (en_long != NULL) {
+    raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, long_term: enabled=%d\n", zone, *en_long);
+    msrval = replace_bits(msrval, *en_long ? 0x1 : 0x0, 15, 15);
+  }
+  if (en_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
+    raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, short_term: enabled=%d\n", zone, *en_short);
+    msrval = replace_bits(msrval, *en_short ? 0x1 : 0x0, 47, 47);
   }
   return msrval;
 }
 
-int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                         int* clamp_long, int* clamp_short) {
   assert(ctx != NULL);
-  const int ret = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1 &&
-                  (HAS_SHORT_TERM(ctx, zone) ? ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1 : 1);
-  raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, clamp=%d\n", zone, ret);
+  int ret = 0;
+  if (clamp_long != NULL) {
+    *clamp_long = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1;
+    raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, long_term: clamp=%d\n", zone, *clamp_long);
+    ret++;
+  }
+  if (clamp_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
+    *clamp_short = ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1;
+    raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, short_term: clamp=%d\n", zone, *clamp_short);
+    ret++;
+  }
   return ret;
 }
 
-uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int clamp) {
+uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                               const int* clamp_long, const int* clamp_short) {
   assert(ctx != NULL);
-  const uint64_t clamp_bits = clamp ? 0x1 : 0x0;
-  raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, clamp=%d\n", zone, clamp);
-  msrval = replace_bits(msrval, clamp_bits, 16, 16);
-  if (HAS_SHORT_TERM(ctx, zone)) {
-    msrval = replace_bits(msrval, clamp_bits, 48, 48);
+  if (clamp_long != NULL) {
+    raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, long_term: clamp=%d\n", zone, *clamp_long);
+    msrval = replace_bits(msrval, *clamp_long ? 0x1 : 0x0, 16, 16);
+  }
+  if (clamp_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
+    raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, short_term: clamp=%d\n", zone, *clamp_short);
+    msrval = replace_bits(msrval, *clamp_short ? 0x1 : 0x0, 48, 48);
   }
   return msrval;
 }

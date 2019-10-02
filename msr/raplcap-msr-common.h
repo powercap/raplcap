@@ -67,22 +67,26 @@ int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t m
 /**
  * Parse msrval to determine if zone is enabled.
  */
-int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
+int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                        int* en_long, int* en_short);
 
 /**
  * Set bit fields on msrval to enable/disable zone. Returns modified msrval.
  */
-uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int enabled);
+uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                              const int* en_long, const int* en_short);
 
 /**
  * Parse msrval to determine if zone clamping is enabled.
  */
-int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
+int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                         int* clamp_long, int* clamp_short);
 
 /**
  * Set bit fields on msrval to enable/disable zone clamping. Returns modified msrval.
  */
-uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int clamp);
+uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                               const int* clamp_long, const int* clamp_short);
 
 /**
  * Parse msrval and translate bit fields to populate limits.

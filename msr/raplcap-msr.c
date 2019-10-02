@@ -355,6 +355,7 @@ static raplcap_msr* get_state(uint32_t socket, const raplcap* rc) {
 
 int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   uint64_t msrval;
+  int en[2] = { 1, 1 };
   int ret;
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
@@ -362,8 +363,9 @@ int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zon
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
-  ret = msr_is_zone_enabled(&state->ctx, zone, msrval);
-  if (ret && !msr_is_zone_clamping(&state->ctx, zone, msrval)) {
+  msr_is_zone_enabled(&state->ctx, zone, msrval, &en[0], &en[1]);
+  ret = en[0] && en[1];
+  if (ret && !raplcap_msr_is_zone_clamping(rc, socket, zone)) {
     raplcap_log(INFO, "Zone is enabled but clamping is not\n");
   }
   return ret;
@@ -393,10 +395,10 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zo
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
-  msrval = msr_set_zone_enabled(&state->ctx, zone, msrval, enabled);
+  msrval = msr_set_zone_enabled(&state->ctx, zone, msrval, &enabled, &enabled);
   if ((ret = write_msr_by_offset(state->fds[socket], msr, msrval, 0)) == 0) {
     // try to enable clamping (not supported by all zones or all CPUs)
-    msrval = msr_set_zone_clamping(&state->ctx, zone, msrval, enabled);
+    msrval = msr_set_zone_clamping(&state->ctx, zone, msrval, &enabled, &enabled);
     if (write_msr_by_offset(state->fds[socket], msr, msrval, 1)) {
       raplcap_log(INFO, "Clamping not available for this zone or platform\n");
     }
@@ -464,13 +466,15 @@ int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone 
 
 int raplcap_msr_is_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   uint64_t msrval;
+  int clamp[2] = { 1, 1 };
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_msr_is_zone_clamping: socket=%"PRIu32", zone=%d\n", socket, zone);
   if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
     return -1;
   }
-  return msr_is_zone_clamping(&state->ctx, zone, msrval);
+  msr_is_zone_clamping(&state->ctx, zone, msrval, &clamp[0], &clamp[1]);
+  return clamp[0] && clamp[1];
 }
 
 double raplcap_msr_get_time_units(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
