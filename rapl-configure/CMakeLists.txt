@@ -1,10 +1,13 @@
 # Binaries
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  option(RAPLCAP_CONFIGURE_MSR_EXTRA "Enable extra features in rapl-configure-msr" OFF)
   set(RAPL_LIB "msr")
   add_executable(rapl-configure-${RAPL_LIB} rapl-configure.c)
   target_include_directories(rapl-configure-${RAPL_LIB} PRIVATE ../msr)
-  target_compile_definitions(rapl-configure-${RAPL_LIB} PRIVATE RAPLCAP_${RAPL_LIB})
+  if (RAPLCAP_CONFIGURE_MSR_EXTRA)
+    target_compile_definitions(rapl-configure-${RAPL_LIB} PRIVATE RAPLCAP_${RAPL_LIB})
+  endif()
   target_link_libraries(rapl-configure-${RAPL_LIB} raplcap-${RAPL_LIB})
   install(TARGETS rapl-configure-${RAPL_LIB} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
