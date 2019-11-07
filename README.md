@@ -125,6 +125,7 @@ For backend-specific runtime dependencies, see the README files in their impleme
 The following is a simple example of setting power caps.
 
 ``` C
+  // Note: more robust error handling may be desirable for a real application
   raplcap rc;
   raplcap_limit rl_short, rl_long;
   uint32_t i, n;
@@ -142,7 +143,7 @@ The following is a simple example of setting power caps.
     return -1;
   }
 
-  // for each socket, set a powercap of 100 Watts for short_term and 50 Watts for long_term constraints
+  // for each socket, set a power cap of 100 Watts for short_term and 50 Watts for long_term constraints
   // a time window of 0 leaves the time window unchanged
   rl_short.watts = 100.0;
   rl_short.seconds = 0.0;
@@ -151,6 +152,14 @@ The following is a simple example of setting power caps.
   for (i = 0; i < n; i++) {
     if (raplcap_set_limits(&rc, i, RAPLCAP_ZONE_PACKAGE, &rl_long, &rl_short)) {
       perror("raplcap_set_limits");
+    }
+  }
+
+  // for each socket, enable the power caps
+  // this could be done before setting caps, at the risk of enabling unknown power cap values first
+  for (i = 0; i < n; i++) {
+    if (raplcap_set_zone_enabled(&rc, i, RAPLCAP_ZONE_PACKAGE, 1)) {
+      perror("raplcap_set_zone_enabled");
     }
   }
 

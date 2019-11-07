@@ -9,6 +9,7 @@
  * [rapl-configure] MSR-only support for clamping bit status
 
 ### Changed
+ * README: Enable zones in example code snippet ([#7])
  * [msr] Updated for the Intel Software Developer's Manual, May 2019 release
 
 ### Fixed
@@ -94,3 +95,4 @@
 [v0.1.2]: https://github.com/powercap/raplcap/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1
 [#6]: https://github.com/powercap/raplcap/issues/6
+[#7]: https://github.com/powercap/raplcap/issues/7
