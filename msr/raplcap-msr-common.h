@@ -60,16 +60,6 @@ uint32_t msr_get_supported_cpu_model(void);
 void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_msrval);
 
 /**
- * Parse msrval to determine if zone is locked.
- */
-int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
-
-/**
- * Set bit fields on msrval to lock/unlock a zone (in practice a zone can't be unlocked). Returns modified msrval.
- */
-uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked);
-
-/**
  * Parse msrval to determine if zone is enabled.
  */
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
@@ -92,6 +82,16 @@ int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t
  */
 uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                                const int* clamp_long, const int* clamp_short);
+
+/**
+ * Parse msrval to determine if zone is locked.
+ */
+int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
+
+/**
+ * Set bit fields on msrval to lock/unlock a zone (in practice a zone can't be unlocked). Returns modified msrval.
+ */
+uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked);
 
 /**
  * Parse msrval and translate bit fields to populate limits.

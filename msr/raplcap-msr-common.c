@@ -344,21 +344,6 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   return (msrval & ~mask) | ((data << first) & mask);
 }
 
-int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
-  assert(ctx != NULL);
-  const int ret = (msrval >> (HAS_SHORT_TERM(ctx, zone) ? 63 : 31) & LCK_MASK) == 0x1;
-  raplcap_log(DEBUG, "msr_is_zone_locked: zone=%d, locked=%d\n", zone, ret);
-  return ret;
-}
-
-uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked) {
-  assert(ctx != NULL);
-  const uint8_t b = HAS_SHORT_TERM(ctx, zone) ? 63 : 31;
-  raplcap_log(DEBUG, "msr_set_zone_locked: zone=%d, locked=%d\n", zone, locked);
-  msrval = replace_bits(msrval, locked ? 1 : 0, b, b);
-  return msrval;
-}
-
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         int* en_long, int* en_short) {
   assert(ctx != NULL);
@@ -418,6 +403,21 @@ uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, ui
     raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, short_term: clamp=%d\n", zone, *clamp_short);
     msrval = replace_bits(msrval, *clamp_short ? 0x1 : 0x0, 48, 48);
   }
+  return msrval;
+}
+
+int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  const int ret = (msrval >> (HAS_SHORT_TERM(ctx, zone) ? 63 : 31) & LCK_MASK) == 0x1;
+  raplcap_log(DEBUG, "msr_is_zone_locked: zone=%d, locked=%d\n", zone, ret);
+  return ret;
+}
+
+uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked) {
+  assert(ctx != NULL);
+  const uint8_t b = HAS_SHORT_TERM(ctx, zone) ? 63 : 31;
+  raplcap_log(DEBUG, "msr_set_zone_locked: zone=%d, locked=%d\n", zone, locked);
+  msrval = replace_bits(msrval, locked ? 1 : 0, b, b);
   return msrval;
 }
 

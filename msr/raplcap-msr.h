@@ -15,27 +15,6 @@ extern "C" {
 #include <raplcap.h>
 
 /**
- * Check if a zone is locked.
- *
- * @param rc
- * @param socket
- * @param zone
- * @return 0 if unlocked, 1 if locked, a negative value on error
- */
-int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
-
-/**
- * Lock a zone.
- * Note: once locked, a zone cannot be unlocked until CPU is reset.
- *
- * @param rc
- * @param socket
- * @param zone
- * @return 0 on success, a negative value on error
- */
-int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
-
-/**
  * Check if a zone is clamping.
  *
  * @param rc
@@ -56,6 +35,27 @@ int raplcap_msr_is_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zon
  * @return 0 on success, a negative value on error
  */
 int raplcap_msr_set_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone, int clamping);
+
+/**
+ * Check if a zone is locked.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return 0 if unlocked, 1 if locked, a negative value on error
+ */
+int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
+/**
+ * Lock a zone.
+ * Note: once locked, a zone cannot be unlocked until CPU is reset.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return 0 on success, a negative value on error
+ */
+int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
  * Get the time units for a zone in seconds.
