@@ -7,6 +7,7 @@
 * [msr] Support for Atom Tremont ("Jacobsville"), Model 0x86
 * [msr] Function 'raplcap_msr_is_zone_locked'
 * [msr] Function 'raplcap_msr_is_zone_clamping'
+* [msr] Function 'raplcap_msr_set_zone_clamping'
 * [powercap] Support for new "package-X-die-Y" Package zone naming convention in sysfs
 * [powercap] Support for systems with more than 10 packages or dies
 * [rapl-configure] MSR-only support for locked bit status

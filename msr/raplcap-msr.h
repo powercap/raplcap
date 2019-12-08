@@ -35,6 +35,18 @@ int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone 
 int raplcap_msr_is_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
+ * Set/unset zone clamping.
+ * Note: clamping is automatically set when a zone is enabled.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @param clamping
+ * @return 0 on success, a negative value on error
+ */
+int raplcap_msr_set_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone, int clamping);
+
+/**
  * Get the time units for a zone in seconds.
  *
  * @param rc

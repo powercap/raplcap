@@ -477,6 +477,18 @@ int raplcap_msr_is_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zon
   return clamp[0] && clamp[1];
 }
 
+int raplcap_msr_set_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone, int clamping) {
+  uint64_t msrval;
+  const raplcap_msr* state = get_state(socket, rc);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  raplcap_log(DEBUG, "raplcap_msr_set_zone_clamping: socket=%"PRIu32", zone=%d\n", socket, zone);
+  if (state == NULL || msr < 0 || read_msr_by_offset(state->fds[socket], msr, &msrval, 0)) {
+    return -1;
+  }
+  msrval = msr_set_zone_clamping(&state->ctx, zone, msrval, &clamping, &clamping);
+  return write_msr_by_offset(state->fds[socket], msr, msrval, 0);
+}
+
 double raplcap_msr_get_time_units(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
