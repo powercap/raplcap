@@ -25,6 +25,17 @@ extern "C" {
 int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
+ * Lock a zone.
+ * Note: once locked, a zone cannot be unlocked until CPU is reset.
+ *
+ * @param rc
+ * @param socket
+ * @param zone
+ * @return 0 on success, a negative value on error
+ */
+int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+
+/**
  * Check if a zone is clamping.
  *
  * @param rc
