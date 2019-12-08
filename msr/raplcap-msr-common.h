@@ -65,6 +65,11 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
 int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
 
 /**
+ * Set bit fields on msrval to lock/unlock a zone (in practice a zone can't be unlocked). Returns modified msrval.
+ */
+uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked);
+
+/**
  * Parse msrval to determine if zone is enabled.
  */
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,

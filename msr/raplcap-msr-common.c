@@ -351,6 +351,14 @@ int msr_is_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t m
   return ret;
 }
 
+uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked) {
+  assert(ctx != NULL);
+  const uint8_t b = HAS_SHORT_TERM(ctx, zone) ? 63 : 31;
+  raplcap_log(DEBUG, "msr_set_zone_locked: zone=%d, locked=%d\n", zone, locked);
+  msrval = replace_bits(msrval, locked ? 1 : 0, b, b);
+  return msrval;
+}
+
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         int* en_long, int* en_short) {
   assert(ctx != NULL);
