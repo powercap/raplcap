@@ -10,8 +10,6 @@
 #include "../raplcap-msr-common.h"
 #include "../raplcap-cpuid.h"
 
-// TODO: Test additional functions (cpu_model, enabled, clamping, energy...)
-
 static double abs_dbl(double a) {
   return a >= 0 ? a : -a;
 }
@@ -129,11 +127,168 @@ static void test_translate_atom_airmont(void) {
   assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(50.01, TU) == 0xA);
 }
 
+#define TEST_CPU_MODEL CPUID_MODEL_BROADWELL_CORE
+#define TEST_UNITS_MSRVAL 0x00000000000A0E03
+
+static const unsigned int TEST_ZONE_COUNT = 2;
+static const raplcap_zone TEST_ZONES[] = { RAPLCAP_ZONE_PACKAGE, RAPLCAP_ZONE_CORE };
+static const int TEST_ZONES_HAS_SHORT[] = { 1, 0 };
+
+#define MSRVAL_LOCKED_LONG 0x80000000
+#define MSRVAL_LOCKED_SHORT 0x8000000000000000
+void test_locked(void) {
+  raplcap_msr_ctx ctx;
+  uint64_t msrval;
+  int i;
+  msr_get_context(&ctx, TEST_CPU_MODEL, TEST_UNITS_MSRVAL);
+
+  for (i = 0; i < TEST_ZONE_COUNT; i++) {
+    assert(msr_is_zone_locked(&ctx, TEST_ZONES[i], 0) == 0);
+    msrval = msr_set_zone_locked(&ctx, TEST_ZONES[i], 0, 1);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(msrval == MSRVAL_LOCKED_SHORT);
+    } else {
+      assert(msrval == MSRVAL_LOCKED_LONG);
+    }
+    assert(msr_is_zone_locked(&ctx, TEST_ZONES[i], msrval));
+    msrval = msr_set_zone_locked(&ctx, TEST_ZONES[i], msrval, 0);
+    assert(msrval == 0);
+  }
+}
+
+#define MSRVAL_ENABLED_LONG 0x8000
+#define MSRVAL_ENABLED_SHORT 0x800000000000
+#define MSRVAL_ENABLED_BOTH (MSRVAL_ENABLED_LONG | MSRVAL_ENABLED_SHORT)
+void test_enabled(void) {
+  raplcap_msr_ctx ctx;
+  uint64_t msrval;
+  int i;
+  int en_long;
+  int en_short;
+  int rc;
+  msr_get_context(&ctx, TEST_CPU_MODEL, TEST_UNITS_MSRVAL);
+
+  for (i = 0; i < TEST_ZONE_COUNT; i++) {
+    en_long = 1;
+    en_short = 1;
+    rc = msr_is_zone_enabled(&ctx, TEST_ZONES[i], 0, &en_long, &en_short);
+    assert(en_long == 0);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(rc == 2);
+      assert(en_short == 0);
+    } else {
+      assert(rc == 1);
+      assert(en_short);
+    }
+    en_long = 1;
+    msrval = msr_set_zone_enabled(&ctx, TEST_ZONES[i], 0, &en_long, NULL);
+    assert(msrval == MSRVAL_ENABLED_LONG);
+    en_long = 0;
+    en_short = 0;
+    msr_is_zone_enabled(&ctx, TEST_ZONES[i], msrval, &en_long, &en_short);
+    assert(en_long);
+    assert(en_short == 0);
+    en_short = 1;
+    msrval = msr_set_zone_enabled(&ctx, TEST_ZONES[i], 0, 0, &en_short);
+    en_long = 0;
+    en_short = 0;
+    msr_is_zone_enabled(&ctx, TEST_ZONES[i], msrval, &en_long, &en_short);
+    assert(!en_long);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(msrval == MSRVAL_ENABLED_SHORT);
+      assert(en_short);
+    } else {
+      assert(msrval == 0);
+      assert(en_short == 0);
+    }
+    en_long = 1;
+    en_short = 1;
+    msrval = msr_set_zone_enabled(&ctx, TEST_ZONES[i], 0, &en_long, &en_short);
+    en_long = 0;
+    en_short = 0;
+    msr_is_zone_enabled(&ctx, TEST_ZONES[i], msrval, &en_long, &en_short);
+    assert(en_long);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(msrval == MSRVAL_ENABLED_BOTH);
+      assert(en_short);
+    } else {
+      assert(msrval == MSRVAL_ENABLED_LONG);
+      assert(en_short == 0);
+    }
+  }
+}
+
+#define MSRVAL_CLAMPING_LONG 0x10000
+#define MSRVAL_CLAMPING_SHORT 0x1000000000000
+#define MSRVAL_CLAMPING_BOTH (MSRVAL_CLAMPING_LONG | MSRVAL_CLAMPING_SHORT)
+void test_clamping(void) {
+  raplcap_msr_ctx ctx;
+  uint64_t msrval;
+  int i;
+  int cl_long;
+  int cl_short;
+  int rc;
+  msr_get_context(&ctx, TEST_CPU_MODEL, TEST_UNITS_MSRVAL);
+
+  for (i = 0; i < TEST_ZONE_COUNT; i++) {
+    cl_long = 1;
+    cl_short = 1;
+    rc = msr_is_zone_clamping(&ctx, TEST_ZONES[i], 0, &cl_long, &cl_short);
+    assert(cl_long == 0);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(rc == 2);
+      assert(cl_short == 0);
+    } else {
+      assert(rc == 1);
+      assert(cl_short);
+    }
+    cl_long = 1;
+    msrval = msr_set_zone_clamping(&ctx, TEST_ZONES[i], 0, &cl_long, NULL);
+    assert(msrval == MSRVAL_CLAMPING_LONG);
+    cl_long = 0;
+    cl_short = 0;
+    msr_is_zone_clamping(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
+    assert(cl_long);
+    assert(cl_short == 0);
+    cl_short = 1;
+    msrval = msr_set_zone_clamping(&ctx, TEST_ZONES[i], 0, 0, &cl_short);
+    cl_long = 0;
+    cl_short = 0;
+    msr_is_zone_clamping(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
+    assert(!cl_long);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(msrval == MSRVAL_CLAMPING_SHORT);
+      assert(cl_short);
+    } else {
+      assert(msrval == 0);
+      assert(cl_short == 0);
+    }
+    cl_long = 1;
+    cl_short = 1;
+    msrval = msr_set_zone_clamping(&ctx, TEST_ZONES[i], 0, &cl_long, &cl_short);
+    cl_long = 0;
+    cl_short = 0;
+    msr_is_zone_clamping(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
+    assert(cl_long);
+    if (TEST_ZONES_HAS_SHORT[i]) {
+      assert(msrval == MSRVAL_CLAMPING_BOTH);
+      assert(cl_short);
+    } else {
+      assert(msrval == MSRVAL_CLAMPING_LONG);
+      assert(cl_short == 0);
+    }
+  }
+}
+
 int main(void) {
   // test the private translate functions
   test_translate_default();
   test_translate_atom();
   test_translate_atom_airmont();
-  // TODO: Test functions in the header
+  // test boolean bit fields
+  test_locked();
+  test_enabled();
+  test_clamping();
+  // TODO: Test additional functions (power/time/energy units...)
   return 0;
 }
