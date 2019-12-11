@@ -233,7 +233,7 @@ void test_clamping(void) {
   for (i = 0; i < TEST_ZONE_COUNT; i++) {
     cl_long = 1;
     cl_short = 1;
-    rc = msr_is_zone_clamping(&ctx, TEST_ZONES[i], 0, &cl_long, &cl_short);
+    rc = msr_is_zone_clamped(&ctx, TEST_ZONES[i], 0, &cl_long, &cl_short);
     assert(cl_long == 0);
     if (TEST_ZONES_HAS_SHORT[i]) {
       assert(rc == 2);
@@ -243,18 +243,18 @@ void test_clamping(void) {
       assert(cl_short);
     }
     cl_long = 1;
-    msrval = msr_set_zone_clamping(&ctx, TEST_ZONES[i], 0, &cl_long, NULL);
+    msrval = msr_set_zone_clamped(&ctx, TEST_ZONES[i], 0, &cl_long, NULL);
     assert(msrval == MSRVAL_CLAMPING_LONG);
     cl_long = 0;
     cl_short = 0;
-    msr_is_zone_clamping(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
+    msr_is_zone_clamped(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
     assert(cl_long);
     assert(cl_short == 0);
     cl_short = 1;
-    msrval = msr_set_zone_clamping(&ctx, TEST_ZONES[i], 0, 0, &cl_short);
+    msrval = msr_set_zone_clamped(&ctx, TEST_ZONES[i], 0, 0, &cl_short);
     cl_long = 0;
     cl_short = 0;
-    msr_is_zone_clamping(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
+    msr_is_zone_clamped(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
     assert(!cl_long);
     if (TEST_ZONES_HAS_SHORT[i]) {
       assert(msrval == MSRVAL_CLAMPING_SHORT);
@@ -265,10 +265,10 @@ void test_clamping(void) {
     }
     cl_long = 1;
     cl_short = 1;
-    msrval = msr_set_zone_clamping(&ctx, TEST_ZONES[i], 0, &cl_long, &cl_short);
+    msrval = msr_set_zone_clamped(&ctx, TEST_ZONES[i], 0, &cl_long, &cl_short);
     cl_long = 0;
     cl_short = 0;
-    msr_is_zone_clamping(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
+    msr_is_zone_clamped(&ctx, TEST_ZONES[i], msrval, &cl_long, &cl_short);
     assert(cl_long);
     if (TEST_ZONES_HAS_SHORT[i]) {
       assert(msrval == MSRVAL_CLAMPING_BOTH);

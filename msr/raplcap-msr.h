@@ -15,26 +15,26 @@ extern "C" {
 #include <raplcap.h>
 
 /**
- * Check if a zone is clamping.
+ * Check if a zone is clamped.
  *
  * @param rc
  * @param socket
  * @param zone
- * @return 0 if not clamping, 1 if clamping, a negative value on error
+ * @return 0 if not clamped, 1 if clamped, a negative value on error
  */
-int raplcap_msr_is_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone);
+int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t socket, raplcap_zone zone);
 
 /**
- * Set/unset zone clamping.
+ * Clamp/unclamp a zone.
  * Note: clamping is automatically set when a zone is enabled.
  *
  * @param rc
  * @param socket
  * @param zone
- * @param clamping
+ * @param clamp
  * @return 0 on success, a negative value on error
  */
-int raplcap_msr_set_zone_clamping(const raplcap* rc, uint32_t socket, raplcap_zone zone, int clamping);
+int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t socket, raplcap_zone zone, int clamped);
 
 /**
  * Check if a zone is locked.

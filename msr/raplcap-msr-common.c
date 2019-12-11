@@ -375,33 +375,33 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
   return msrval;
 }
 
-int msr_is_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
-                         int* clamp_long, int* clamp_short) {
+int msr_is_zone_clamped(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                        int* cl_long, int* cl_short) {
   assert(ctx != NULL);
   int ret = 0;
-  if (clamp_long != NULL) {
-    *clamp_long = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1;
-    raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, long_term: clamp=%d\n", zone, *clamp_long);
+  if (cl_long != NULL) {
+    *cl_long = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1;
+    raplcap_log(DEBUG, "msr_is_zone_clamped: zone=%d, long_term: clamp=%d\n", zone, *cl_long);
     ret++;
   }
-  if (clamp_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
-    *clamp_short = ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1;
-    raplcap_log(DEBUG, "msr_is_zone_clamping: zone=%d, short_term: clamp=%d\n", zone, *clamp_short);
+  if (cl_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
+    *cl_short = ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1;
+    raplcap_log(DEBUG, "msr_is_zone_clamped: zone=%d, short_term: clamp=%d\n", zone, *cl_short);
     ret++;
   }
   return ret;
 }
 
-uint64_t msr_set_zone_clamping(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
-                               const int* clamp_long, const int* clamp_short) {
+uint64_t msr_set_zone_clamped(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
+                              const int* cl_long, const int* cl_short) {
   assert(ctx != NULL);
-  if (clamp_long != NULL) {
-    raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, long_term: clamp=%d\n", zone, *clamp_long);
-    msrval = replace_bits(msrval, *clamp_long ? 0x1 : 0x0, 16, 16);
+  if (cl_long != NULL) {
+    raplcap_log(DEBUG, "msr_set_zone_clamped: zone=%d, long_term: clamp=%d\n", zone, *cl_long);
+    msrval = replace_bits(msrval, *cl_long ? 0x1 : 0x0, 16, 16);
   }
-  if (clamp_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
-    raplcap_log(DEBUG, "msr_set_zone_clamping: zone=%d, short_term: clamp=%d\n", zone, *clamp_short);
-    msrval = replace_bits(msrval, *clamp_short ? 0x1 : 0x0, 48, 48);
+  if (cl_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
+    raplcap_log(DEBUG, "msr_set_zone_clamped: zone=%d, short_term: clamp=%d\n", zone, *cl_short);
+    msrval = replace_bits(msrval, *cl_short ? 0x1 : 0x0, 48, 48);
   }
   return msrval;
 }

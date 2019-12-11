@@ -181,8 +181,8 @@ static int configure_limits(const rapl_configure_ctx* c) {
   //       As a result:
   //       1) We set clamping here AFTER enabling in case clamping was requested to be off
   //       2) The user must always explicitly request clamping to be off when setting RAPL limits
-  if (c->set_clamped && (ret = raplcap_msr_set_zone_clamping(NULL, c->socket, c->zone, c->clamped))) {
-    perror("Failed to set zone clamping");
+  if (c->set_clamped && (ret = raplcap_msr_set_zone_clamped(NULL, c->socket, c->zone, c->clamped))) {
+    perror("Failed to clamp/unclamp zone");
     return ret;
   }
   if (c->set_locked && (ret = raplcap_msr_set_zone_locked(NULL, c->socket, c->zone))) {
@@ -212,7 +212,7 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   if (locked < 0) {
     print_error_continue("Failed to determine if zone is locked");
   }
-  clamped = raplcap_msr_is_zone_clamping(NULL, socket, zone);
+  clamped = raplcap_msr_is_zone_clamped(NULL, socket, zone);
   if (clamped < 0) {
     print_error_continue("Failed to determine if zone is clamped");
   }
