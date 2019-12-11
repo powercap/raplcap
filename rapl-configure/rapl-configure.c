@@ -30,11 +30,16 @@ typedef struct rapl_configure_ctx {
   int set_short;
   double watts_short;
   double sec_short;
+#ifdef RAPLCAP_msr
+  int clamped;
+  int set_clamped;
+  int set_locked;
+#endif // RAPLCAP_msr
 } rapl_configure_ctx;
 
 static rapl_configure_ctx ctx;
 static const char* prog;
-static const char short_options[] = "nc:z:e:s:w:S:W:h";
+static const char short_options[] = "nc:z:e:s:w:S:W:C:Lh";
 static const struct option long_options[] = {
   {"nsockets", no_argument,       NULL, 'n'},
   {"socket",   required_argument, NULL, 'c'},
@@ -44,6 +49,10 @@ static const struct option long_options[] = {
   {"watts0",   required_argument, NULL, 'w'},
   {"seconds1", required_argument, NULL, 'S'},
   {"watts1",   required_argument, NULL, 'W'},
+#ifdef RAPLCAP_msr
+  {"clamped",  required_argument, NULL, 'C'},
+  {"locked",   no_argument,       NULL, 'L'},
+#endif // RAPLCAP_msr
   {"help",     no_argument,       NULL, 'h'},
   {0, 0, 0, 0}
 };
@@ -65,6 +74,13 @@ static void print_usage(int exit_code) {
           "  -w, --watts0=WATTS       Long term power limit\n"
           "  -S, --seconds1=SECONDS   Short term time window (PACKAGE & PSYS only)\n"
           "  -W, --watts1=WATTS       Short term power limit (PACKAGE & PSYS only)\n"
+#ifdef RAPLCAP_msr
+          "  -C, --clamped=1|0        Clamp/unclamp a zone\n"
+          "                           Clamping is automatically set when enabling\n"
+          "                           Therefore, you MUST explicitly set --clamped=0 when\n"
+          "                           setting limits (since zones are auto-enabled)\n"
+          "  -L, --locked             Lock a zone (a core RESET is required to unlock)\n"
+#endif // RAPLCAP_msr
           "  -h, --help               Print this message and exit\n\n"
           "Current values are printed if no flags, or only socket and/or zone flags, are specified.\n"
           "Otherwise, specified values are set while other values remain unmodified.\n"
@@ -76,21 +92,21 @@ static void print_usage(int exit_code) {
 // something reasonably outside of errno range
 #define PRINT_LIMIT_IGNORE -1000
 
-static void print_limits(int enabled, int locked, int clamping,
+static void print_limits(int enabled, int locked, int clamped,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short,
                          double joules, double joules_max) {
   // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
   const char* lck = locked < 0 ? "unknown" : (locked ? "true" : "false");
-  const char* clmp = clamping < 0 ? "unknown" : (clamping ? "true" : "false");
+  const char* clmp = clamped < 0 ? "unknown" : (clamped ? "true" : "false");
   // time window can never be 0, so if it's > 0, the short term constraint exists
   if (seconds_short > 0) {
     printf("%13s: %s\n", "enabled", en);
     if (locked != PRINT_LIMIT_IGNORE) {
       printf("%13s: %s\n", "locked", lck);
     }
-    if (clamping != PRINT_LIMIT_IGNORE) {
+    if (clamped != PRINT_LIMIT_IGNORE) {
       printf("%13s: %s\n", "clamped", clmp);
     }
     printf("%13s: %.12f\n", "watts_long", watts_long);
@@ -108,7 +124,7 @@ static void print_limits(int enabled, int locked, int clamping,
     if (locked != PRINT_LIMIT_IGNORE) {
       printf("%7s: %s\n", "locked", lck);
     }
-    if (clamping != PRINT_LIMIT_IGNORE) {
+    if (clamped != PRINT_LIMIT_IGNORE) {
       printf("%7s: %s\n", "clamped", clmp);
     }
     printf("%7s: %.12f\n", "watts", watts_long);
@@ -160,6 +176,20 @@ static int configure_limits(const rapl_configure_ctx* c) {
     perror("Failed to enable zone");
     return ret;
   }
+#ifdef RAPLCAP_msr
+  // Note: Enabling automatically sets clamping AND we auto-enable when configuring unless explicitly requested not to.
+  //       As a result:
+  //       1) We set clamping here AFTER enabling in case clamping was requested to be off
+  //       2) The user must always explicitly request clamping to be off when setting RAPL limits
+  if (c->set_clamped && (ret = raplcap_msr_set_zone_clamping(NULL, c->socket, c->zone, c->clamped))) {
+    perror("Failed to set zone clamping");
+    return ret;
+  }
+  if (c->set_locked && (ret = raplcap_msr_set_zone_locked(NULL, c->socket, c->zone))) {
+    perror("Failed to lock zone");
+    return ret;
+  }
+#endif // RAPLCAP_msr
   return 0;
 }
 
@@ -169,7 +199,7 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   double joules;
   double joules_max;
   int locked = PRINT_LIMIT_IGNORE;
-  int clamping = PRINT_LIMIT_IGNORE;
+  int clamped = PRINT_LIMIT_IGNORE;
   int ret;
   memset(&ll, 0, sizeof(raplcap_limit));
   memset(&ls, 0, sizeof(raplcap_limit));
@@ -182,9 +212,9 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   if (locked < 0) {
     print_error_continue("Failed to determine if zone is locked");
   }
-  clamping = raplcap_msr_is_zone_clamping(NULL, socket, zone);
-  if (clamping < 0) {
-    print_error_continue("Failed to determine if zone is clamping");
+  clamped = raplcap_msr_is_zone_clamping(NULL, socket, zone);
+  if (clamped < 0) {
+    print_error_continue("Failed to determine if zone is clamped");
   }
 #endif // RAPLCAP_msr
   if ((ret = raplcap_get_limits(NULL, socket, zone, &ll, &ls))) {
@@ -194,7 +224,7 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   // we'll consider energy counter information to be optional
   joules = raplcap_get_energy_counter(NULL, socket, zone);
   joules_max = raplcap_get_energy_counter_max(NULL, socket, zone);
-  print_limits(enabled, locked, clamping,
+  print_limits(enabled, locked, clamped,
                ll.watts, ll.seconds, ls.watts, ls.seconds,
                joules, joules_max);
   return ret;
@@ -259,6 +289,15 @@ int main(int argc, char** argv) {
       case 'W':
         SET_VAL(optarg, ctx.watts_short, ctx.set_short);
         break;
+#ifdef RAPLCAP_msr
+      case 'C':
+        ctx.clamped = atoi(optarg);
+        ctx.set_clamped = 1;
+        break;
+      case 'L':
+        ctx.set_locked = 1;
+        break;
+#endif // RAPLCAP_msr
       case '?':
       default:
         print_usage(1);
@@ -280,6 +319,9 @@ int main(int argc, char** argv) {
 
   // initialize
   is_read_only = !ctx.set_enabled && !ctx.set_long && !ctx.set_short;
+#ifdef RAPLCAP_msr
+  is_read_only &= !ctx.set_clamped && !ctx.set_locked;
+#endif // RAPLCAP_msr
 #ifndef _WIN32
   if (is_read_only) {
     // request read-only access (not supported by all implementations, therefore not guaranteed)
