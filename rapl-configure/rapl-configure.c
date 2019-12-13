@@ -149,7 +149,6 @@ static int configure_limits(const rapl_configure_ctx* c) {
   raplcap_limit* ll = NULL;
   raplcap_limit* ls = NULL;
   int ret = 0;
-  int disable = c->set_enabled && !c->enabled;
   if (c->set_long) {
     limit_long.seconds = c->sec_long;
     limit_long.watts = c->watts_long;
@@ -160,19 +159,14 @@ static int configure_limits(const rapl_configure_ctx* c) {
     limit_short.watts = c->watts_short;
     ls = &limit_short;
   }
-  // disable zone first, if requested
-  if (disable && (ret = raplcap_set_zone_enabled(NULL, c->socket, c->zone, 0))) {
-    perror("Failed to disable zone");
-    return ret;
-  }
   // set limits
   if ((c->set_long || c->set_short) && (ret = raplcap_set_limits(NULL, c->socket, c->zone, ll, ls))) {
     perror("Failed to set limits");
     return ret;
   }
-  // enable zone (if not disable)
-  if (!disable && (ret = raplcap_set_zone_enabled(NULL, c->socket, c->zone, 1))) {
-    perror("Failed to enable zone");
+  // enable/disable if requested, otherwise automatically enable
+  if ((ret = raplcap_set_zone_enabled(NULL, c->socket, c->zone, (c->set_enabled ? c->enabled : 1)))) {
+    perror("Failed to enable/disable zone");
     return ret;
   }
 #ifdef RAPLCAP_msr
