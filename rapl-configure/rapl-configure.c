@@ -37,7 +37,6 @@ typedef struct rapl_configure_ctx {
 #endif // RAPLCAP_msr
 } rapl_configure_ctx;
 
-static rapl_configure_ctx ctx;
 static const char* prog;
 static const char short_options[] = "nc:z:e:s:w:S:W:C:Lh";
 static const struct option long_options[] = {
@@ -150,7 +149,7 @@ static int configure_limits(const rapl_configure_ctx* c) {
   raplcap_limit* ll = NULL;
   raplcap_limit* ls = NULL;
   int ret = 0;
-  int disable = ctx.set_enabled && !ctx.enabled;
+  int disable = c->set_enabled && !c->enabled;
   if (c->set_long) {
     limit_long.seconds = c->sec_long;
     limit_long.watts = c->watts_long;
@@ -194,15 +193,13 @@ static int configure_limits(const rapl_configure_ctx* c) {
 }
 
 static int get_limits(unsigned int socket, raplcap_zone zone) {
-  raplcap_limit ll;
-  raplcap_limit ls;
+  raplcap_limit ll = { 0 };
+  raplcap_limit ls = { 0 };
   double joules;
   double joules_max;
   int locked = PRINT_LIMIT_IGNORE;
   int clamped = PRINT_LIMIT_IGNORE;
   int ret;
-  memset(&ll, 0, sizeof(raplcap_limit));
-  memset(&ls, 0, sizeof(raplcap_limit));
   int enabled = raplcap_is_zone_enabled(NULL, socket, zone);
   if (enabled < 0) {
     print_error_continue("Failed to determine if zone is enabled");
@@ -238,6 +235,7 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   set_val = 1
 
 int main(int argc, char** argv) {
+  rapl_configure_ctx ctx = { 0 };
   int ret = 0;
   int c;
   int supported;
@@ -246,7 +244,6 @@ int main(int argc, char** argv) {
   int is_read_only;
 
   // parse parameters
-  memset(&ctx, 0, sizeof(rapl_configure_ctx));
   while ((c = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
     switch (c) {
       case 'h':
