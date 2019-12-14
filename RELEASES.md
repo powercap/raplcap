@@ -16,6 +16,7 @@
 
 * README: Enable zones in example code snippet ([#7])
 * [msr] Updated for the Intel Software Developer's Manual, May 2019 release
+* [rapl-configure] Use consistent output formatting for all zones
 
 ### Fixed
 

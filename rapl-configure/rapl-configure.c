@@ -100,40 +100,27 @@ static void print_limits(int enabled, int locked, int clamped,
   const char* lck = locked < 0 ? "unknown" : (locked ? "true" : "false");
   const char* clmp = clamped < 0 ? "unknown" : (clamped ? "true" : "false");
   // time window can never be 0, so if it's > 0, the short term constraint exists
+  printf("%13s: %s\n", "enabled", en);
+  if (locked != PRINT_LIMIT_IGNORE) {
+    printf("%13s: %s\n", "locked", lck);
+  }
+  if (clamped != PRINT_LIMIT_IGNORE) {
+    printf("%13s: %s\n", "clamped", clmp);
+  }
   if (seconds_short > 0) {
-    printf("%13s: %s\n", "enabled", en);
-    if (locked != PRINT_LIMIT_IGNORE) {
-      printf("%13s: %s\n", "locked", lck);
-    }
-    if (clamped != PRINT_LIMIT_IGNORE) {
-      printf("%13s: %s\n", "clamped", clmp);
-    }
     printf("%13s: %.12f\n", "watts_long", watts_long);
     printf("%13s: %.12f\n", "seconds_long", seconds_long);
     printf("%13s: %.12f\n", "watts_short", watts_short);
     printf("%13s: %.12f\n", "seconds_short", seconds_short);
-    if (joules >= 0) {
-      printf("%13s: %.12f\n", "joules", joules);
-    }
-    if (joules_max >= 0) {
-      printf("%13s: %.12f\n", "joules_max", joules_max);
-    }
   } else {
-    printf("%7s: %s\n", "enabled", en);
-    if (locked != PRINT_LIMIT_IGNORE) {
-      printf("%7s: %s\n", "locked", lck);
-    }
-    if (clamped != PRINT_LIMIT_IGNORE) {
-      printf("%7s: %s\n", "clamped", clmp);
-    }
-    printf("%7s: %.12f\n", "watts", watts_long);
-    printf("%7s: %.12f\n", "seconds", seconds_long);
-    if (joules >= 0) {
-      printf("%7s: %.12f\n", "joules", joules);
-    }
-    if (joules_max >= 0) {
-      printf("%7s: %.12f\n", "joules_max", joules_max);
-    }
+    printf("%13s: %.12f\n", "watts", watts_long);
+    printf("%13s: %.12f\n", "seconds", seconds_long);
+  }
+  if (joules >= 0) {
+    printf("%13s: %.12f\n", "joules", joules);
+  }
+  if (joules_max >= 0) {
+    printf("%13s: %.12f\n", "joules_max", joules_max);
   }
 }
 
