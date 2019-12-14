@@ -101,11 +101,11 @@ static void print_limits(int enabled, int locked, int clamped,
   const char* clmp = clamped < 0 ? "unknown" : (clamped ? "true" : "false");
   // time window can never be 0, so if it's > 0, the short term constraint exists
   printf("%13s: %s\n", "enabled", en);
-  if (locked != PRINT_LIMIT_IGNORE) {
-    printf("%13s: %s\n", "locked", lck);
-  }
   if (clamped != PRINT_LIMIT_IGNORE) {
     printf("%13s: %s\n", "clamped", clmp);
+  }
+  if (locked != PRINT_LIMIT_IGNORE) {
+    printf("%13s: %s\n", "locked", lck);
   }
   if (seconds_short > 0) {
     printf("%13s: %.12f\n", "watts_long", watts_long);
