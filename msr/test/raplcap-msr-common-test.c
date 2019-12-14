@@ -136,10 +136,10 @@ static const int TEST_ZONES_HAS_SHORT[] = { 1, 0 };
 
 #define MSRVAL_LOCKED_LONG 0x80000000
 #define MSRVAL_LOCKED_SHORT 0x8000000000000000
-void test_locked(void) {
+static void test_locked(void) {
   raplcap_msr_ctx ctx;
   uint64_t msrval;
-  int i;
+  unsigned int i;
   msr_get_context(&ctx, TEST_CPU_MODEL, TEST_UNITS_MSRVAL);
 
   for (i = 0; i < TEST_ZONE_COUNT; i++) {
@@ -159,10 +159,10 @@ void test_locked(void) {
 #define MSRVAL_ENABLED_LONG 0x8000
 #define MSRVAL_ENABLED_SHORT 0x800000000000
 #define MSRVAL_ENABLED_BOTH (MSRVAL_ENABLED_LONG | MSRVAL_ENABLED_SHORT)
-void test_enabled(void) {
+static void test_enabled(void) {
   raplcap_msr_ctx ctx;
   uint64_t msrval;
-  int i;
+  unsigned int i;
   int en_long;
   int en_short;
   int rc;
@@ -221,10 +221,10 @@ void test_enabled(void) {
 #define MSRVAL_CLAMPING_LONG 0x10000
 #define MSRVAL_CLAMPING_SHORT 0x1000000000000
 #define MSRVAL_CLAMPING_BOTH (MSRVAL_CLAMPING_LONG | MSRVAL_CLAMPING_SHORT)
-void test_clamping(void) {
+static void test_clamping(void) {
   raplcap_msr_ctx ctx;
   uint64_t msrval;
-  int i;
+  unsigned int i;
   int cl_long;
   int cl_short;
   int rc;
