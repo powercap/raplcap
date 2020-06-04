@@ -56,9 +56,9 @@ static powercap_rapl_pkg* get_pkg_zone(const raplcap* rc, uint32_t socket, raplc
 }
 
 static uint32_t get_powercap_sockets(void) {
-  uint32_t sockets = powercap_rapl_get_num_packages();
+  uint32_t sockets = powercap_rapl_get_num_instances();
   if (sockets == 0) {
-    raplcap_perror(ERROR, "get_powercap_sockets: powercap_rapl_get_num_packages");
+    raplcap_perror(ERROR, "get_powercap_sockets: powercap_rapl_get_num_instances");
   }
   raplcap_log(DEBUG, "get_powercap_sockets: sockets=%"PRIu32"\n", sockets);
   return sockets;
