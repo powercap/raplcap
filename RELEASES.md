@@ -6,6 +6,10 @@
 
 * [powercap] Library dependency now requires version >= 0.3.0
 
+### Fixed
+
+* [powercap] Support for PSYS zones ([#8])
+
 
 ## [v0.4.0] - 2019-12-14
 
@@ -130,3 +134,4 @@
 [v0.1.1]: https://github.com/powercap/raplcap/compare/v0.1.0...v0.1.1
 [#6]: https://github.com/powercap/raplcap/issues/6
 [#7]: https://github.com/powercap/raplcap/issues/7
+[#8]: https://github.com/powercap/raplcap/issues/8
