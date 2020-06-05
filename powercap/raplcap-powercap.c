@@ -18,10 +18,8 @@
 #include <powercap-sysfs.h>
 
 #define CONTROL_TYPE "intel-rapl"
+#define ZONE_NAME_MAX_SIZE 64
 #define ZONE_NAME_PREFIX_PACKAGE "package"
-
-// format is expected to be: "package-%d" or "package-%d-die-%d"
-#define MAX_PKG_NAME_SIZE 64
 
 #define HAS_SHORT_TERM(pkg, z) (powercap_rapl_is_constraint_supported(pkg, z, POWERCAP_RAPL_CONSTRAINT_SHORT) > 0)
 
@@ -82,7 +80,7 @@ static uint32_t count_parent_zones(void) {
 }
 
 static uint32_t count_package_zones(uint32_t n_parent_zones) {
-  char name[MAX_PKG_NAME_SIZE];
+  char name[ZONE_NAME_MAX_SIZE];
   uint32_t i;
   uint32_t n = 0;
   for (i = 0; i < n_parent_zones; i++) {
@@ -101,6 +99,7 @@ static uint32_t count_package_zones(uint32_t n_parent_zones) {
 }
 
 // compare strings that may contain substrings of natural numbers (values >= 0)
+// format is expected to be: "package-%d" or "package-%d-die-%d"
 static int strcmp_nat_lu(const char* l, const char* r) {
   unsigned long l_val;
   unsigned long r_val;
@@ -149,8 +148,8 @@ static int strcmp_nat_lu(const char* l, const char* r) {
 }
 
 static int sort_parent_zones(const void* a, const void* b) {
-  char name_a[MAX_PKG_NAME_SIZE] = { 0 };
-  char name_b[MAX_PKG_NAME_SIZE] = { 0 };
+  char name_a[ZONE_NAME_MAX_SIZE] = { 0 };
+  char name_b[ZONE_NAME_MAX_SIZE] = { 0 };
   const powercap_rapl_pkg* zone_a = (const powercap_rapl_pkg*) a;
   const powercap_rapl_pkg* zone_b = (const powercap_rapl_pkg*) b;
   int ret;
