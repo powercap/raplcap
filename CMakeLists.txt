@@ -50,11 +50,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
       add_subdirectory(powercap)
     endif()
   endif()
-
-  find_package(libmsr)
-  if(libmsr_FOUND)
-    add_subdirectory(libmsr)
-  endif()
 endif()
 
 

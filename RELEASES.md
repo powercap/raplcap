@@ -12,6 +12,11 @@
 * [msr] Updated for the Intel Software Developer's Manual, May 2020 release
 * [powercap] Library dependency now requires version >= 0.3.0
 
+### Removed
+
+* libmsr implementation - the upstream library is no longer being developed
+
+
 ### Fixed
 
 * [powercap] Support for PSYS zones ([#8])

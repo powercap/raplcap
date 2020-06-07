@@ -23,13 +23,6 @@ install:
   - cmake -DCMAKE_INSTALL_PREFIX=_install ..
   - cmake --build . --target install
   - cd ../..
-  # libmsr dependency (force version 0.3.0) (force Ivy Bridge architecture)
-  - git clone https://github.com/LLNL/libmsr.git libmsr_src
-  - cd libmsr_src
-  - git checkout v0.3.0
-  # libmsr only claims to support gcc, so don't let it build with clang
-  - CC=gcc ./install.sh _install -f3E
-  - cd ..
 
 script:
   - mkdir _build
@@ -39,6 +32,6 @@ script:
       -Wcast-qual -Wdisabled-optimization -Wendif-labels -Wfloat-equal -Wformat=2 -Wformat-nonliteral -Winline
       -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wno-unused-parameter -Wpointer-arith -Wshadow
       -Wstrict-prototypes -Wstack-protector -Wswitch -Wundef -Wwrite-strings"
-  - PKG_CONFIG_PATH="../libpowercap/_build/_install/lib/pkgconfig" cmake .. -DCMAKE_PREFIX_PATH="`pwd`/../libmsr_src/_install/" -DCMAKE_C_FLAGS="$CFLAGS"
+  - PKG_CONFIG_PATH="../libpowercap/_build/_install/lib/pkgconfig" cmake .. -DCMAKE_C_FLAGS="$CFLAGS"
   - cmake --build .
   - ctest --verbose

@@ -15,7 +15,6 @@ Each provides the same command line interface, but use different RAPLCap library
 Experimental backends, which are not documented here in any further detail and may be removed at any time, include:
 
 * `libraplcap-ipg` ([README](ipg/README.md)): Uses Intel&reg; Power Gadget (OSX and Windows).
-* `libraplcap-libmsr` ([README](libmsr/README.md)): Uses LLNL's [libmsr](https://software.llnl.gov/libmsr) interface (Linux).
 
 If using this project for other scientific works or publications, please reference:
 
