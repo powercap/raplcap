@@ -33,7 +33,7 @@ RESERVED = "Reserved (0)" # this should also be OK (just gets a 0 energy reading
 class CPU(object):
     """A CPU with RAPL register info in a list of tables."""
 
-    DELIM = '\t'
+    DELIM = ','
 
     REGS = [MSR_RAPL_POWER_UNIT,
             MSR_PKG_POWER_LIMIT, MSR_PKG_ENERGY_STATUS,
