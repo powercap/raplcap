@@ -278,9 +278,13 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     //
     case CPUID_MODEL_CANNONLAKE_L:
     //
+    case CPUID_MODEL_ICELAKE:
+    case CPUID_MODEL_ICELAKE_L:
+    //
+    case CPUID_MODEL_COMETLAKE:
+    case CPUID_MODEL_COMETLAKE_L:
+    //
     case CPUID_MODEL_ATOM_GOLDMONT:
-    // As of May 2019, the SDM doesn't document ATOM_GOLDMONT_X (Denverton) MSRs
-    // However, the linux kernel indicates that it uses standard RAPL conversions
     case CPUID_MODEL_ATOM_GOLDMONT_X:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
     case CPUID_MODEL_ATOM_TREMONT_X:
@@ -295,8 +299,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_BROADWELL_X:
     case CPUID_MODEL_BROADWELL_D:
     case CPUID_MODEL_SKYLAKE_X:
-    // As of May 2019, the SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
-    // However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
+    case CPUID_MODEL_ICELAKE_X:
+    case CPUID_MODEL_ICELAKE_D:
     case CPUID_MODEL_XEON_PHI_KNL:
     case CPUID_MODEL_XEON_PHI_KNM:
       ctx->power_units = from_msr_pu_default(units_msrval);

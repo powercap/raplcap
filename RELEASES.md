@@ -2,8 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+* [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
+* [msr] Support for Comet Lake, Models 0xA5, 0xA6
+
 ### Changed
 
+* [msr] Updated for the Intel Software Developer's Manual, May 2020 release
 * [powercap] Library dependency now requires version >= 0.3.0
 
 ### Fixed

@@ -20,12 +20,12 @@ MSR_PLATFORM_POWER_LIMIT = "MSR_PLATFORM_POWER_LIMIT" # 0x65C
 MSR_PLATFORM_ENERGY_COUNTER = "MSR_PLATFORM_ENERGY_COUNTER" # 0x64D
 
 NONE = "None"
-POWER_DEFAULT = "14.9.1"
-PKG_DEFAULT = "14.9.3"
-PP0_DEFAULT = "14.9.4"
-PP1_DEFAULT = "14.9.4"
-DRAM_DEFAULT = "14.9.5"
-PLATFORM_DEFAULT = "Table 2-38"
+POWER_DEFAULT = "14.10.1"
+PKG_DEFAULT = "14.10.3"
+PP0_DEFAULT = "14.10.4"
+PP1_DEFAULT = "14.10.4"
+DRAM_DEFAULT = "14.10.5"
+PLATFORM_DEFAULT = "Table 2-39"
 DRAM_15_3 = "ESU: 15.3 uJ" # assumed for now that this ESU is found in MSR_RAPL_POWER_UNIT
 RESERVED = "Reserved (0)" # this should also be OK (just gets a 0 energy reading)
 
@@ -224,6 +224,20 @@ if __name__ == "__main__":
     CANNONLAKE_L = CPU("0x66", "CANNONLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_42, TBL_43])
     CANNONLAKE_L.print_line()
 
+    ICELAKE = CPU("0x7D", "ICELAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44])
+    ICELAKE.print_line()
+    ICELAKE_L = CPU("0x7E", "ICELAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44])
+    ICELAKE_L.print_line()
+    ICELAKE_X = CPU("0x6A", "ICELAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    ICELAKE_X.print_line()
+    ICELAKE_D = CPU("0x6C", "ICELAKE_D", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    ICELAKE_D.print_line()
+
+    COMETLAKE = CPU("0xA5", "COMETLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
+    COMETLAKE.print_line()
+    COMETLAKE_L = CPU("0xA6", "COMETLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
+    COMETLAKE_L.print_line()
+
     TBL_46 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
@@ -239,4 +253,4 @@ if __name__ == "__main__":
     XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_46, TBL_47, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - May 2019
+    # Last updated for Software Developer's Manual, Volume 4 - May 2020

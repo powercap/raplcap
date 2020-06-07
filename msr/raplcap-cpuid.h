@@ -41,7 +41,13 @@ extern "C" {
 
 #define CPUID_MODEL_CANNONLAKE_L      0x66
 
-// TODO: Not enough info yet for ICELAKE microarchitecture: 0x7D, 0x7E, 0x6A, 0x6C
+#define CPUID_MODEL_ICELAKE           0x7D
+#define CPUID_MODEL_ICELAKE_L         0x7E
+#define CPUID_MODEL_ICELAKE_X         0x6A
+#define CPUID_MODEL_ICELAKE_D         0x6C
+
+#define CPUID_MODEL_COMETLAKE         0xA5
+#define CPUID_MODEL_COMETLAKE_L       0xA6
 
 #define CPUID_MODEL_XEON_PHI_KNL      0x57
 #define CPUID_MODEL_XEON_PHI_KNM      0x85
