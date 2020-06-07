@@ -67,6 +67,19 @@ class CPU(object):
 
 
 if __name__ == "__main__":
+    # Exceptions to the SDM
+    # These are not exhaustive, just the important ones that require coding changes in the library.
+    # E.g., not specifying PP0 power limit exceptions which obviously exist---but are no documented---for all RAPL CPUs
+    EXCEPTION_DRAM_ENERGY_STATUS_15_3 = {MSR_DRAM_ENERGY_STATUS: DRAM_15_3 + " [E]"}
+    EXCEPTION_GOLDMONT_X = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT + " [E]",
+                            MSR_PKG_POWER_LIMIT: PKG_DEFAULT + " [E]",
+                            MSR_PKG_ENERGY_STATUS: PKG_DEFAULT + " [E]",
+                            MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT + " [E]",
+                            MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT + " [E]",
+                            MSR_PP0_ENERGY_STATUS: PP0_DEFAULT + " [E]",
+                            MSR_PP1_ENERGY_STATUS: PP1_DEFAULT + " [E]"}
+
+    # Tables from the SDM
     CPU.print_header()
 
     TBL_6 = {}
@@ -103,7 +116,8 @@ if __name__ == "__main__":
     TBL_13 = {}
     ATOM_GOLDMONT = CPU("0x5C", "ATOM_GOLDMONT", [TBL_6, TBL_12])
     ATOM_GOLDMONT.print_line()
-    ATOM_GOLDMONT_X = CPU("0x5F", "ATOM_GOLDMONT_X", []) # not documented? kernel uses standard RAPL conversions
+    # GOLDMONT_X (Denverton) not documented in SDM, but kernel uses standard RAPL conversions
+    ATOM_GOLDMONT_X = CPU("0x5F", "ATOM_GOLDMONT_X", [EXCEPTION_GOLDMONT_X])
     ATOM_GOLDMONT_X.print_line()
     ATOM_GOLDMONT_PLUS = CPU("0x7A", "ATOM_GOLDMONT_PLUS", [TBL_6, TBL_12, TBL_13])
     ATOM_GOLDMONT_PLUS.print_line()
@@ -218,9 +232,11 @@ if __name__ == "__main__":
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
     TBL_47 = {}
-    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_46])
+    # The SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
+    # However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
+    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_46, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNL.print_line()
-    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_46, TBL_47])
+    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_46, TBL_47, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
     # Last updated for Software Developer's Manual, Volume 4 - May 2019
