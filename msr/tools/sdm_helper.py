@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Helper script for processing RAPL data from Intel Software Developer's Manual, Volume 4."""
 
 import sys
