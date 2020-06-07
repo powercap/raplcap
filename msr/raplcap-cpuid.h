@@ -10,7 +10,7 @@ extern "C" {
 #define CPUID_VENDOR_ID_GENUINE_INTEL "GenuineIntel"
 
 /* 
- * See: Software Developer's Manual, Volume 4 (May 2019)
+ * See: Software Developer's Manual, Volume 4
  * See: https://en.wikichip.org/wiki/intel/cpuid
  */
 
