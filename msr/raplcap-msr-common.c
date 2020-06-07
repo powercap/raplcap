@@ -263,20 +263,20 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_IVYBRIDGE:
     case CPUID_MODEL_IVYBRIDGE_X:
     //
-    case CPUID_MODEL_HASWELL_CORE:
-    case CPUID_MODEL_HASWELL_ULT:
-    case CPUID_MODEL_HASWELL_GT3E:
+    case CPUID_MODEL_HASWELL:
+    case CPUID_MODEL_HASWELL_L:
+    case CPUID_MODEL_HASWELL_G:
     //
-    case CPUID_MODEL_BROADWELL_CORE:
-    case CPUID_MODEL_BROADWELL_GT3E:
+    case CPUID_MODEL_BROADWELL:
+    case CPUID_MODEL_BROADWELL_G:
     //
-    case CPUID_MODEL_SKYLAKE_MOBILE:
-    case CPUID_MODEL_SKYLAKE_DESKTOP:
+    case CPUID_MODEL_SKYLAKE_L:
+    case CPUID_MODEL_SKYLAKE:
     //
-    case CPUID_MODEL_KABYLAKE_MOBILE:
-    case CPUID_MODEL_KABYLAKE_DESKTOP:
+    case CPUID_MODEL_KABYLAKE_L:
+    case CPUID_MODEL_KABYLAKE:
     //
-    case CPUID_MODEL_CANNONLAKE_MOBILE:
+    case CPUID_MODEL_CANNONLAKE_L:
     //
     case CPUID_MODEL_ATOM_GOLDMONT:
     // As of May 2019, the SDM doesn't document ATOM_GOLDMONT_X (Denverton) MSRs
@@ -293,7 +293,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     //----
     case CPUID_MODEL_HASWELL_X:
     case CPUID_MODEL_BROADWELL_X:
-    case CPUID_MODEL_BROADWELL_XEON_D:
+    case CPUID_MODEL_BROADWELL_D:
     case CPUID_MODEL_SKYLAKE_X:
     // As of May 2019, the SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
     // However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units

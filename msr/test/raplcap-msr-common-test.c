@@ -127,7 +127,7 @@ static void test_translate_atom_airmont(void) {
   assert(ctx.cfg[RAPLCAP_ZONE_CORE].to_msr_tw(50.01, TU) == 0xA);
 }
 
-#define TEST_CPU_MODEL CPUID_MODEL_BROADWELL_CORE
+#define TEST_CPU_MODEL CPUID_MODEL_BROADWELL
 #define TEST_UNITS_MSRVAL 0x00000000000A0E03
 
 static const unsigned int TEST_ZONE_COUNT = 2;

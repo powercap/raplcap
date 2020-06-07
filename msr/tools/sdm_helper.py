@@ -152,16 +152,16 @@ if __name__ == "__main__":
               MSR_PP0_ENERGY_STATUS: RESERVED}
     TBL_33 = {}
     # TBL_25 specified at end of TBL_30
-    HASWELL_CORE = CPU("0x3C", "HASWELL_CORE", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30])
-    HASWELL_CORE.print_line()
+    HASWELL = CPU("0x3C", "HASWELL", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30])
+    HASWELL.print_line()
     HASWELL_X = CPU("0x3F", "HASWELL_X", [TBL_20, TBL_29, TBL_32, TBL_33])
     HASWELL_X.print_line()
     # TBL_22 specified at end of TBL_31
-    HASWELL_ULT = CPU("0x45", "HASWELL_ULT", [TBL_20, TBL_21, TBL_22, TBL_29, TBL_30, TBL_31])
-    HASWELL_ULT.print_line()
+    HASWELL_L = CPU("0x45", "HASWELL_L", [TBL_20, TBL_21, TBL_22, TBL_29, TBL_30, TBL_31])
+    HASWELL_L.print_line()
     # TBL_25 specified at end of TBL_30
-    HASWELL_GT3E = CPU("0x46", "HASWELL_GT3E", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30])
-    HASWELL_GT3E.print_line()
+    HASWELL_G = CPU("0x46", "HASWELL_G", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30])
+    HASWELL_G.print_line()
 
     TBL_34 = {}
     TBL_35 = {MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
@@ -171,18 +171,18 @@ if __name__ == "__main__":
               MSR_PP0_ENERGY_STATUS: RESERVED}
     TBL_37 = {}
     TBL_38 = {}
-    BROADWELL_CORE = CPU("0x3D", "BROADWELL_CORE", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30, TBL_34, TBL_35])
-    BROADWELL_CORE.print_line()
-    BROADWELL_GT3E = CPU("0x47", "BROADWELL_GT3E", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30, TBL_34, TBL_35])
-    BROADWELL_GT3E.print_line()
+    BROADWELL = CPU("0x3D", "BROADWELL", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30, TBL_34, TBL_35])
+    BROADWELL.print_line()
+    BROADWELL_G = CPU("0x47", "BROADWELL_G", [TBL_20, TBL_21, TBL_22, TBL_25, TBL_29, TBL_30, TBL_34, TBL_35])
+    BROADWELL_G.print_line()
     # BROADWELL_X: Section 2.16.2 specifies the prior tables for this architecture.
     # TODO: Also TBL_37? Mentioned at start of Section 2.16.2, but not included in explicit list
     # TODO: Comment at end of TBL_38 is for 0x45? Won't use (no effect on results anyway)...
     BROADWELL_X = CPU("0x4F", "BROADWELL_X", [TBL_20, TBL_21, TBL_29, TBL_34, TBL_36, TBL_38])
     BROADWELL_X.print_line()
-    # BROADWELL_XEON_D: See 2.16.1 for mention of Tables 19 and 28
-    BROADWELL_XEON_D = CPU("0x56", "BROADWELL_XEON_D", [TBL_20, TBL_29, TBL_34, TBL_36, TBL_37])
-    BROADWELL_XEON_D.print_line()
+    # BROADWELL_D: See 2.16.1 for mention of Tables 19 and 28
+    BROADWELL_D = CPU("0x56", "BROADWELL_D", [TBL_20, TBL_29, TBL_34, TBL_36, TBL_37])
+    BROADWELL_D.print_line()
 
     TBL_39 = {MSR_PP0_ENERGY_STATUS: PP0_DEFAULT,
               MSR_PLATFORM_ENERGY_COUNTER: PLATFORM_DEFAULT,
@@ -196,19 +196,19 @@ if __name__ == "__main__":
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_15_3,
               MSR_PP0_ENERGY_STATUS: RESERVED}
-    SKYLAKE_MOBILE = CPU("0x4E", "SKYLAKE_MOBILE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
-    SKYLAKE_MOBILE.print_line()
+    SKYLAKE_L = CPU("0x4E", "SKYLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
+    SKYLAKE_L.print_line()
     # Top of Section 2.17 says TBL_40 (Uncore) is used for 0x55, but TBL_40 doesn't mention it
     SKYLAKE_X = CPU("0x55", "SKYLAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_45])
     SKYLAKE_X.print_line()
-    SKYLAKE_DESKTOP = CPU("0x5E", "SKYLAKE_DESKTOP", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
-    SKYLAKE_DESKTOP.print_line()
-    KABYLAKE_MOBILE = CPU("0x8E", "KABYLAKE_MOBILE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_41])
-    KABYLAKE_MOBILE.print_line()
-    KABYLAKE_DESKTOP = CPU("0x9E", "KABYLAKE_DESKTOP", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_41])
-    KABYLAKE_DESKTOP.print_line()
-    CANNONLAKE_MOBILE = CPU("0x66", "CANNONLAKE_MOBILE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_42, TBL_43])
-    CANNONLAKE_MOBILE.print_line()
+    SKYLAKE = CPU("0x5E", "SKYLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
+    SKYLAKE.print_line()
+    KABYLAKE_L = CPU("0x8E", "KABYLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_41])
+    KABYLAKE_L.print_line()
+    KABYLAKE = CPU("0x9E", "KABYLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_41])
+    KABYLAKE.print_line()
+    CANNONLAKE_L = CPU("0x66", "CANNONLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_42, TBL_43])
+    CANNONLAKE_L.print_line()
 
     TBL_46 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
