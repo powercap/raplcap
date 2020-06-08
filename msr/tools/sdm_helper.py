@@ -195,6 +195,7 @@ if __name__ == "__main__":
     BROADWELL_X = CPU("0x4F", "BROADWELL_X", [TBL_20, TBL_21, TBL_29, TBL_34, TBL_36, TBL_38])
     BROADWELL_X.print_line()
     # BROADWELL_D: See 2.16.1 for mention of Tables 19 and 28
+    # TODO: Discrepancy with kernel: it doesn't claim DRAM_15_3 for BROADWELL_D
     BROADWELL_D = CPU("0x56", "BROADWELL_D", [TBL_20, TBL_29, TBL_34, TBL_36, TBL_37])
     BROADWELL_D.print_line()
 
