@@ -112,31 +112,38 @@ static uint32_t get_cpu_count(void) {
   return (uint32_t) n;
 }
 
+static int get_physical_package_id(uint32_t cpu, uint32_t* pkg) {
+  char fname[92] = { 0 };
+  FILE* f;
+  int fret;
+  // phys socket IDs may not be in range [0, nsockets), see kernel docs: Documentation/cputopology.txt
+  snprintf(fname, sizeof(fname), "/sys/devices/system/cpu/cpu%"PRIu32"/topology/physical_package_id", cpu);
+  if ((f = fopen(fname, "r")) == NULL) {
+    raplcap_perror(ERROR, fname);
+    return -1;
+  }
+  fret = fscanf(f, "%"PRIu32, pkg);
+  if (fclose(f)) {
+    raplcap_perror(WARN, "get_physical_package_id: fclose");
+  }
+  if (fret != 1) {
+    raplcap_log(ERROR, "get_physical_package_id: Failed to read physical_package_id for cpu%"PRIu32"\n", cpu);
+    errno = ENODATA;
+    return -1;
+  }
+  raplcap_log(DEBUG, "get_physical_package_id: cpu=%"PRIu32", pkg=%"PRIu32"\n", cpu, *pkg);
+  return 0;
+}
+
 static int get_cpu_to_socket_mapping(uint32_t* cpu_to_socket, uint32_t ncpus) {
   // assumes cpus are numbered from 0 to ncpus-1
   assert(cpu_to_socket != NULL);
   assert(ncpus > 0);
-  char fname[92] = { 0 };
-  FILE* f;
   uint32_t i;
-  int fret;
   for (i = 0; i < ncpus; i++) {
-    // phys socket IDs may not be in range [0, nsockets), see kernel docs: Documentation/cputopology.txt
-    snprintf(fname, sizeof(fname), "/sys/devices/system/cpu/cpu%"PRIu32"/topology/physical_package_id", i);
-    if ((f = fopen(fname, "r")) == NULL) {
-      raplcap_perror(ERROR, fname);
+    if (get_physical_package_id(i, &cpu_to_socket[i]) < 0) {
       return -1;
     }
-    fret = fscanf(f, "%"PRIu32, &cpu_to_socket[i]);
-    if (fclose(f)) {
-      raplcap_perror(WARN, "get_cpu_to_socket_mapping: fclose");
-    }
-    if (fret != 1) {
-      raplcap_log(ERROR, "get_cpu_to_socket_mapping: Failed to read physical_package_id for cpu%"PRIu32"\n", i);
-      errno = ENODATA;
-      return -1;
-    }
-    raplcap_log(DEBUG, "get_cpu_to_socket_mapping: cpu=%"PRIu32", phys_socket=%"PRIu32"\n", i, cpu_to_socket[i]);
   }
   return 0;
 }
