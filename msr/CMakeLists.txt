@@ -2,6 +2,7 @@
 
 add_library(raplcap-msr raplcap-msr.c
                         raplcap-msr-common.c
+                        raplcap-msr-sys-linux.c
                         raplcap-cpuid.c)
 target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr")
 if(BUILD_SHARED_LIBS)
