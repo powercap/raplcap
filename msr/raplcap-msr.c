@@ -61,6 +61,7 @@ int raplcap_init(raplcap* rc) {
   raplcap_msr* state;
   uint64_t msrval;
   uint32_t cpu_model;
+  uint32_t n_die;
   int err_save;
   // check that we recognize the CPU
   if ((cpu_model = msr_get_supported_cpu_model()) == 0) {
@@ -71,12 +72,12 @@ int raplcap_init(raplcap* rc) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
-  if ((state->sys = msr_sys_init(&rc->nsockets)) == NULL) {
+  if ((state->sys = msr_sys_init(&rc->nsockets, &n_die)) == NULL) {
     free(state);
     return -1;
   }
   rc->state = state;
-  if (msr_sys_read(state->sys, &msrval, 0, MSR_RAPL_POWER_UNIT)) {
+  if (msr_sys_read(state->sys, &msrval, 0, 0, MSR_RAPL_POWER_UNIT)) {
     err_save = errno;
     raplcap_destroy(rc);
     errno = err_save;
@@ -105,15 +106,16 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  uint32_t nsockets = 0;
+  uint32_t n_pkgs = 0;
+  uint32_t n_die = 0;
   if (rc == NULL) {
     rc = &rc_default;
   }
   if (rc->nsockets > 0) {
     return rc->nsockets;
   }
-  msr_get_num_pkgs(&nsockets);
-  return nsockets;
+  msr_get_num_pkg_die(&n_pkgs, &n_die);
+  return n_pkgs;
 }
 
 static raplcap_msr* get_state(uint32_t socket, const raplcap* rc) {
@@ -141,7 +143,7 @@ int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zon
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_is_zone_enabled: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msr_is_zone_enabled(&state->ctx, zone, msrval, &en[0], &en[1]);
@@ -161,7 +163,7 @@ int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone z
   if (state == NULL || msr < 0) {
     return -1;
   }
-  ret = msr_sys_read(state->sys, &msrval, socket, msr) ? 0 : 1;
+  ret = msr_sys_read(state->sys, &msrval, socket, 0, msr) ? 0 : 1;
   raplcap_log(DEBUG, "raplcap_is_zone_supported: socket=%"PRIu32", zone=%d, supported=%d\n", socket, zone, ret);
   return ret;
 }
@@ -173,14 +175,14 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zo
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   int ret;
   raplcap_log(DEBUG, "raplcap_set_zone_enabled: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msrval = msr_set_zone_enabled(&state->ctx, zone, msrval, &enabled, &enabled);
-  if ((ret = msr_sys_write(state->sys, msrval, socket, msr)) == 0) {
+  if ((ret = msr_sys_write(state->sys, msrval, socket, 0, msr)) == 0) {
     // try to clamp (not supported by all zones or all CPUs)
     msrval = msr_set_zone_clamped(&state->ctx, zone, msrval, &enabled, &enabled);
-    if (msr_sys_write(state->sys, msrval, socket, msr)) {
+    if (msr_sys_write(state->sys, msrval, socket, 0, msr)) {
       raplcap_log(INFO, "Clamping not available for this zone or platform\n");
     }
   }
@@ -193,7 +195,7 @@ int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_get_limits: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msr_get_limits(&state->ctx, zone, msrval, limit_long, limit_short);
@@ -206,11 +208,11 @@ int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_set_limits: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msrval = msr_set_limits(&state->ctx, zone, msrval, limit_long, limit_short);
-  return msr_sys_write(state->sys, msrval, socket, msr);
+  return msr_sys_write(state->sys, msrval, socket, 0, msr);
 }
 
 double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
@@ -218,7 +220,7 @@ double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zo
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
   raplcap_log(DEBUG, "raplcap_get_energy_counter: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   return msr_get_energy_counter(&state->ctx, msrval, zone);
@@ -240,7 +242,7 @@ int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t socket, raplcap_zone
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_msr_is_zone_clamped: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msr_is_zone_clamped(&state->ctx, zone, msrval, &cl[0], &cl[1]);
@@ -252,11 +254,11 @@ int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t socket, raplcap_zon
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_msr_set_zone_clamped: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msrval = msr_set_zone_clamped(&state->ctx, zone, msrval, &clamped, &clamped);
-  return msr_sys_write(state->sys, msrval, socket, msr);
+  return msr_sys_write(state->sys, msrval, socket, 0, msr);
 }
 
 int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
@@ -264,7 +266,7 @@ int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone 
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_msr_is_zone_locked: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   return msr_is_zone_locked(&state->ctx, zone, msrval);
@@ -275,11 +277,11 @@ int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t socket, raplcap_zone
   const raplcap_msr* state = get_state(socket, rc);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   raplcap_log(DEBUG, "raplcap_msr_set_zone_locked: socket=%"PRIu32", zone=%d\n", socket, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, msr)) {
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, socket, 0, msr)) {
     return -1;
   }
   msrval = msr_set_zone_locked(&state->ctx, zone, msrval, 1);
-  return msr_sys_write(state->sys, msrval, socket, msr);
+  return msr_sys_write(state->sys, msrval, socket, 0, msr);
 }
 
 double raplcap_msr_get_time_units(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
