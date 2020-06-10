@@ -18,7 +18,7 @@ extern "C" {
 
 typedef struct raplcap_msr_sys_ctx raplcap_msr_sys_ctx;
 
-int msr_get_num_pkg_die(uint32_t *n_pkg, uint32_t* n_die);
+int msr_get_num_pkg_die(const raplcap_msr_sys_ctx* ctx, uint32_t *n_pkg, uint32_t* n_die);
 
 raplcap_msr_sys_ctx* msr_sys_init(uint32_t* n_pkg, uint32_t* n_die);
 

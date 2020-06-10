@@ -183,11 +183,16 @@ static int open_msrs(int* fds, const uint32_t* cpus_to_open, uint32_t n_fds) {
   return 0;
 }
 
-int msr_get_num_pkg_die(uint32_t *n_pkg, uint32_t* n_die) {
+int msr_get_num_pkg_die(const raplcap_msr_sys_ctx* ctx, uint32_t *n_pkg, uint32_t* n_die) {
   msr_topology* topo;
   uint32_t ncpus;
   assert(n_pkg);
   assert(n_die);
+  if (ctx) {
+    *n_pkg = ctx->n_pkg;
+    *n_die = ctx->n_die;
+    return 0;
+  }
   if ((ncpus = get_cpu_count()) == 0) {
     raplcap_perror(ERROR, "msr_get_num_pkg_die: get_cpu_count");
     return -1;
