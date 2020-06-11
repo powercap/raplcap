@@ -106,7 +106,7 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  uint32_t n_pkg = 0;
+  uint32_t n_pkg;
   uint32_t n_die;
   if (rc == NULL) {
     rc = &rc_default;
@@ -114,8 +114,31 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
   if (rc->nsockets > 0) {
     return rc->nsockets;
   }
-  msr_get_num_pkg_die(NULL, &n_pkg, &n_die);
-  return n_pkg;
+  return msr_get_num_pkg_die(NULL, &n_pkg, &n_die) ? 0 : n_pkg;
+}
+
+uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t socket) {
+  const raplcap_msr* state;
+  const raplcap_msr_sys_ctx* sys;
+  uint32_t n_pkg;
+  uint32_t n_die;
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if ((state = (raplcap_msr*) rc->state) != NULL) {
+    sys = state->sys;
+  } else {
+    sys = NULL;
+  }
+  if (msr_get_num_pkg_die(sys, &n_pkg, &n_die)) {
+    return 0;
+  }
+  if (socket >= n_pkg) {
+    raplcap_log(ERROR, "raplcap_get_num_die: Socket %"PRIu32" not in range [0, %"PRIu32")\n", socket, n_pkg);
+    errno = EINVAL;
+    return 0;
+  }
+  return n_die;
 }
 
 static raplcap_msr* get_state(uint32_t socket, const raplcap* rc) {

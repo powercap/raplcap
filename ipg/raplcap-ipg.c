@@ -208,6 +208,11 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
   return nsockets;
 }
 
+uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t socket) {
+  errno = ENOSYS;
+  return 0;
+}
+
 static raplcap_ipg* get_state(const raplcap* rc, uint32_t socket) {
   if (rc == NULL) {
     rc = &rc_default;

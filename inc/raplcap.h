@@ -74,6 +74,16 @@ int raplcap_destroy(raplcap* rc);
 uint32_t raplcap_get_num_sockets(const raplcap* rc);
 
 /**
+ * Get the number of available die in a socket.
+ * If the raplcap context is not initialized, the function will attempt to discover the number of available die.
+ *
+ * @param rc
+ * @param socket
+ * @return the number of die, 0 on error
+ */
+uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t socket);
+
+/**
  * Check if a zone is supported.
  *
  * @param rc

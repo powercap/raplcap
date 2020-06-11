@@ -4,6 +4,7 @@
 
 ### Added
 
+* Interface function 'raplcap_get_num_die'
 * [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
 * [msr] Support for Comet Lake, Models 0xA5, 0xA6
 

@@ -377,9 +377,16 @@ int raplcap_destroy(raplcap* rc) {
   return err_save ? -1 : 0;
 }
 
-uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+static int get_topology_uninit(uint32_t* n_pkg, uint32_t* n_die) {
   uint32_t n_parent_zones;
-  uint32_t n_pkgs;
+  if ((n_parent_zones = count_parent_zones()) == 0) {
+    return -1;
+  }
+  return get_topology(n_parent_zones, n_pkg, n_die);
+}
+
+uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+  uint32_t n_pkg = 0;
   uint32_t n_die;
   if (rc == NULL) {
     rc = &rc_default;
@@ -387,13 +394,33 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
   if (rc->nsockets > 0) {
     return rc->nsockets;
   }
-  if ((n_parent_zones = count_parent_zones()) == 0) {
+  return get_topology_uninit(&n_pkg, &n_die) ? 0 : n_pkg;
+}
+
+uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t socket) {
+  const raplcap_powercap* state;
+  uint32_t n_pkg;
+  uint32_t n_die;
+  if (rc == NULL) {
+    rc = &rc_default;
+  }
+  if ((state = (raplcap_powercap*) rc->state) != NULL) {
+    if (socket >= rc->nsockets) {
+      raplcap_log(ERROR, "raplcap_get_num_die: Socket %"PRIu32" not in range [0, %"PRIu32")\n", socket, rc->nsockets);
+      errno = EINVAL;
+      return 0;
+    }
+    return state->n_die;
+  }
+  if (get_topology_uninit(&n_pkg, &n_die)) {
     return 0;
   }
-  if (get_topology(n_parent_zones, &n_pkgs, &n_die) < 0) {
+  if (socket >= n_pkg) {
+    raplcap_log(ERROR, "raplcap_get_num_die: Socket %"PRIu32" not in range [0, %"PRIu32")\n", socket, n_pkg);
+    errno = EINVAL;
     return 0;
   }
-  return n_pkgs;
+  return n_die;
 }
 
 int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
