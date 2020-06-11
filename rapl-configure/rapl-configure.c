@@ -20,6 +20,7 @@
 
 typedef struct rapl_configure_ctx {
   int get_sockets;
+  int get_die;
   raplcap_zone zone;
   unsigned int socket;
   int enabled;
@@ -38,9 +39,10 @@ typedef struct rapl_configure_ctx {
 } rapl_configure_ctx;
 
 static const char* prog;
-static const char short_options[] = "nc:z:e:s:w:S:W:C:Lh";
+static const char short_options[] = "nNc:z:e:s:w:S:W:C:Lh";
 static const struct option long_options[] = {
   {"nsockets", no_argument,       NULL, 'n'},
+  {"ndie",     no_argument,       NULL, 'N'},
   {"socket",   required_argument, NULL, 'c'},
   {"zone",     required_argument, NULL, 'z'},
   {"enabled",  required_argument, NULL, 'e'},
@@ -61,6 +63,7 @@ static void print_usage(int exit_code) {
           "Usage: %s [OPTION]...\n"
           "Options:\n"
           "  -n, --nsockets           Print the number of sockets found and exit\n"
+          "  -N, --ndie               Print the number of die found for a socket and exit\n"
           "  -c, --socket=SOCKET      The processor socket (0 by default)\n"
           "  -z, --zone=ZONE          Which zone/domain use. Allowable values:\n"
           "                           PACKAGE - a processor socket (default)\n"
@@ -220,7 +223,7 @@ int main(int argc, char** argv) {
   int ret = 0;
   int c;
   int supported;
-  uint32_t sockets;
+  uint32_t count;
   prog = argv[0];
   int is_read_only;
 
@@ -235,6 +238,9 @@ int main(int argc, char** argv) {
         break;
       case 'n':
         ctx.get_sockets = 1;
+        break;
+      case 'N':
+        ctx.get_die = 1;
         break;
       case 'z':
         if (!strcmp(optarg, "PACKAGE")) {
@@ -283,15 +289,24 @@ int main(int argc, char** argv) {
     }
   }
 
-  // just print the number of sockets and exit
-  // this is often an unprivileged operation since we don't need to initialize a raplcap instance
+  // just print the number of sockets or die and exit
+  // these are often unprivileged operations since we don't need to initialize a raplcap instance
   if (ctx.get_sockets) {
-    sockets = raplcap_get_num_sockets(NULL);
-    if (sockets == 0) {
+    count = raplcap_get_num_sockets(NULL);
+    if (count == 0) {
       perror("Failed to get number of sockets");
       return 1;
     }
-    printf("%"PRIu32"\n", sockets);
+    printf("%"PRIu32"\n", count);
+    return 0;
+  }
+  if (ctx.get_die) {
+    count = raplcap_get_num_die(NULL, ctx.socket);
+    if (count == 0) {
+      perror("Failed to get number of die");
+      return 1;
+    }
+    printf("%"PRIu32"\n", count);
     return 0;
   }
 

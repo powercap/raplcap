@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2017-11-03" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2020-06-10" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -24,7 +24,8 @@ Hardware components other than the processor can sometimes also be configured
 as zones.
 Currently supported zones are:
 .IP \[bu] 2
-\fIPackage\fP: the entire processor die.
+\fIPackage\fP: a processor package, including cores and other shared resources
+like the uncore components below and a DRAM controller.
 .IP \[bu]
 \fICore\fP: the processor core, like compute components and private caches
 (often L1 and L2).
@@ -66,6 +67,9 @@ explicitly set to 0.
 \fB\-n,\fP \fB\-\-nsockets\fP
 Print the number of sockets found and exit
 .TP
+\fB\-N,\fP \fB\-\-ndie\fP
+Print the number of die found for a socket and exit
+.TP
 \fB\-c,\fP \fB\-\-socket\fP=\fISOCKET\fP
 The processor socket (0 by default)
 .TP
@@ -103,6 +107,9 @@ Prints out the help screen
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-n\fP
 Print the number of sockets found on the system.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-N \-c 1\fP
+Print the number of die found for socket 1.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@\fP
 Print PACKAGE zone information for socket 0.
