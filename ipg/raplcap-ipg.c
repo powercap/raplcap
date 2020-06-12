@@ -139,7 +139,7 @@ static int initEnergyLib(raplcap_ipg* state, int* nNodes) {
     return -1;
   }
   raplcap_log(DEBUG, "initEnergyLib: Found Package Power Limit MSR: %d\n", state->msr_pkg_power_limit);
-  // get the number of packages/sockets
+  // get the number of packages
   *nNodes = -1;
   if (!state->pGetNumNodes(nNodes) || *nNodes <= 0) {
     raplcap_log(ERROR, "initEnergyLib: GetNumNodes\n");
@@ -189,31 +189,31 @@ int raplcap_destroy(raplcap* rc) {
 
 uint32_t raplcap_get_num_sockets(const raplcap* rc) {
   raplcap tmp;
-  uint32_t nsockets;
+  uint32_t n_pkg;
   if (rc == NULL) {
     rc = &rc_default;
   }
-  nsockets = rc->nsockets;
-  if (nsockets == 0) {
+  n_pkg = rc->nsockets;
+  if (n_pkg == 0) {
     // Can't discover sockets without initializing an IPG.
     // Can't init a const parameter, and can't init the default impl, o/w a later init could cause memory leak.
     // Instead, we create and destroy a local instance.
     if (raplcap_init(&tmp)) {
       return 0;
     }
-    nsockets = tmp.nsockets;
+    n_pkg = tmp.nsockets;
     // destroy never fails...
     raplcap_destroy(&tmp);
   }
-  return nsockets;
+  return n_pkg;
 }
 
-uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t socket) {
+uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   errno = ENOSYS;
   return 0;
 }
 
-static raplcap_ipg* get_state(const raplcap* rc, uint32_t socket) {
+static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg) {
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -223,16 +223,16 @@ static raplcap_ipg* get_state(const raplcap* rc, uint32_t socket) {
     errno = EINVAL;
     return NULL;
   }
-  if (socket >= rc->nsockets) {
-    raplcap_log(ERROR, "get_state: Socket %"PRIu32" not in range [0, %"PRIu32")\n", socket, rc->nsockets);
+  if (pkg >= rc->nsockets) {
+    raplcap_log(ERROR, "get_state: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, rc->nsockets);
     errno = EINVAL;
     return NULL;
   }
   return (raplcap_ipg*) rc->state;
 }
 
-int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
-  if (get_state(rc, socket) == NULL) {
+int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  if (get_state(rc, pkg) == NULL) {
     errno = EINVAL;
     return -1;
   }
@@ -240,18 +240,18 @@ int raplcap_is_zone_supported(const raplcap* rc, uint32_t socket, raplcap_zone z
   return zone == RAPLCAP_ZONE_PACKAGE;
 }
 
-int raplcap_is_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
   // not supported by IPG
-  (void) socket;
+  (void) pkg;
   (void) rc;
   (void) zone;
   errno = ENOSYS;
   return -1;
 }
 
-int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zone, int enabled) {
+int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled) {
   // not supported by IPG
-  (void) socket;
+  (void) pkg;
   (void) rc;
   (void) zone;
   (void) enabled;
@@ -259,23 +259,23 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t socket, raplcap_zone zo
   return -1;
 }
 
-int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
+int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short) {
   int nResult = 0;
   double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
   raplcap_ipg* state;
-  if (raplcap_is_zone_supported(rc, socket, zone) <= 0) {
+  if (raplcap_is_zone_supported(rc, pkg, zone) <= 0) {
     return -1;
   }
   // will not be NULL if zone is supported
-  state = get_state(rc, socket);
+  state = get_state(rc, pkg);
   // try twice to work around overflow which doesn't affect our functions
   if (!state->pReadSample() || !state->pReadSample()) {
     raplcap_log(ERROR, "raplcap_get_limits: ReadSample\n");
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_get_limits: Read sample from MSR\n");
-  if (!state->pGetPowerData((int) socket, state->msr_pkg_power_limit, data, &nResult) ||
+  if (!state->pGetPowerData((int) pkg, state->msr_pkg_power_limit, data, &nResult) ||
       nResult != MSR_FUNC_N_RESULTS_POWER_LIMIT) {
     raplcap_log(ERROR, "raplcap_get_limits: GetPowerData\n");
     return -1;
@@ -294,10 +294,10 @@ int raplcap_get_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   return 0;
 }
 
-int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
+int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   // not supported by IPG
-  (void) socket;
+  (void) pkg;
   (void) rc;
   (void) zone;
   (void) limit_long;
@@ -306,22 +306,22 @@ int raplcap_set_limits(const raplcap* rc, uint32_t socket, raplcap_zone zone,
   return -1;
 }
 
-double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
+double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
   int nResult = 0;
   double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
   raplcap_ipg* state;
-  if (raplcap_is_zone_supported(rc, socket, zone) <= 0) {
+  if (raplcap_is_zone_supported(rc, pkg, zone) <= 0) {
     return -1;
   }
   // will not be NULL if zone is supported
-  state = get_state(rc, socket);
+  state = get_state(rc, pkg);
   // try twice to work around overflow
   if (!state->pReadSample() || !state->pReadSample()) {
     raplcap_log(ERROR, "raplcap_get_energy_counter: ReadSample\n");
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_get_energy_counter: Read sample from MSR\n");
-  if (!state->pGetPowerData((int) socket, state->msr_pkg_power_energy, data, &nResult) ||
+  if (!state->pGetPowerData((int) pkg, state->msr_pkg_power_energy, data, &nResult) ||
       nResult != MSR_FUNC_N_RESULTS_POWER_ENERGY) {
     raplcap_log(ERROR, "raplcap_get_energy_counter: GetPowerData\n");
     return -1;
@@ -329,8 +329,8 @@ double raplcap_get_energy_counter(const raplcap* rc, uint32_t socket, raplcap_zo
   return data[POWER_IDX_ENERGY_JOULES];
 }
 
-double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t socket, raplcap_zone zone) {
-  (void) socket;
+double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  (void) pkg;
   (void) rc;
   (void) zone;
   raplcap_log(ERROR, "raplcap_get_energy_counter_max: Getting energy counter max is not supported\n");
