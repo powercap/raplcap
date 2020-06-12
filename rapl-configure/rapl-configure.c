@@ -19,10 +19,10 @@
 #endif // RAPLCAP_msr
 
 typedef struct rapl_configure_ctx {
-  int get_sockets;
+  int get_packages;
   int get_die;
   raplcap_zone zone;
-  unsigned int socket;
+  unsigned int pkg;
   int enabled;
   int set_enabled;
   int set_long;
@@ -62,11 +62,11 @@ static void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
           "Usage: %s [OPTION]...\n"
           "Options:\n"
-          "  -n, --nsockets           Print the number of sockets found and exit\n"
-          "  -N, --ndie               Print the number of die found for a socket and exit\n"
-          "  -c, --socket=SOCKET      The processor socket (0 by default)\n"
+          "  -n, --nsockets           Print the number of packages found and exit\n"
+          "  -N, --ndie               Print the number of die found for a package and exit\n"
+          "  -c, --socket=PACKAGE     The processor package (0 by default)\n"
           "  -z, --zone=ZONE          Which zone/domain use. Allowable values:\n"
-          "                           PACKAGE - a processor socket (default)\n"
+          "                           PACKAGE - a processor package (default)\n"
           "                           CORE - core power plane\n"
           "                           UNCORE - uncore power plane (client systems only)\n"
           "                           DRAM - main memory (server systems only)\n"
@@ -84,7 +84,7 @@ static void print_usage(int exit_code) {
           "  -L, --locked             Lock a zone (a core RESET is required to unlock)\n"
 #endif // RAPLCAP_msr
           "  -h, --help               Print this message and exit\n\n"
-          "Current values are printed if no flags, or only socket and/or zone flags, are specified.\n"
+          "Current values are printed if no flags, or only package and/or zone flags, are specified.\n"
           "Otherwise, specified values are set while other values remain unmodified.\n"
           "When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0.\n",
           prog);
@@ -150,12 +150,12 @@ static int configure_limits(const rapl_configure_ctx* c) {
     ls = &limit_short;
   }
   // set limits
-  if ((c->set_long || c->set_short) && (ret = raplcap_set_limits(NULL, c->socket, c->zone, ll, ls))) {
+  if ((c->set_long || c->set_short) && (ret = raplcap_set_limits(NULL, c->pkg, c->zone, ll, ls))) {
     perror("Failed to set limits");
     return ret;
   }
   // enable/disable if requested, otherwise automatically enable
-  if ((ret = raplcap_set_zone_enabled(NULL, c->socket, c->zone, (c->set_enabled ? c->enabled : 1)))) {
+  if ((ret = raplcap_set_zone_enabled(NULL, c->pkg, c->zone, (c->set_enabled ? c->enabled : 1)))) {
     perror("Failed to enable/disable zone");
     return ret;
   }
@@ -164,11 +164,11 @@ static int configure_limits(const rapl_configure_ctx* c) {
   //       As a result:
   //       1) We set clamping here AFTER enabling in case clamping was requested to be off
   //       2) The user must always explicitly request clamping to be off when setting RAPL limits
-  if (c->set_clamped && (ret = raplcap_msr_set_zone_clamped(NULL, c->socket, c->zone, c->clamped))) {
+  if (c->set_clamped && (ret = raplcap_msr_set_zone_clamped(NULL, c->pkg, c->zone, c->clamped))) {
     perror("Failed to clamp/unclamp zone");
     return ret;
   }
-  if (c->set_locked && (ret = raplcap_msr_set_zone_locked(NULL, c->socket, c->zone))) {
+  if (c->set_locked && (ret = raplcap_msr_set_zone_locked(NULL, c->pkg, c->zone))) {
     perror("Failed to lock zone");
     return ret;
   }
@@ -176,7 +176,7 @@ static int configure_limits(const rapl_configure_ctx* c) {
   return 0;
 }
 
-static int get_limits(unsigned int socket, raplcap_zone zone) {
+static int get_limits(unsigned int pkg, raplcap_zone zone) {
   raplcap_limit ll = { 0 };
   raplcap_limit ls = { 0 };
   double joules;
@@ -184,27 +184,27 @@ static int get_limits(unsigned int socket, raplcap_zone zone) {
   int locked = PRINT_LIMIT_IGNORE;
   int clamped = PRINT_LIMIT_IGNORE;
   int ret;
-  int enabled = raplcap_is_zone_enabled(NULL, socket, zone);
+  int enabled = raplcap_is_zone_enabled(NULL, pkg, zone);
   if (enabled < 0) {
     print_error_continue("Failed to determine if zone is enabled");
   }
 #ifdef RAPLCAP_msr
-  locked = raplcap_msr_is_zone_locked(NULL, socket, zone);
+  locked = raplcap_msr_is_zone_locked(NULL, pkg, zone);
   if (locked < 0) {
     print_error_continue("Failed to determine if zone is locked");
   }
-  clamped = raplcap_msr_is_zone_clamped(NULL, socket, zone);
+  clamped = raplcap_msr_is_zone_clamped(NULL, pkg, zone);
   if (clamped < 0) {
     print_error_continue("Failed to determine if zone is clamped");
   }
 #endif // RAPLCAP_msr
-  if ((ret = raplcap_get_limits(NULL, socket, zone, &ll, &ls))) {
+  if ((ret = raplcap_get_limits(NULL, pkg, zone, &ll, &ls))) {
     perror("Failed to get limits");
     return ret;
   }
   // we'll consider energy counter information to be optional
-  joules = raplcap_get_energy_counter(NULL, socket, zone);
-  joules_max = raplcap_get_energy_counter_max(NULL, socket, zone);
+  joules = raplcap_get_energy_counter(NULL, pkg, zone);
+  joules_max = raplcap_get_energy_counter_max(NULL, pkg, zone);
   print_limits(enabled, locked, clamped,
                ll.watts, ll.seconds, ls.watts, ls.seconds,
                joules, joules_max);
@@ -234,10 +234,10 @@ int main(int argc, char** argv) {
         print_usage(0);
         break;
       case 'c':
-        ctx.socket = atoi(optarg);
+        ctx.pkg = atoi(optarg);
         break;
       case 'n':
-        ctx.get_sockets = 1;
+        ctx.get_packages = 1;
         break;
       case 'N':
         ctx.get_die = 1;
@@ -289,19 +289,19 @@ int main(int argc, char** argv) {
     }
   }
 
-  // just print the number of sockets or die and exit
+  // just print the number of packages or die and exit
   // these are often unprivileged operations since we don't need to initialize a raplcap instance
-  if (ctx.get_sockets) {
+  if (ctx.get_packages) {
     count = raplcap_get_num_sockets(NULL);
     if (count == 0) {
-      perror("Failed to get number of sockets");
+      perror("Failed to get number of packages");
       return 1;
     }
     printf("%"PRIu32"\n", count);
     return 0;
   }
   if (ctx.get_die) {
-    count = raplcap_get_num_die(NULL, ctx.socket);
+    count = raplcap_get_num_die(NULL, ctx.pkg);
     if (count == 0) {
       perror("Failed to get number of die");
       return 1;
@@ -326,7 +326,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  supported = raplcap_is_zone_supported(NULL, ctx.socket, ctx.zone);
+  supported = raplcap_is_zone_supported(NULL, ctx.pkg, ctx.zone);
   if (supported == 0) {
     fprintf(stderr, "Zone not supported\n");
     ret = -1;
@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
     }
     // perform requested action
     if (is_read_only) {
-      ret = get_limits(ctx.socket, ctx.zone);
+      ret = get_limits(ctx.pkg, ctx.zone);
     } else {
       ret = configure_limits(&ctx);
     }

@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2020-06-10" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2020-06-12" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -16,9 +16,9 @@ Refer to the "Intel\*R 64 and IA-32 Architectures Software Developer Manual,
 Volume 3: System Programming Guide" for more technical information.
 This description is only a short summary.
 .LP
-Power limits are configured on a per-socket basis, although most client systems
-only have a single processor socket.
-Each socket supports \fIzones\fP, also known as \fIdomains\fP, to manage power
+Power limits are configured on a per-package basis, although most client systems
+only have a single processor package.
+Each package supports \fIzones\fP, also known as \fIdomains\fP, to manage power
 at fine-grained levels.
 Hardware components other than the processor can sometimes also be configured
 as zones.
@@ -55,8 +55,8 @@ Actual power limit and time window values are system-dependent.
 Refer to your hardware's technical documentation, particularly for the Thermal
 Design Power (TDP).
 .LP
-By default, rapl\-configure\-@RAPL_LIB@ uses the PACKAGE zone on socket 0.
-Current values are printed if no flags, or only socket and/or zone flags, are
+By default, rapl\-configure\-@RAPL_LIB@ uses the PACKAGE zone on package 0.
+Current values are printed if no flags, or only package and/or zone flags, are
 specified.
 Otherwise, specified values are set while other values remain unmodified.
 When setting values, zones are automatically enabled unless \-e/\-\-enabled is
@@ -65,18 +65,18 @@ explicitly set to 0.
 .LP
 .TP
 \fB\-n,\fP \fB\-\-nsockets\fP
-Print the number of sockets found and exit
+Print the number of packages found and exit
 .TP
 \fB\-N,\fP \fB\-\-ndie\fP
-Print the number of die found for a socket and exit
+Print the number of die found for a package and exit
 .TP
-\fB\-c,\fP \fB\-\-socket\fP=\fISOCKET\fP
-The processor socket (0 by default)
+\fB\-c,\fP \fB\-\-socket\fP=\fIPACKAGE\fP
+The processor package (0 by default)
 .TP
 \fB\-z,\fP \fB\-\-zone\fP=\fIZONE\fP
 Which zone/domain use. Allowable values:
 .br
-PACKAGE \- a processor socket (default)
+PACKAGE \- a processor package (default)
 .br
 CORE \- core power plane
 .br
@@ -106,41 +106,41 @@ Prints out the help screen
 .SH "EXAMPLES"
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-n\fP
-Print the number of sockets found on the system.
+Print the number of packages found on the system.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-N \-c 1\fP
-Print the number of die found for socket 1.
+Print the number of die found for package 1 (requires multi-package system).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@\fP
-Print PACKAGE zone information for socket 0.
+Print PACKAGE zone information for package 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-c 1\fP
-Print PACKAGE zone information for socket 1 (requires multi-socket system).
+Print PACKAGE zone information for package 1 (requires multi-package system).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z CORE\fP
-Print CORE zone information for socket 0.
+Print CORE zone information for package 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-c 1 \-z DRAM\fP
-Print DRAM zone information for socket 1 (requires multi-socket system).
+Print DRAM zone information for package 1 (requires multi-package system).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-w 20\fP
-Set 20 Watt long term power constraint on PACKAGE zone for socket 0 without
+Set 20 Watt long term power constraint on PACKAGE zone for package 0 without
 changing time window.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-w 20 -s 30\fP
 Set 20 Watt long term power constraint with 30 second time window on PACKAGE
-zone for socket 0.
+zone for package 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-W 30 -S 0.0025\fP
 Set 30 Watt short term power constraint with 2.5 millisecond time window on
-PACKAGE zone for socket 0.
+PACKAGE zone for package 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 10\fP
-Set 10 Watt long term power constraint on UNCORE zone for socket 0 without
+Set 10 Watt long term power constraint on UNCORE zone for package 0 without
 changing time window (automatically enables zone if it is disabled).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 0\fP
-Disable UNCORE zone for socket 0.
+Disable UNCORE zone for package 0.
 .SH "REMARKS"
 .LP
 Administrative (root) privileges are usually needed to access RAPL settings.
