@@ -41,8 +41,10 @@ typedef struct rapl_configure_ctx {
 static const char* prog;
 static const char short_options[] = "nNc:z:e:s:w:S:W:C:Lh";
 static const struct option long_options[] = {
+  {"npackages",no_argument,       NULL, 'n'},
   {"nsockets", no_argument,       NULL, 'n'},
   {"ndie",     no_argument,       NULL, 'N'},
+  {"package",  required_argument, NULL, 'c'},
   {"socket",   required_argument, NULL, 'c'},
   {"zone",     required_argument, NULL, 'z'},
   {"enabled",  required_argument, NULL, 'e'},
@@ -62,9 +64,11 @@ static void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
           "Usage: %s [OPTION]...\n"
           "Options:\n"
-          "  -n, --nsockets           Print the number of packages found and exit\n"
+          "  -n, --npackages          Print the number of packages found and exit\n"
+          "      --nsockets           Deprecated, use --npackages instead\n"
           "  -N, --ndie               Print the number of die found for a package and exit\n"
-          "  -c, --socket=PACKAGE     The processor package (0 by default)\n"
+          "  -c, --package=PACKAGE    The processor package (0 by default)\n"
+          "      --socket=PACKAGE     Deprecated, use --package instead\n"
           "  -z, --zone=ZONE          Which zone/domain use. Allowable values:\n"
           "                           PACKAGE - a processor package (default)\n"
           "                           CORE - core power plane\n"

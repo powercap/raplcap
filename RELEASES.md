@@ -8,12 +8,19 @@
 * [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
 * [msr] Support for Comet Lake, Models 0xA5, 0xA6
 * [rapl-configure] New -N/--ndie flag
+* [rapl-configure] Long option --npackages (supersedes --nsockets)
+* [rapl-configure] Long option --package (supersedes --socket)
 
 ### Changed
 
 * Increased minimum CMake version from 2.8.5 to 2.8.12 to support target_compile_definitions
 * [msr] Updated for the Intel Software Developer's Manual, May 2020 release
 * [powercap] Library dependency now requires version >= 0.3.0
+
+### Deprecated
+
+* [rapl-configure] Long option --nsockets, use --npackages instead
+* [rapl-configure] Long option --socket, use --package instead
 
 ### Removed
 

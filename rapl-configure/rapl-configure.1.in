@@ -64,14 +64,20 @@ explicitly set to 0.
 .SH "OPTIONS"
 .LP
 .TP
-\fB\-n,\fP \fB\-\-nsockets\fP
+\fB\-n,\fP \fB\-\-npackages\fP
 Print the number of packages found and exit
+.TP
+\fB\-n,\fP \fB\-\-nsockets\fP
+Deprecated, use \fB\-\-npackages\fP instead
 .TP
 \fB\-N,\fP \fB\-\-ndie\fP
 Print the number of die found for a package and exit
 .TP
-\fB\-c,\fP \fB\-\-socket\fP=\fIPACKAGE\fP
+\fB\-c,\fP \fB\-\-package\fP=\fIPACKAGE\fP
 The processor package (0 by default)
+.TP
+\fB\-c,\fP \fB\-\-socket\fP=\fIPACKAGE\fP
+Deprecated, use \fB\-\-package\fP instead
 .TP
 \fB\-z,\fP \fB\-\-zone\fP=\fIZONE\fP
 Which zone/domain use. Allowable values:
@@ -153,6 +159,12 @@ Power and time window values are not always stored exactly as specified.
 This is a result of how values are encoded in the Model-Specific Registers.
 When using the powercap backend, some accuracy may also be lost as the
 interface forces rounding values to microJoule and microsecond precision.
+.LP
+Historically, the term \fIsocket\fP was used interchangeably with \fIpackage\fP.
+While there used to only ever be a single processor package per socket, this
+symmetry no longer holds - sockets may contain multiple packages.
+Therefore, parameters with the term \fIsocket\fP are deprecated and only
+retained to support backward compatibility.
 .SH "BUGS"
 .LP
 Report bugs upstream at <https://github.com/powercap/raplcap>
