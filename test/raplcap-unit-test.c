@@ -36,6 +36,6 @@ int main(void) {
   // just verify that it doesn't crash (API doesn't specify what to return or whether to set errno in this case)
   raplcap_destroy(NULL);
   // also verifying that it doesn't crash
-  raplcap_get_num_sockets(NULL);
+  raplcap_get_num_packages(NULL);
   return 0;
 }
