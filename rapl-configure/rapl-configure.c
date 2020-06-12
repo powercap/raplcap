@@ -296,7 +296,7 @@ int main(int argc, char** argv) {
   // just print the number of packages or die and exit
   // these are often unprivileged operations since we don't need to initialize a raplcap instance
   if (ctx.get_packages) {
-    count = raplcap_get_num_sockets(NULL);
+    count = raplcap_get_num_packages(NULL);
     if (count == 0) {
       perror("Failed to get number of packages");
       return 1;

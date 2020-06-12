@@ -385,7 +385,7 @@ static int get_topology_uninit(uint32_t* n_pkg, uint32_t* n_die) {
   return get_topology(n_parent_zones, n_pkg, n_die);
 }
 
-uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+uint32_t raplcap_get_num_packages(const raplcap* rc) {
   uint32_t n_pkg = 0;
   uint32_t n_die;
   if (rc == NULL) {
@@ -395,6 +395,10 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
     return rc->nsockets;
   }
   return get_topology_uninit(&n_pkg, &n_die) ? 0 : n_pkg;
+}
+
+uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+  return raplcap_get_num_packages(rc);
 }
 
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {

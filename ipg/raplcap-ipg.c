@@ -187,7 +187,7 @@ int raplcap_destroy(raplcap* rc) {
   return 0;
 }
 
-uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+uint32_t raplcap_get_num_packages(const raplcap* rc) {
   raplcap tmp;
   uint32_t n_pkg;
   if (rc == NULL) {
@@ -206,6 +206,10 @@ uint32_t raplcap_get_num_sockets(const raplcap* rc) {
     raplcap_destroy(&tmp);
   }
   return n_pkg;
+}
+
+uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+  return raplcap_get_num_packages(rc);
 }
 
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {

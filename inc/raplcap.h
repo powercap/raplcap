@@ -74,6 +74,15 @@ int raplcap_destroy(raplcap* rc);
  * @param rc
  * @return the number of packages, 0 on error
  */
+uint32_t raplcap_get_num_packages(const raplcap* rc);
+
+/**
+ * Deprecated, superseded by raplcap_get_num_packages.
+ *
+ * @param rc
+ * @return the number of packages, 0 on error
+ * @deprecated
+ */
 uint32_t raplcap_get_num_sockets(const raplcap* rc);
 
 /**

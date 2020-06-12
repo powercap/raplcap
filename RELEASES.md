@@ -4,6 +4,7 @@
 
 ### Added
 
+* Interface function 'raplcap_get_num_packages' (supersedes 'raplcap_get_num_sockets')
 * Interface function 'raplcap_get_num_die'
 * [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
 * [msr] Support for Comet Lake, Models 0xA5, 0xA6
@@ -19,6 +20,7 @@
 
 ### Deprecated
 
+* Interface function 'raplcap_get_num_sockets', use 'raplcap_get_num_packages' instead
 * [rapl-configure] Long option --nsockets, use --npackages instead
 * [rapl-configure] Long option --socket, use --package instead
 
