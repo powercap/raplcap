@@ -7,6 +7,7 @@
 * Interface function 'raplcap_get_num_packages' (supersedes 'raplcap_get_num_sockets')
 * Interface function 'raplcap_get_num_die'
 * Interface functions 'raplcap_pd_*' for package+die support
+* [msr] Interface functions 'raplcap_msr_pd_*' for package+die support
 * [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
 * [msr] Support for Comet Lake, Models 0xA5, 0xA6
 * [rapl-configure] New -N/--ndie flag

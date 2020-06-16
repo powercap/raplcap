@@ -277,80 +277,108 @@ double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32
   return msr_get_energy_counter_max(&state->ctx, zone);
 }
 
-int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+int raplcap_msr_pd_is_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   uint64_t msrval;
   int cl[2] = { 1, 1 };
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
-  raplcap_log(DEBUG, "raplcap_msr_is_zone_clamped: pkg=%"PRIu32", zone=%d\n", pkg, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, 0, msr)) {
+  raplcap_log(DEBUG, "raplcap_msr_pd_is_zone_clamped: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
     return -1;
   }
   msr_is_zone_clamped(&state->ctx, zone, msrval, &cl[0], &cl[1]);
   return cl[0] && cl[1];
 }
 
-int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped) {
+int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  return raplcap_msr_pd_is_zone_clamped(rc, pkg, 0, zone);
+}
+
+int raplcap_msr_pd_set_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int clamped) {
   uint64_t msrval;
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
-  raplcap_log(DEBUG, "raplcap_msr_set_zone_clamped: pkg=%"PRIu32", zone=%d\n", pkg, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, 0, msr)) {
+  raplcap_log(DEBUG, "raplcap_msr_pd_set_zone_clamped: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
     return -1;
   }
   msrval = msr_set_zone_clamped(&state->ctx, zone, msrval, &clamped, &clamped);
   return msr_sys_write(state->sys, msrval, pkg, 0, msr);
 }
 
-int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped) {
+  return raplcap_msr_pd_set_zone_clamped(rc, pkg, 0, zone, clamped);
+}
+
+int raplcap_msr_pd_is_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   uint64_t msrval;
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
-  raplcap_log(DEBUG, "raplcap_msr_is_zone_locked: pkg=%"PRIu32", zone=%d\n", pkg, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, 0, msr)) {
+  raplcap_log(DEBUG, "raplcap_msr_pd_is_zone_locked: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
     return -1;
   }
   return msr_is_zone_locked(&state->ctx, zone, msrval);
 }
 
-int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  return raplcap_msr_pd_is_zone_locked(rc, pkg, 0, zone);
+}
+
+int raplcap_msr_pd_set_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   uint64_t msrval;
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
-  raplcap_log(DEBUG, "raplcap_msr_set_zone_locked: pkg=%"PRIu32", zone=%d\n", pkg, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, 0, msr)) {
+  raplcap_log(DEBUG, "raplcap_msr_pd_set_zone_locked: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
     return -1;
   }
   msrval = msr_set_zone_locked(&state->ctx, zone, msrval, 1);
   return msr_sys_write(state->sys, msrval, pkg, 0, msr);
 }
 
-double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  return raplcap_msr_pd_set_zone_locked(rc, pkg, 0, zone);
+}
+
+double raplcap_msr_pd_get_time_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
-  raplcap_log(DEBUG, "raplcap_msr_get_time_units: pkg=%"PRIu32", zone=%d\n", pkg, zone);
+  raplcap_log(DEBUG, "raplcap_msr_pd_get_time_units: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
   if (state == NULL || msr < 0) {
     return -1;
   }
   return msr_get_time_units(&state->ctx, zone);
 }
 
-double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  return raplcap_msr_pd_get_time_units(rc, pkg, 0, zone);
+}
+
+double raplcap_msr_pd_get_power_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
-  raplcap_log(DEBUG, "raplcap_msr_get_power_units: pkg=%"PRIu32", zone=%d\n", pkg, zone);
+  raplcap_log(DEBUG, "raplcap_msr_pd_get_power_units: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
   if (state == NULL || msr < 0) {
     return -1;
   }
   return msr_get_power_units(&state->ctx, zone);
 }
 
-double raplcap_msr_get_energy_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
-  const raplcap_msr* state = get_state(rc, pkg, 0);
+double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  return raplcap_msr_pd_get_power_units(rc, pkg, 0, zone);
+}
+
+double raplcap_msr_pd_get_energy_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
+  const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);
-  raplcap_log(DEBUG, "raplcap_msr_get_energy_units: pkg=%"PRIu32", zone=%d\n", pkg, zone);
+  raplcap_log(DEBUG, "raplcap_msr_pd_get_energy_units: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
   if (state == NULL || msr < 0) {
     return -1;
   }
   return msr_get_energy_units(&state->ctx, zone);
+}
+
+double raplcap_msr_get_energy_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+  return raplcap_msr_pd_get_energy_units(rc, pkg, 0, zone);
 }

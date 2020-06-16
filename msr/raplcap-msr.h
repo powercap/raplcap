@@ -19,10 +19,11 @@ extern "C" {
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return 0 if not clamped, 1 if clamped, a negative value on error
  */
-int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+int raplcap_msr_pd_is_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Clamp/unclamp a zone.
@@ -30,21 +31,23 @@ int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zo
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @param clamp
  * @return 0 on success, a negative value on error
  */
-int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped);
+int raplcap_msr_pd_set_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int clamped);
 
 /**
  * Check if a zone is locked.
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return 0 if unlocked, 1 if locked, a negative value on error
  */
-int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+int raplcap_msr_pd_is_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Lock a zone.
@@ -52,38 +55,91 @@ int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zon
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return 0 on success, a negative value on error
  */
-int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+int raplcap_msr_pd_set_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Get the time units for a zone in seconds.
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return Seconds on success, a negative value on error
  */
-double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+double raplcap_msr_pd_get_time_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Get the power units for a zone in Watts.
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return Watts on success, a negative value on error
  */
-double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+double raplcap_msr_pd_get_power_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Get the energy units for a zone in Joules.
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return Joules on success, a negative value on error
+ */
+double raplcap_msr_pd_get_energy_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_is_zone_clamped
+ */
+int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_set_zone_clamped
+ */
+int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_is_zone_locked
+ */
+int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_set_zone_locked
+ */
+int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_get_time_units
+ */
+double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_get_power_units
+ */
+double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_msr_pd_get_energy_units
  */
 double raplcap_msr_get_energy_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
