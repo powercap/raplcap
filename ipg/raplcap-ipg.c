@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "raplcap.h"
+#include "raplcap-wrappers.h"
 #define RAPLCAP_IMPL "raplcap-ipg"
 #include "raplcap-common.h"
 #ifdef _WIN32
@@ -217,7 +218,7 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   return 0;
 }
 
-static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg) {
+static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -232,11 +233,16 @@ static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg) {
     errno = EINVAL;
     return NULL;
   }
+  if (die != 0) {
+    raplcap_log(ERROR, "get_state: Multi-die systems not supported\n");
+    errno = ENOSYS;
+    return NULL;
+  }
   return (raplcap_ipg*) rc->state;
 }
 
-int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
-  if (get_state(rc, pkg) == NULL) {
+int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
+  if (get_state(rc, pkg, die) == NULL) {
     errno = EINVAL;
     return -1;
   }
@@ -244,47 +250,49 @@ int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone
   return zone == RAPLCAP_ZONE_PACKAGE;
 }
 
-int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   // not supported by IPG
-  (void) pkg;
   (void) rc;
+  (void) pkg;
+  (void) die;
   (void) zone;
   errno = ENOSYS;
   return -1;
 }
 
-int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled) {
+int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int enabled) {
   // not supported by IPG
-  (void) pkg;
   (void) rc;
+  (void) pkg;
+  (void) die;
   (void) zone;
   (void) enabled;
   errno = ENOSYS;
   return -1;
 }
 
-int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
-                       raplcap_limit* limit_long, raplcap_limit* limit_short) {
+int raplcap_pd_get_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                          raplcap_limit* limit_long, raplcap_limit* limit_short) {
   int nResult = 0;
   double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
   raplcap_ipg* state;
-  if (raplcap_is_zone_supported(rc, pkg, zone) <= 0) {
+  if (raplcap_pd_is_zone_supported(rc, pkg, die, zone) <= 0) {
     return -1;
   }
   // will not be NULL if zone is supported
-  state = get_state(rc, pkg);
+  state = get_state(rc, pkg, die);
   // try twice to work around overflow which doesn't affect our functions
   if (!state->pReadSample() || !state->pReadSample()) {
-    raplcap_log(ERROR, "raplcap_get_limits: ReadSample\n");
+    raplcap_log(ERROR, "raplcap_pd_get_limits: ReadSample\n");
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_limits: Read sample from MSR\n");
+  raplcap_log(DEBUG, "raplcap_pd_get_limits: Read sample from MSR\n");
   if (!state->pGetPowerData((int) pkg, state->msr_pkg_power_limit, data, &nResult) ||
       nResult != MSR_FUNC_N_RESULTS_POWER_LIMIT) {
-    raplcap_log(ERROR, "raplcap_get_limits: GetPowerData\n");
+    raplcap_log(ERROR, "raplcap_pd_get_limits: GetPowerData\n");
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_limits: Got package power limit: %.12f\n", data[POWER_LIMIT_IDX_POWER_WATTS]);
+  raplcap_log(DEBUG, "raplcap_pd_get_limits: Got package power limit: %.12f\n", data[POWER_LIMIT_IDX_POWER_WATTS]);
   // TODO: assuming this is long_term data
   // TODO: What about data we can't collect, like long term seconds or any short term data? Currently setting to 0.
   if (limit_long != NULL) {
@@ -298,11 +306,12 @@ int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
   return 0;
 }
 
-int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
-                       const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
+int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                          const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   // not supported by IPG
-  (void) pkg;
   (void) rc;
+  (void) pkg;
+  (void) die;
   (void) zone;
   (void) limit_long;
   (void) limit_short;
@@ -310,34 +319,35 @@ int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
   return -1;
 }
 
-double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   int nResult = 0;
   double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
   raplcap_ipg* state;
-  if (raplcap_is_zone_supported(rc, pkg, zone) <= 0) {
+  if (raplcap_pd_is_zone_supported(rc, pkg, die, zone) <= 0) {
     return -1;
   }
   // will not be NULL if zone is supported
-  state = get_state(rc, pkg);
+  state = get_state(rc, pkg, die);
   // try twice to work around overflow
   if (!state->pReadSample() || !state->pReadSample()) {
-    raplcap_log(ERROR, "raplcap_get_energy_counter: ReadSample\n");
+    raplcap_log(ERROR, "raplcap_pd_get_energy_counter: ReadSample\n");
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_energy_counter: Read sample from MSR\n");
+  raplcap_log(DEBUG, "raplcap_pd_get_energy_counter: Read sample from MSR\n");
   if (!state->pGetPowerData((int) pkg, state->msr_pkg_power_energy, data, &nResult) ||
       nResult != MSR_FUNC_N_RESULTS_POWER_ENERGY) {
-    raplcap_log(ERROR, "raplcap_get_energy_counter: GetPowerData\n");
+    raplcap_log(ERROR, "raplcap_pd_get_energy_counter: GetPowerData\n");
     return -1;
   }
   return data[POWER_IDX_ENERGY_JOULES];
 }
 
-double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
-  (void) pkg;
+double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   (void) rc;
+  (void) pkg;
+  (void) die;
   (void) zone;
-  raplcap_log(ERROR, "raplcap_get_energy_counter_max: Getting energy counter max is not supported\n");
+  raplcap_log(ERROR, "raplcap_pd_get_energy_counter_max: Getting energy counter max is not supported\n");
   errno = ENOSYS;
   return -1;
 }

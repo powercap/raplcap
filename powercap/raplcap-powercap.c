@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "raplcap.h"
+#include "raplcap-wrappers.h"
 #define RAPLCAP_IMPL "raplcap-powercap"
 #include "raplcap-common.h"
 // powercap header
@@ -427,42 +428,45 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   return n_die;
 }
 
-int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   int ret;
   if (p == NULL) {
     ret = -1;
   } else if ((ret = powercap_rapl_is_zone_supported(p, z)) < 0) {
-    raplcap_perror(ERROR, "raplcap_is_zone_supported: powercap_rapl_is_zone_supported");
+    raplcap_perror(ERROR, "raplcap_pd_is_zone_supported: powercap_rapl_is_zone_supported");
   }
-  raplcap_log(DEBUG, "raplcap_is_zone_supported: pkg=%"PRIu32", zone=%d, supported=%d\n", pkg, zone, ret);
+  raplcap_log(DEBUG, "raplcap_pd_is_zone_supported: pkg=%"PRIu32", die=%"PRIu32", zone=%d, supported=%d\n",
+              pkg, die, zone, ret);
   return ret;
 }
 
-int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   int ret;
   if (p == NULL) {
     ret = -1;
   } else if ((ret = powercap_rapl_is_enabled(p, z)) < 0) {
-    raplcap_perror(ERROR, "raplcap_is_zone_enabled: powercap_rapl_is_enabled");
+    raplcap_perror(ERROR, "raplcap_pd_is_zone_enabled: powercap_rapl_is_enabled");
   }
-  raplcap_log(DEBUG, "raplcap_is_zone_enabled: pkg=%"PRIu32", zone=%d, enabled=%d\n", pkg, zone, ret);
+  raplcap_log(DEBUG, "raplcap_pd_is_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
+              pkg, die, zone, ret);
   return ret;
 }
 
-int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled) {
+int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int enabled) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   int ret;
   if (p == NULL) {
     ret = -1;
   } else {
-    raplcap_log(DEBUG, "raplcap_set_zone_enabled: pkg=%"PRIu32", zone=%d, enabled=%d\n", pkg, zone, enabled);
+    raplcap_log(DEBUG, "raplcap_pd_set_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
+                pkg, die, zone, enabled);
     if ((ret = powercap_rapl_set_enabled(p, z, enabled)) != 0) {
-      raplcap_perror(ERROR, "raplcap_set_zone_enabled: powercap_rapl_set_enabled");
+      raplcap_perror(ERROR, "raplcap_pd_set_zone_enabled: powercap_rapl_set_enabled");
     }
   }
   return ret;
@@ -490,14 +494,14 @@ static int get_constraint(const powercap_rapl_pkg* p, powercap_rapl_zone z,
   return 0;
 }
 
-int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
-                       raplcap_limit* limit_long, raplcap_limit* limit_short) {
+int raplcap_pd_get_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                          raplcap_limit* limit_long, raplcap_limit* limit_short) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   if (p == NULL) {
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_limits: pkg=%"PRIu32", zone=%d\n", pkg, zone);
+  raplcap_log(DEBUG, "raplcap_pd_get_limits: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
   if ((limit_long != NULL && get_constraint(p, z, POWERCAP_RAPL_CONSTRAINT_LONG, limit_long)) ||
       (limit_short != NULL && HAS_SHORT_TERM(p, z) &&
        get_constraint(p, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
@@ -527,14 +531,14 @@ static int set_constraint(const powercap_rapl_pkg* p, powercap_rapl_zone z,
   return 0;
 }
 
-int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
-                       const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
+int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                          const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   powercap_rapl_zone z;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   if (p == NULL) {
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_set_limits: pkg=%"PRIu32", zone=%d\n", pkg, zone);
+  raplcap_log(DEBUG, "raplcap_pd_set_limits: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
   if ((limit_long != NULL && set_constraint(p, z, POWERCAP_RAPL_CONSTRAINT_LONG, limit_long)) ||
       (limit_short != NULL && HAS_SHORT_TERM(p, z) &&
        set_constraint(p, z, POWERCAP_RAPL_CONSTRAINT_SHORT, limit_short))) {
@@ -543,32 +547,34 @@ int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
   return 0;
 }
 
-double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   powercap_rapl_zone z;
   uint64_t uj;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   if (p == NULL) {
     return -1;
   }
   if (powercap_rapl_get_energy_uj(p, z, &uj)) {
-    raplcap_perror(ERROR, "raplcap_get_energy_counter: powercap_rapl_get_energy_uj");
+    raplcap_perror(ERROR, "raplcap_pd_get_energy_counter: powercap_rapl_get_energy_uj");
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_energy_counter: pkg=%"PRIu32", zone=%d, uj=%"PRIu64"\n", pkg, zone, uj);
+  raplcap_log(DEBUG, "raplcap_pd_get_energy_counter: pkg=%"PRIu32", die=%"PRIu32", zone=%d, uj=%"PRIu64"\n",
+              pkg, die, zone, uj);
   return uj / 1000000.0;
 }
 
-double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
+double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   powercap_rapl_zone z;
   uint64_t uj;
-  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, 0, zone, &z);
+  const powercap_rapl_pkg* p = get_parent_zone(rc, pkg, die, zone, &z);
   if (p == NULL) {
     return -1;
   }
   if (powercap_rapl_get_max_energy_range_uj(p, z, &uj)) {
-    raplcap_perror(ERROR, "raplcap_get_energy_counter_max: powercap_rapl_get_max_energy_range_uj");
+    raplcap_perror(ERROR, "raplcap_pd_get_energy_counter_max: powercap_rapl_get_max_energy_range_uj");
     return -1;
   }
-  raplcap_log(DEBUG, "raplcap_get_energy_counter_max: pkg=%"PRIu32", zone=%d, uj=%"PRIu64"\n", pkg, zone, uj);
+  raplcap_log(DEBUG, "raplcap_pd_get_energy_counter_max: pkg=%"PRIu32", die=%"PRIu32", zone=%d, uj=%"PRIu64"\n",
+              pkg, die, zone, uj);
   return uj / 1000000.0;
 }

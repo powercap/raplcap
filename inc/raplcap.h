@@ -100,10 +100,11 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg);
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return 0 if unsupported, 1 if supported, a negative value on error
  */
-int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Check if a zone is enabled.
@@ -112,21 +113,23 @@ int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return 0 if disabled, 1 if enabled, a negative value on error
  */
-int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Enable/disable a zone by enabling/disabling all of its constraints.
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @param enabled
  * @return 0 on success, a negative value on error
  */
-int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled);
+int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int enabled);
 
 /**
  * Get the limits for a zone, if it is supported.
@@ -134,13 +137,14 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @param limit_long
  * @param limit_short
  * @return 0 on success, a negative value on error
  */
-int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
-                       raplcap_limit* limit_long, raplcap_limit* limit_short);
+int raplcap_pd_get_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                          raplcap_limit* limit_long, raplcap_limit* limit_short);
 
 /**
  * Set the limits for a zone, if it is supported.
@@ -149,13 +153,14 @@ int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @param limit_long
  * @param limit_short
  * @return 0 on success, a negative value on error
  */
-int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
-                       const raplcap_limit* limit_long, const raplcap_limit* limit_short);
+int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                          const raplcap_limit* limit_long, const raplcap_limit* limit_short);
 
 /**
  * Get the current energy counter value for a zone in Joules.
@@ -163,18 +168,71 @@ int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return Joules on success, a negative value on error
  */
-double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
  * Get the maximum energy counter value for a zone in Joules.
  *
  * @param rc
  * @param pkg
+ * @param die
  * @param zone
  * @return Joules on success, a negative value on error
+ */
+double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_is_zone_supported
+ */
+int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_is_zone_enabled
+ */
+int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_set_zone_enabled
+ */
+int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_get_limits
+ */
+int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
+                       raplcap_limit* limit_long, raplcap_limit* limit_short);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_set_limits
+ */
+int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
+                       const raplcap_limit* limit_long, const raplcap_limit* limit_short);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_get_energy_counter
+ */
+double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
+
+/**
+ * Assumes die=0.
+ *
+ * @see raplcap_pd_get_energy_counter_max
  */
 double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
