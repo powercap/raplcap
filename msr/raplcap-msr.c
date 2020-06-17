@@ -62,6 +62,7 @@ int raplcap_init(raplcap* rc) {
   raplcap_msr* state;
   uint64_t msrval;
   uint32_t cpu_model;
+  uint32_t n_pkg;
   uint32_t n_die;
   int err_save;
   // check that we recognize the CPU
@@ -73,10 +74,11 @@ int raplcap_init(raplcap* rc) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
-  if ((state->sys = msr_sys_init(&rc->nsockets, &n_die)) == NULL) {
+  if ((state->sys = msr_sys_init(&n_pkg, &n_die)) == NULL) {
     free(state);
     return -1;
   }
+  rc->nsockets = n_pkg;
   rc->state = state;
   if (msr_sys_read(state->sys, &msrval, 0, 0, MSR_RAPL_POWER_UNIT)) {
     err_save = errno;
@@ -107,15 +109,19 @@ int raplcap_destroy(raplcap* rc) {
 }
 
 uint32_t raplcap_get_num_packages(const raplcap* rc) {
+  const raplcap_msr* state;
+  const raplcap_msr_sys_ctx* sys;
   uint32_t n_pkg;
   uint32_t n_die;
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->nsockets > 0) {
-    return rc->nsockets;
+  if ((state = (raplcap_msr*) rc->state) != NULL) {
+    sys = state->sys;
+  } else {
+    sys = NULL;
   }
-  return msr_sys_get_num_pkg_die(NULL, &n_pkg, &n_die) ? 0 : n_pkg;
+  return msr_sys_get_num_pkg_die(sys, &n_pkg, &n_die) ? 0 : n_pkg;
 }
 
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
@@ -149,13 +155,12 @@ static raplcap_msr* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->nsockets == 0 || rc->state == NULL) {
+  if ((state = (raplcap_msr*) rc->state) == NULL) {
     // unfortunately can't detect if the context just contains garbage
     raplcap_log(ERROR, "get_state: Context is not initialized\n");
     errno = EINVAL;
     return NULL;
   }
-  state = (raplcap_msr*) rc->state;
   if (msr_sys_get_num_pkg_die(state->sys, &n_pkg, &n_die)) {
     return NULL;
   }

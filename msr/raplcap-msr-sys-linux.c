@@ -64,7 +64,6 @@ static int get_physical_package_id(uint32_t cpu, uint32_t* pkg) {
   char fname[92] = { 0 };
   FILE* f;
   int fret;
-  // phys socket IDs may not be in range [0, nsockets), see kernel docs: Documentation/cputopology.txt
   snprintf(fname, sizeof(fname), "/sys/devices/system/cpu/cpu%"PRIu32"/topology/physical_package_id", cpu);
   if ((f = fopen(fname, "r")) == NULL) {
     raplcap_perror(ERROR, fname);
