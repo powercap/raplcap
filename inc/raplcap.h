@@ -188,6 +188,7 @@ double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_is_zone_supported
  */
 int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -195,6 +196,7 @@ int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_is_zone_enabled
  */
 int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -202,6 +204,7 @@ int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_set_zone_enabled
  */
 int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled);
@@ -209,6 +212,7 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_get_limits
  */
 int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
@@ -217,6 +221,7 @@ int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_set_limits
  */
 int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
@@ -225,6 +230,7 @@ int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_get_energy_counter
  */
 double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -232,6 +238,7 @@ double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone 
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_pd_get_energy_counter_max
  */
 double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
