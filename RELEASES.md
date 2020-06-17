@@ -24,6 +24,7 @@
 ### Deprecated
 
 * Interface function 'raplcap_get_num_sockets', use 'raplcap_get_num_packages' instead
+* [msr] Interface functions 'raplcap_msr_*' use 'raplcap_msr_pd_*' functions instead
 * [rapl-configure] Long option --nsockets, use --npackages instead
 * [rapl-configure] Long option --socket, use --package instead
 

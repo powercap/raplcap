@@ -97,6 +97,7 @@ double raplcap_msr_pd_get_energy_units(const raplcap* rc, uint32_t pkg, uint32_t
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_is_zone_clamped
  */
 int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -104,6 +105,7 @@ int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zo
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_set_zone_clamped
  */
 int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped);
@@ -111,6 +113,7 @@ int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone z
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_is_zone_locked
  */
 int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -118,6 +121,7 @@ int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zon
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_set_zone_locked
  */
 int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -125,6 +129,7 @@ int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zo
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_get_time_units
  */
 double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -132,6 +137,7 @@ double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone 
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_get_power_units
  */
 double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
@@ -139,6 +145,7 @@ double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone
 /**
  * Assumes die=0.
  *
+ * @deprecated
  * @see raplcap_msr_pd_get_energy_units
  */
 double raplcap_msr_get_energy_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
