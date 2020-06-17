@@ -115,7 +115,7 @@ uint32_t raplcap_get_num_packages(const raplcap* rc) {
   if (rc->nsockets > 0) {
     return rc->nsockets;
   }
-  return msr_get_num_pkg_die(NULL, &n_pkg, &n_die) ? 0 : n_pkg;
+  return msr_sys_get_num_pkg_die(NULL, &n_pkg, &n_die) ? 0 : n_pkg;
 }
 
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
@@ -131,7 +131,7 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   } else {
     sys = NULL;
   }
-  if (msr_get_num_pkg_die(sys, &n_pkg, &n_die)) {
+  if (msr_sys_get_num_pkg_die(sys, &n_pkg, &n_die)) {
     return 0;
   }
   if (pkg >= n_pkg) {
@@ -156,7 +156,7 @@ static raplcap_msr* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
     return NULL;
   }
   state = (raplcap_msr*) rc->state;
-  if (msr_get_num_pkg_die(state->sys, &n_pkg, &n_die)) {
+  if (msr_sys_get_num_pkg_die(state->sys, &n_pkg, &n_die)) {
     return NULL;
   }
   if (pkg >= n_pkg) {

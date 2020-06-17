@@ -183,7 +183,7 @@ static int open_msrs(int* fds, const uint32_t* cpus_to_open, uint32_t n_fds) {
   return 0;
 }
 
-int msr_get_num_pkg_die(const raplcap_msr_sys_ctx* ctx, uint32_t *n_pkg, uint32_t* n_die) {
+int msr_sys_get_num_pkg_die(const raplcap_msr_sys_ctx* ctx, uint32_t *n_pkg, uint32_t* n_die) {
   msr_topology* topo;
   uint32_t ncpus;
   assert(n_pkg);
@@ -194,11 +194,11 @@ int msr_get_num_pkg_die(const raplcap_msr_sys_ctx* ctx, uint32_t *n_pkg, uint32_
     return 0;
   }
   if ((ncpus = get_cpu_count()) == 0) {
-    raplcap_perror(ERROR, "msr_get_num_pkg_die: get_cpu_count");
+    raplcap_perror(ERROR, "msr_sys_get_num_pkg_die: get_cpu_count");
     return -1;
   }
   if ((topo = malloc(ncpus * sizeof(*topo))) == NULL) {
-    raplcap_perror(ERROR, "msr_get_num_pkg_die: malloc");
+    raplcap_perror(ERROR, "msr_sys_get_num_pkg_die: malloc");
     return -1;
   }
   if (get_topology(topo, ncpus)) {
@@ -209,7 +209,8 @@ int msr_get_num_pkg_die(const raplcap_msr_sys_ctx* ctx, uint32_t *n_pkg, uint32_
   *n_pkg = topo[ncpus - 1].pkg + 1;
   // assumes homogeneous die configurations across packages
   *n_die = topo[ncpus - 1].die + 1;
-  raplcap_log(DEBUG, "msr_get_num_pkg_die: n_cpus=%"PRIu32", n_pkg=%"PRIu32", n_die=%"PRIu32"\n", ncpus, *n_pkg, *n_die);
+  raplcap_log(DEBUG, "msr_sys_get_num_pkg_die: n_cpus=%"PRIu32", n_pkg=%"PRIu32", n_die=%"PRIu32"\n",
+              ncpus, *n_pkg, *n_die);
   free(topo);
   return 0;
 }
