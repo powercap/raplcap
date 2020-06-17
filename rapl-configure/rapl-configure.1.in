@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2020-06-12" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2020-06-16" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -16,16 +16,11 @@ Refer to the "Intel\*R 64 and IA-32 Architectures Software Developer Manual,
 Volume 3: System Programming Guide" for more technical information.
 This description is only a short summary.
 .LP
-Power limits are configured on a per-package basis, although most client systems
-only have a single processor package.
-Each package supports \fIzones\fP, also known as \fIdomains\fP, to manage power
-at fine-grained levels.
-Hardware components other than the processor can sometimes also be configured
-as zones.
+RAPL control is structured into \fIzones\fP, also known as \fIdomains\fP.
 Currently supported zones are:
 .IP \[bu] 2
-\fIPackage\fP: a processor package, including cores and other shared resources
-like the uncore components below and a DRAM controller.
+\fIPackage\fP: a processor package die, including cores and other shared
+resources like the uncore components below and a DRAM controller.
 .IP \[bu]
 \fICore\fP: the processor core, like compute components and private caches
 (often L1 and L2).
@@ -41,12 +36,10 @@ DRAM power capping is typically only available on server systems, but has been
 spotted on some client hardware.
 .IP \[bu]
 \fIPSys\fP: the entire platform/system.
-PSys is a known as \fIPlatform\fP, is only available on Intel\*R Skylake (6th
-generation Intel\*R Core) and newer processors, and requires additional BIOS
-support.
+PSys is also known as \fIPlatform\fP and is only available on Intel\*R Skylake
+(6th generation Intel\*R Core) and newer processors, and requires additional
+BIOS support.
 .LP
-RAPL hardware enforces that the average power over a time window does not
-violate the configured limit.
 Package and PSys zones support two power limits, or \fIconstraints\fP - \fIlong
 term\fP and \fIshort term\fP.
 Other zones support a single constraint (long term).
@@ -55,9 +48,13 @@ Actual power limit and time window values are system-dependent.
 Refer to your hardware's technical documentation, particularly for the Thermal
 Design Power (TDP).
 .LP
-By default, rapl\-configure\-@RAPL_LIB@ uses the PACKAGE zone on package 0.
-Current values are printed if no flags, or only package and/or zone flags, are
-specified.
+Package, Core, Uncore, and DRAM zones may exist for each die in each processor
+package, although many systems only have a single package with a single die.
+.LP
+By default, rapl\-configure\-@RAPL_LIB@ uses the PACKAGE zone on package 0,
+die 0.
+Current values are printed if no flags, or only package, die, and/or zone flags
+are specified.
 Otherwise, specified values are set while other values remain unmodified.
 When setting values, zones are automatically enabled unless \-e/\-\-enabled is
 explicitly set to 0.
@@ -75,6 +72,9 @@ Print the number of die found for a package and exit
 .TP
 \fB\-c,\fP \fB\-\-package\fP=\fIPACKAGE\fP
 The processor package (0 by default)
+.TP
+\fB\-d,\fP \fB\-\-die\fP=\fIDIE\fP
+The package die (0 by default)
 .TP
 \fB\-c,\fP \fB\-\-socket\fP=\fIPACKAGE\fP
 Deprecated, use \fB\-\-package\fP instead
@@ -118,35 +118,41 @@ Print the number of packages found on the system.
 Print the number of die found for package 1 (requires multi-package system).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@\fP
-Print PACKAGE zone information for package 0.
+Print PACKAGE zone information for package 0, die 0.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ -d 1\fP
+Print PACKAGE zone information for package 0, die 1 (requires multi-die
+package).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-c 1\fP
-Print PACKAGE zone information for package 1 (requires multi-package system).
+Print PACKAGE zone information for package 1, die 0 (requires multi-package
+system).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z CORE\fP
-Print CORE zone information for package 0.
+Print CORE zone information for package 0, die 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-c 1 \-z DRAM\fP
-Print DRAM zone information for package 1 (requires multi-package system).
+Print DRAM zone information for package 1, die 0 (requires multi-package
+system).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-w 20\fP
-Set 20 Watt long term power constraint on PACKAGE zone for package 0 without
-changing time window.
+Set 20 Watt long term power constraint on PACKAGE zone for package 0, die 1
+without changing time window.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-w 20 -s 30\fP
 Set 20 Watt long term power constraint with 30 second time window on PACKAGE
-zone for package 0.
+zone for package 0, die 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-W 30 -S 0.0025\fP
 Set 30 Watt short term power constraint with 2.5 millisecond time window on
-PACKAGE zone for package 0.
+PACKAGE zone for package 0, die 0.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 10\fP
-Set 10 Watt long term power constraint on UNCORE zone for package 0 without
-changing time window (automatically enables zone if it is disabled).
+Set 10 Watt long term power constraint on UNCORE zone for package 0, die 0
+without changing time window (automatically enables zone if it is disabled).
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 0\fP
-Disable UNCORE zone for package 0.
+Disable UNCORE zone for package 0, die 0.
 .SH "REMARKS"
 .LP
 Administrative (root) privileges are usually needed to access RAPL settings.

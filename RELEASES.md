@@ -11,6 +11,7 @@
 * [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
 * [msr] Support for Comet Lake, Models 0xA5, 0xA6
 * [rapl-configure] New -N/--ndie flag
+* [rapl-configure] New -d/--die option
 * [rapl-configure] Long option --npackages (supersedes --nsockets)
 * [rapl-configure] Long option --package (supersedes --socket)
 

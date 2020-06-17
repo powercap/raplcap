@@ -23,6 +23,7 @@ typedef struct rapl_configure_ctx {
   int get_die;
   raplcap_zone zone;
   unsigned int pkg;
+  unsigned int die;
   int enabled;
   int set_enabled;
   int set_long;
@@ -39,12 +40,13 @@ typedef struct rapl_configure_ctx {
 } rapl_configure_ctx;
 
 static const char* prog;
-static const char short_options[] = "nNc:z:e:s:w:S:W:C:Lh";
+static const char short_options[] = "nNc:d:z:e:s:w:S:W:C:Lh";
 static const struct option long_options[] = {
   {"npackages",no_argument,       NULL, 'n'},
   {"nsockets", no_argument,       NULL, 'n'},
   {"ndie",     no_argument,       NULL, 'N'},
   {"package",  required_argument, NULL, 'c'},
+  {"die",      required_argument, NULL, 'd'},
   {"socket",   required_argument, NULL, 'c'},
   {"zone",     required_argument, NULL, 'z'},
   {"enabled",  required_argument, NULL, 'e'},
@@ -69,6 +71,7 @@ static void print_usage(int exit_code) {
           "  -N, --ndie               Print the number of die found for a package and exit\n"
           "  -c, --package=PACKAGE    The processor package (0 by default)\n"
           "      --socket=PACKAGE     Deprecated, use --package instead\n"
+          "  -d, --die=DIE            The package die (0 by default)\n"
           "  -z, --zone=ZONE          Which zone/domain use. Allowable values:\n"
           "                           PACKAGE - a processor package (default)\n"
           "                           CORE - core power plane\n"
@@ -154,12 +157,12 @@ static int configure_limits(const rapl_configure_ctx* c) {
     ls = &limit_short;
   }
   // set limits
-  if ((c->set_long || c->set_short) && (ret = raplcap_set_limits(NULL, c->pkg, c->zone, ll, ls))) {
+  if ((c->set_long || c->set_short) && (ret = raplcap_pd_set_limits(NULL, c->pkg, c->die, c->zone, ll, ls))) {
     perror("Failed to set limits");
     return ret;
   }
   // enable/disable if requested, otherwise automatically enable
-  if ((ret = raplcap_set_zone_enabled(NULL, c->pkg, c->zone, (c->set_enabled ? c->enabled : 1)))) {
+  if ((ret = raplcap_pd_set_zone_enabled(NULL, c->pkg, c->die, c->zone, (c->set_enabled ? c->enabled : 1)))) {
     perror("Failed to enable/disable zone");
     return ret;
   }
@@ -168,11 +171,11 @@ static int configure_limits(const rapl_configure_ctx* c) {
   //       As a result:
   //       1) We set clamping here AFTER enabling in case clamping was requested to be off
   //       2) The user must always explicitly request clamping to be off when setting RAPL limits
-  if (c->set_clamped && (ret = raplcap_msr_set_zone_clamped(NULL, c->pkg, c->zone, c->clamped))) {
+  if (c->set_clamped && (ret = raplcap_msr_pd_set_zone_clamped(NULL, c->pkg, c->die, c->zone, c->clamped))) {
     perror("Failed to clamp/unclamp zone");
     return ret;
   }
-  if (c->set_locked && (ret = raplcap_msr_set_zone_locked(NULL, c->pkg, c->zone))) {
+  if (c->set_locked && (ret = raplcap_msr_pd_set_zone_locked(NULL, c->pkg, c->die, c->zone))) {
     perror("Failed to lock zone");
     return ret;
   }
@@ -180,7 +183,7 @@ static int configure_limits(const rapl_configure_ctx* c) {
   return 0;
 }
 
-static int get_limits(unsigned int pkg, raplcap_zone zone) {
+static int get_limits(unsigned int pkg, unsigned int die, raplcap_zone zone) {
   raplcap_limit ll = { 0 };
   raplcap_limit ls = { 0 };
   double joules;
@@ -188,27 +191,27 @@ static int get_limits(unsigned int pkg, raplcap_zone zone) {
   int locked = PRINT_LIMIT_IGNORE;
   int clamped = PRINT_LIMIT_IGNORE;
   int ret;
-  int enabled = raplcap_is_zone_enabled(NULL, pkg, zone);
+  int enabled = raplcap_pd_is_zone_enabled(NULL, pkg, die, zone);
   if (enabled < 0) {
     print_error_continue("Failed to determine if zone is enabled");
   }
 #ifdef RAPLCAP_msr
-  locked = raplcap_msr_is_zone_locked(NULL, pkg, zone);
+  locked = raplcap_msr_pd_is_zone_locked(NULL, pkg, die, zone);
   if (locked < 0) {
     print_error_continue("Failed to determine if zone is locked");
   }
-  clamped = raplcap_msr_is_zone_clamped(NULL, pkg, zone);
+  clamped = raplcap_msr_pd_is_zone_clamped(NULL, pkg, die, zone);
   if (clamped < 0) {
     print_error_continue("Failed to determine if zone is clamped");
   }
 #endif // RAPLCAP_msr
-  if ((ret = raplcap_get_limits(NULL, pkg, zone, &ll, &ls))) {
+  if ((ret = raplcap_pd_get_limits(NULL, pkg, die, zone, &ll, &ls))) {
     perror("Failed to get limits");
     return ret;
   }
   // we'll consider energy counter information to be optional
-  joules = raplcap_get_energy_counter(NULL, pkg, zone);
-  joules_max = raplcap_get_energy_counter_max(NULL, pkg, zone);
+  joules = raplcap_pd_get_energy_counter(NULL, pkg, die, zone);
+  joules_max = raplcap_pd_get_energy_counter_max(NULL, pkg, die, zone);
   print_limits(enabled, locked, clamped,
                ll.watts, ll.seconds, ls.watts, ls.seconds,
                joules, joules_max);
@@ -239,6 +242,9 @@ int main(int argc, char** argv) {
         break;
       case 'c':
         ctx.pkg = atoi(optarg);
+        break;
+      case 'd':
+        ctx.die = atoi(optarg);
         break;
       case 'n':
         ctx.get_packages = 1;
@@ -330,7 +336,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  supported = raplcap_is_zone_supported(NULL, ctx.pkg, ctx.zone);
+  supported = raplcap_pd_is_zone_supported(NULL, ctx.pkg, ctx.die, ctx.zone);
   if (supported == 0) {
     fprintf(stderr, "Zone not supported\n");
     ret = -1;
@@ -340,7 +346,7 @@ int main(int argc, char** argv) {
     }
     // perform requested action
     if (is_read_only) {
-      ret = get_limits(ctx.pkg, ctx.zone);
+      ret = get_limits(ctx.pkg, ctx.die, ctx.zone);
     } else {
       ret = configure_limits(&ctx);
     }
