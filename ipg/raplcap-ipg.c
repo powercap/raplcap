@@ -54,6 +54,7 @@ typedef struct raplcap_ipg {
   IPGGetMsrFunc pGetMsrFunc;
   IPGReadSample pReadSample;
   IPGGetPowerData pGetPowerData;
+  uint32_t n_pkg;
   int msr_pkg_power_energy;
   int msr_pkg_power_limit;
 } raplcap_ipg;
@@ -151,20 +152,23 @@ static int initEnergyLib(raplcap_ipg* state, int* nNodes) {
 }
 
 int raplcap_init(raplcap* rc) {
+  raplcap_ipg* state;
   int nNodes;
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if ((rc->state = (raplcap_ipg*) malloc(sizeof(raplcap_ipg))) == NULL) {
+  if ((state = (raplcap_ipg*) malloc(sizeof(raplcap_ipg))) == NULL) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
-  if (getEnergyLib((raplcap_ipg*) rc->state) || initEnergyLib((raplcap_ipg*) rc->state, &nNodes)) {
+  rc->state = state;
+  if (getEnergyLib(state) || initEnergyLib(state, &nNodes)) {
     raplcap_destroy(rc);
     return -1;
   }
   assert(nNodes > 0);
-  rc->nsockets = (uint32_t) nNodes;
+  state->n_pkg = (uint32_t) nNodes;
+  rc->nsockets = state->n_pkg;
   raplcap_log(DEBUG, "raplcap_init: Initialized\n");
   return 0;
 }
@@ -190,19 +194,22 @@ int raplcap_destroy(raplcap* rc) {
 
 uint32_t raplcap_get_num_packages(const raplcap* rc) {
   raplcap tmp;
+  raplcap_ipg* state;
   uint32_t n_pkg;
   if (rc == NULL) {
     rc = &rc_default;
   }
-  n_pkg = rc->nsockets;
-  if (n_pkg == 0) {
+  if ((state = (raplcap_ipg*) rc->state) != NULL) {
+    n_pkg = state->n_pkg;
+  } else {
     // Can't discover sockets without initializing an IPG.
     // Can't init a const parameter, and can't init the default impl, o/w a later init could cause memory leak.
     // Instead, we create and destroy a local instance.
     if (raplcap_init(&tmp)) {
       return 0;
     }
-    n_pkg = tmp.nsockets;
+    state = (raplcap_ipg*) tmp.state;
+    n_pkg = state->n_pkg;
     // destroy never fails...
     raplcap_destroy(&tmp);
   }
@@ -215,17 +222,18 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
 }
 
 static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
+  raplcap_ipg* state;
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->nsockets == 0 || rc->state == NULL) {
+  if ((state = (raplcap_ipg*) rc->state) == NULL) {
     // unfortunately can't detect if the context just contains garbage
     raplcap_log(ERROR, "get_state: Context is not initialized\n");
     errno = EINVAL;
     return NULL;
   }
-  if (pkg >= rc->nsockets) {
-    raplcap_log(ERROR, "get_state: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, rc->nsockets);
+  if (pkg >= state->n_pkg) {
+    raplcap_log(ERROR, "get_state: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
     errno = EINVAL;
     return NULL;
   }
@@ -234,7 +242,7 @@ static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
     errno = ENOSYS;
     return NULL;
   }
-  return (raplcap_ipg*) rc->state;
+  return state;
 }
 
 int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
