@@ -14,6 +14,10 @@ extern "C" {
 #include <inttypes.h>
 #include <raplcap.h>
 
+uint32_t raplcap_get_num_sockets(const raplcap* rc) {
+  return raplcap_get_num_packages(rc);
+}
+
 int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
   return raplcap_pd_is_zone_supported(rc, pkg, 0, zone);
 }

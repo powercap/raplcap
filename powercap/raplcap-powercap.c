@@ -398,10 +398,6 @@ uint32_t raplcap_get_num_packages(const raplcap* rc) {
   return get_topology_uninit(&n_pkg, &n_die) ? 0 : n_pkg;
 }
 
-uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  return raplcap_get_num_packages(rc);
-}
-
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   const raplcap_powercap* state;
   uint32_t n_pkg;

@@ -118,10 +118,6 @@ uint32_t raplcap_get_num_packages(const raplcap* rc) {
   return msr_get_num_pkg_die(NULL, &n_pkg, &n_die) ? 0 : n_pkg;
 }
 
-uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  return raplcap_get_num_packages(rc);
-}
-
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   const raplcap_msr* state;
   const raplcap_msr_sys_ctx* sys;

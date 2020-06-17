@@ -209,10 +209,6 @@ uint32_t raplcap_get_num_packages(const raplcap* rc) {
   return n_pkg;
 }
 
-uint32_t raplcap_get_num_sockets(const raplcap* rc) {
-  return raplcap_get_num_packages(rc);
-}
-
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   errno = ENOSYS;
   return 0;
