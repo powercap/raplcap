@@ -4,14 +4,15 @@
 
 ### Added
 
+* Support for multi-die packages ([#9])
+  * Interface function 'raplcap_get_num_die'
+  * Interface functions 'raplcap_pd_*'
+  * [msr] Interface functions 'raplcap_msr_pd_*'
+  * [rapl-configure] New -N/--ndie flag
+  * [rapl-configure] New -d/--die option
 * Interface function 'raplcap_get_num_packages' (supersedes 'raplcap_get_num_sockets')
-* Interface function 'raplcap_get_num_die'
-* Interface functions 'raplcap_pd_*' for package+die support
-* [msr] Interface functions 'raplcap_msr_pd_*' for package+die support
 * [msr] Support for Ice Lake, Models 0x7D, 0x7E, 0x6A, 0x6C
 * [msr] Support for Comet Lake, Models 0xA5, 0xA6
-* [rapl-configure] New -N/--ndie flag
-* [rapl-configure] New -d/--die option
 * [rapl-configure] Long option --npackages (supersedes --nsockets)
 * [rapl-configure] Long option --package (supersedes --socket)
 
@@ -23,9 +24,10 @@
 
 ### Deprecated
 
+* Functions that are superseded by die-aware ones ([#9])
+  * Interface functions that are not die-aware, use corresponding 'raplcap_pd_*' functions instead
+  * [msr] Interface functions that are not die-aware, use corresponding 'raplcap_msr_pd_*' functions instead
 * Interface function 'raplcap_get_num_sockets', use 'raplcap_get_num_packages' instead
-* Interface functions that are not die-aware, use corresponding 'raplcap_pd_*' functions instead
-* [msr] Interface functions 'raplcap_msr_*' use 'raplcap_msr_pd_*' functions instead
 * [rapl-configure] Long option --nsockets, use --npackages instead
 * [rapl-configure] Long option --socket, use --package instead
 
@@ -163,3 +165,4 @@
 [#6]: https://github.com/powercap/raplcap/issues/6
 [#7]: https://github.com/powercap/raplcap/issues/7
 [#8]: https://github.com/powercap/raplcap/issues/8
+[#9]: https://github.com/powercap/raplcap/issues/9
