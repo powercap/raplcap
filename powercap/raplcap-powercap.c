@@ -27,6 +27,7 @@
 typedef struct raplcap_powercap {
   powercap_rapl_pkg* parent_zones;
   uint32_t n_parent_zones;
+  uint32_t n_pkg;
   // currently only support homogeneous die count per package
   uint32_t n_die;
 } raplcap_powercap;
@@ -46,18 +47,17 @@ static powercap_rapl_pkg* get_parent_zone(const raplcap* rc, uint32_t pkg, uint3
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->nsockets == 0 || rc->state == NULL) {
+  if ((state = (raplcap_powercap*) rc->state) == NULL) {
     // unfortunately can't detect if the context just contains garbage
     raplcap_log(ERROR, "get_parent_zone: Context is not initialized\n");
     errno = EINVAL;
     return NULL;
   }
-  if (pkg >= rc->nsockets) {
-    raplcap_log(ERROR, "get_parent_zone: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, rc->nsockets);
+  if (pkg >= state->n_pkg) {
+    raplcap_log(ERROR, "get_parent_zone: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
     errno = EINVAL;
     return NULL;
   }
-  state = (raplcap_powercap*) rc->state;
   if (die >= state->n_die) {
     raplcap_log(ERROR, "get_parent_zone: Die %"PRIu32" not in range [0, %"PRIu32")\n", die, state->n_die);
     errno = EINVAL;
@@ -69,7 +69,7 @@ static powercap_rapl_pkg* get_parent_zone(const raplcap* rc, uint32_t pkg, uint3
     return NULL;
   }
   *z = POWERCAP_RAPL_ZONES[zone];
-  // PSYS is a special case - always stored at the end of the parent_zones array, with index > rc->nsockets
+  // PSYS is a special case - always stored at the end of the parent_zones array, with index > n_pkg
   // If PSYS is requested and supported, it doesn't matter what pkg or die the caller actually specified
   if (*z == POWERCAP_RAPL_ZONE_PSYS &&
       powercap_rapl_is_zone_supported(&state->parent_zones[state->n_parent_zones - 1], *z)) {
@@ -299,6 +299,7 @@ static int sort_parent_zones(const void* a, const void* b) {
 int raplcap_init(raplcap* rc) {
   raplcap_powercap* state;
   uint32_t n_parent_zones;
+  uint32_t n_pkg;
   uint32_t n_die;
   uint32_t i;
   int err_save;
@@ -311,21 +312,20 @@ int raplcap_init(raplcap* rc) {
   if ((n_parent_zones = count_parent_zones()) == 0) {
     return -1;
   }
-  if (get_topology(n_parent_zones, &rc->nsockets, &n_die) < 0) {
+  if (get_topology(n_parent_zones, &n_pkg, &n_die) < 0) {
     return -1;
   }
   if ((state = malloc(sizeof(raplcap_powercap))) == NULL) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
-    rc->nsockets = 0;
     return -1;
   }
   if ((state->parent_zones = malloc(n_parent_zones * sizeof(powercap_rapl_pkg))) == NULL) {
     raplcap_perror(ERROR, "raplcap_init: malloc");
-    rc->nsockets = 0;
     free(state);
     return -1;
   }
   state->n_parent_zones = n_parent_zones;
+  state->n_pkg = n_pkg;
   state->n_die = n_die;
   rc->state = state;
   for (i = 0; i < state->n_parent_zones; i++) {
@@ -349,6 +349,7 @@ int raplcap_init(raplcap* rc) {
     errno = err_save;
     return -1;
   }
+  rc->nsockets = n_pkg;
   raplcap_log(DEBUG, "raplcap_init: Initialized\n");
   return 0;
 }
@@ -360,8 +361,7 @@ int raplcap_destroy(raplcap* rc) {
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->state != NULL) {
-    state = (raplcap_powercap*) rc->state;
+  if ((state = (raplcap_powercap*) rc->state) != NULL) {
     for (i = 0; i < state->n_parent_zones; i++) {
       raplcap_log(DEBUG, "raplcap_destroy: zone=%"PRIu32"\n", i);
       if (powercap_rapl_destroy(&state->parent_zones[i])) {
@@ -369,7 +369,7 @@ int raplcap_destroy(raplcap* rc) {
         err_save = errno;
       }
     }
-    free(rc->state);
+    free(state);
     rc->state = NULL;
   }
   rc->nsockets = 0;
@@ -387,13 +387,14 @@ static int get_topology_uninit(uint32_t* n_pkg, uint32_t* n_die) {
 }
 
 uint32_t raplcap_get_num_packages(const raplcap* rc) {
+  const raplcap_powercap* state;
   uint32_t n_pkg = 0;
   uint32_t n_die;
   if (rc == NULL) {
     rc = &rc_default;
   }
-  if (rc->nsockets > 0) {
-    return rc->nsockets;
+  if ((state = (raplcap_powercap*) rc->state) != NULL) {
+    return state->n_pkg;
   }
   return get_topology_uninit(&n_pkg, &n_die) ? 0 : n_pkg;
 }
@@ -406,8 +407,8 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
     rc = &rc_default;
   }
   if ((state = (raplcap_powercap*) rc->state) != NULL) {
-    if (pkg >= rc->nsockets) {
-      raplcap_log(ERROR, "raplcap_get_num_die: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, rc->nsockets);
+    if (pkg >= state->n_pkg) {
+      raplcap_log(ERROR, "raplcap_get_num_die: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
       errno = EINVAL;
       return 0;
     }
