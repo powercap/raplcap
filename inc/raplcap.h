@@ -26,6 +26,13 @@ extern "C" {
 
 /**
  * A RAPLCap context
+ *
+ * With the nsockets field deprecated, all that remains in the struct is a void pointer.
+ * For better forward compatibility, we chose not to expose new fields for packages and die, so that the ABI won't need
+ * to change as processor architectures continue to evolve in ways that impact RAPL management structure.
+ * It's easier to make functions backward compatible than it is to make structs backward compatible.
+ * In future releases, it might therefore be beneficial to just make the raplcap context struct opaque.
+ * If such a change is made, raplcap_init will also be changed to something like: `raplcap* raplcap_init(void)`
  */
 typedef struct raplcap {
   /**
