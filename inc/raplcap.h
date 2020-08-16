@@ -28,6 +28,12 @@ extern "C" {
  * A RAPLCap context
  */
 typedef struct raplcap {
+  /**
+   * The nsockets field is now deprecated since it doesn't reflect the RAPL control structure anymore.
+   * Do not access the field directly - use functions 'raplcap_get_num_packages' and 'raplcap_get_num_die' instead.
+   *
+   * @deprecated
+   */
   uint32_t nsockets;
   void* state;
 } raplcap;

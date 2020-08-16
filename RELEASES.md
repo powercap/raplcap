@@ -28,6 +28,7 @@
   * Interface functions that are not die-aware, use corresponding 'raplcap_pd_*' functions instead
   * [msr] Interface functions that are not die-aware, use corresponding 'raplcap_msr_pd_*' functions instead
 * Interface function 'raplcap_get_num_sockets', use 'raplcap_get_num_packages' instead
+* Interface struct member 'nsockets', use functions 'raplcap_get_num_packages' and 'raplcap_get_num_die' instead
 * [rapl-configure] Long option --nsockets, use --npackages instead
 * [rapl-configure] Long option --socket, use --package instead
 
