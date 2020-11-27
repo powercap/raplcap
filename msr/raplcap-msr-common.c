@@ -284,6 +284,9 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_COMETLAKE:
     case CPUID_MODEL_COMETLAKE_L:
     //
+    case CPUID_MODEL_TIGERLAKE_L:
+    case CPUID_MODEL_TIGERLAKE:
+    //
     case CPUID_MODEL_ATOM_GOLDMONT:
     case CPUID_MODEL_ATOM_GOLDMONT_X:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:

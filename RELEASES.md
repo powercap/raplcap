@@ -1,5 +1,16 @@
 # Release Notes
 
+## [Unreleased]
+
+### Added
+
+* [msr] Support for Tiger Lake, Models 0x8C, 0x8D
+
+### Changed
+
+* [msr] Updated for the Intel Software Developer's Manual, November 2020 release
+
+
 ## [v0.5.0] - 2020-09-02
 
 ### Added
@@ -157,6 +168,7 @@
 * Initial public release
 
 
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.5.0...HEAD
 [v0.5.0]: https://github.com/powercap/raplcap/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/powercap/raplcap/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/powercap/raplcap/compare/v0.2.0...v0.3.0

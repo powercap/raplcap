@@ -92,6 +92,9 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       case CPUID_MODEL_COMETLAKE:
       case CPUID_MODEL_COMETLAKE_L:
       //
+      case CPUID_MODEL_TIGERLAKE_L:
+      case CPUID_MODEL_TIGERLAKE:
+      //
       case CPUID_MODEL_XEON_PHI_KNL:
       case CPUID_MODEL_XEON_PHI_KNM:
       //

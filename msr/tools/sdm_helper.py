@@ -207,14 +207,15 @@ if __name__ == "__main__":
     TBL_42 = {}
     TBL_43 = {}
     TBL_44 = {}
-    TBL_45 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
+    TBL_45 = {}
+    TBL_46 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_15_3,
               MSR_PP0_ENERGY_STATUS: RESERVED}
     SKYLAKE_L = CPU("0x4E", "SKYLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
     SKYLAKE_L.print_line()
     # Top of Section 2.17 says TBL_40 (Uncore) is used for 0x55, but TBL_40 doesn't mention it
-    SKYLAKE_X = CPU("0x55", "SKYLAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_45])
+    SKYLAKE_X = CPU("0x55", "SKYLAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_46])
     SKYLAKE_X.print_line()
     SKYLAKE = CPU("0x5E", "SKYLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
     SKYLAKE.print_line()
@@ -239,19 +240,24 @@ if __name__ == "__main__":
     COMETLAKE_L = CPU("0xA6", "COMETLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
     COMETLAKE_L.print_line()
 
-    TBL_46 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
+    TIGERLAKE_L = CPU("0x8C", "TIGERLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_45])
+    TIGERLAKE_L.print_line()
+    TIGERLAKE = CPU("0x8D", "TIGERLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_45])
+    TIGERLAKE.print_line()
+
+    TBL_47 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT, # community consensus is that Xeon Phi should be DRAM_15_3
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
-    TBL_47 = {}
+    TBL_48 = {}
     # The SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
     # However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
-    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_46, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_47, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNL.print_line()
-    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_46, TBL_47, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_47, TBL_48, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - May 2020
+    # Last updated for Software Developer's Manual, Volume 4 - November 2020

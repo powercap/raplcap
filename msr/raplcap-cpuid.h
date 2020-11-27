@@ -49,6 +49,9 @@ extern "C" {
 #define CPUID_MODEL_COMETLAKE         0xA5
 #define CPUID_MODEL_COMETLAKE_L       0xA6
 
+#define CPUID_MODEL_TIGERLAKE_L       0x8C
+#define CPUID_MODEL_TIGERLAKE         0x8D
+
 #define CPUID_MODEL_XEON_PHI_KNL      0x57
 #define CPUID_MODEL_XEON_PHI_KNM      0x85
 
