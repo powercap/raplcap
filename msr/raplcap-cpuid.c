@@ -103,7 +103,7 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       case CPUID_MODEL_ATOM_AIRMONT:
       case CPUID_MODEL_ATOM_AIRMONT_MID:
       case CPUID_MODEL_ATOM_GOLDMONT:
-      case CPUID_MODEL_ATOM_GOLDMONT_X:
+      case CPUID_MODEL_ATOM_GOLDMONT_D:
       case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
       case CPUID_MODEL_ATOM_TREMONT_D:
         return 1;

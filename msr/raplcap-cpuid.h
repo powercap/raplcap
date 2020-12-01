@@ -66,7 +66,7 @@ extern "C" {
 #define CPUID_MODEL_ATOM_SOFIA          0x5D
 
 #define CPUID_MODEL_ATOM_GOLDMONT       0x5C // Apollo Lake
-#define CPUID_MODEL_ATOM_GOLDMONT_X     0x5F // Denverton
+#define CPUID_MODEL_ATOM_GOLDMONT_D     0x5F // Denverton
 #define CPUID_MODEL_ATOM_GOLDMONT_PLUS  0x7A // Gemini Lake
 
 #define CPUID_MODEL_ATOM_TREMONT_D      0x86 // Jacobsville
