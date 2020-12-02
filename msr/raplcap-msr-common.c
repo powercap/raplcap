@@ -336,7 +336,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       raplcap_log(ERROR, "Unknown architecture\n");
       raplcap_log(ERROR, "Please report a bug if you see this message, it should never occur!\n");
       assert(0);
-      break;
+      return;
   }
   raplcap_log(DEBUG, "msr_get_context: model=%02X, "
               "power_units=%.12f, energy_units=%.12f, energy_units_dram=%.12f, time_units=%.12f\n",
