@@ -18,6 +18,7 @@ MSR_DRAM_POWER_LIMIT = "MSR_DRAM_POWER_LIMIT" # 0x618
 MSR_DRAM_ENERGY_STATUS = "MSR_DRAM_ENERGY_STATUS" # 0x619
 MSR_PLATFORM_POWER_LIMIT = "MSR_PLATFORM_POWER_LIMIT" # 0x65C
 MSR_PLATFORM_ENERGY_COUNTER = "MSR_PLATFORM_ENERGY_COUNTER" # 0x64D
+MSR_VR_CURRENT_CONFIG = "MSR_VR_CURRENT_CONFIG" # 0x601
 
 NONE = "None"
 POWER_DEFAULT = "14.10.1"
@@ -28,6 +29,7 @@ DRAM_DEFAULT = "14.10.5"
 PLATFORM_DEFAULT = "Table 2-39"
 DRAM_15_3 = "ESU: 15.3 uJ" # assumed for now that this ESU is found in MSR_RAPL_POWER_UNIT
 RESERVED = "Reserved (0)" # this should also be OK (just gets a 0 energy reading)
+PL4_DEFAULT = "Table 2-45"
 
 
 class CPU(object):
@@ -40,7 +42,8 @@ class CPU(object):
             MSR_PP0_POWER_LIMIT, MSR_PP0_ENERGY_STATUS,
             MSR_PP1_POWER_LIMIT, MSR_PP1_ENERGY_STATUS,
             MSR_DRAM_POWER_LIMIT, MSR_DRAM_ENERGY_STATUS,
-            MSR_PLATFORM_POWER_LIMIT, MSR_PLATFORM_ENERGY_COUNTER]
+            MSR_PLATFORM_POWER_LIMIT, MSR_PLATFORM_ENERGY_COUNTER,
+            MSR_VR_CURRENT_CONFIG]
 
     def __init__(self, cpuid, name, register_dicts):
         self.cpuid = cpuid
@@ -207,7 +210,7 @@ if __name__ == "__main__":
     TBL_42 = {}
     TBL_43 = {}
     TBL_44 = {}
-    TBL_45 = {}
+    TBL_45 = {MSR_VR_CURRENT_CONFIG: PL4_DEFAULT}
     TBL_46 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_15_3,

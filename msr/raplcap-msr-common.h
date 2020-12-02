@@ -26,6 +26,8 @@ extern "C" {
 /* Platform (PSys) Domain (Skylake and newer) */
 #define MSR_PLATFORM_POWER_LIMIT  0x65C
 #define MSR_PLATFORM_ENERGY_COUNTER 0x64D
+/* PL4 Power Limit (Tiger Lake and newer) */
+#define MSR_VR_CURRENT_CONFIG     0x601
 
 #define RAPLCAP_NZONES (RAPLCAP_ZONE_PSYS + 1)
 
