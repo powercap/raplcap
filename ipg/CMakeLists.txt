@@ -26,7 +26,7 @@ set(PKG_CONFIG_REQUIRES_PRIVATE "")
 set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-ipg")
 set(PKG_CONFIG_LIBS_PRIVATE "${IPG_LINKER_FLAGS}")
 configure_file(
-  ${CMAKE_SOURCE_DIR}/pkgconfig.in
+  ${PROJECT_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_CURRENT_BINARY_DIR}/raplcap-ipg.pc)
 
 # Install

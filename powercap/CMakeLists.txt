@@ -11,12 +11,12 @@ endif()
 
 # Tests
 
-add_executable(raplcap-powercap-unit-test ${CMAKE_SOURCE_DIR}/test/raplcap-unit-test.c)
+add_executable(raplcap-powercap-unit-test ${PROJECT_SOURCE_DIR}/test/raplcap-unit-test.c)
 target_link_libraries(raplcap-powercap-unit-test PRIVATE raplcap-powercap)
 add_test(raplcap-powercap-unit-test raplcap-powercap-unit-test)
 
 # must be run manually
-add_executable(raplcap-powercap-integration-test ${CMAKE_SOURCE_DIR}/test/raplcap-integration-test.c)
+add_executable(raplcap-powercap-integration-test ${PROJECT_SOURCE_DIR}/test/raplcap-integration-test.c)
 target_link_libraries(raplcap-powercap-integration-test PRIVATE raplcap-powercap)
 
 # pkg-config
@@ -32,7 +32,7 @@ set(PKG_CONFIG_REQUIRES_PRIVATE "powercap")
 set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-powercap")
 set(PKG_CONFIG_LIBS_PRIVATE "")
 configure_file(
-  ${CMAKE_SOURCE_DIR}/pkgconfig.in
+  ${PROJECT_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_CURRENT_BINARY_DIR}/raplcap-powercap.pc)
 
 # Install

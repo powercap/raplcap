@@ -12,7 +12,7 @@ endif()
 
 # Tests
 
-add_executable(raplcap-msr-unit-test ${CMAKE_SOURCE_DIR}/test/raplcap-unit-test.c)
+add_executable(raplcap-msr-unit-test ${PROJECT_SOURCE_DIR}/test/raplcap-unit-test.c)
 target_link_libraries(raplcap-msr-unit-test PRIVATE raplcap-msr)
 add_test(raplcap-msr-unit-test raplcap-msr-unit-test)
 
@@ -22,7 +22,7 @@ add_executable(raplcap-msr-common-unit-test test/raplcap-msr-common-test.c
 add_test(raplcap-msr-common-unit-test raplcap-msr-common-unit-test)
 
 # must be run manually
-add_executable(raplcap-msr-integration-test ${CMAKE_SOURCE_DIR}/test/raplcap-integration-test.c)
+add_executable(raplcap-msr-integration-test ${PROJECT_SOURCE_DIR}/test/raplcap-integration-test.c)
 target_link_libraries(raplcap-msr-integration-test PRIVATE raplcap-msr)
 
 # pkg-config
@@ -38,7 +38,7 @@ set(PKG_CONFIG_REQUIRES_PRIVATE "")
 set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-msr")
 set(PKG_CONFIG_LIBS_PRIVATE "")
 configure_file(
-  ${CMAKE_SOURCE_DIR}/pkgconfig.in
+  ${PROJECT_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc)
 
 # Install
