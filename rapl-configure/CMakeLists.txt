@@ -8,7 +8,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   if (RAPLCAP_CONFIGURE_MSR_EXTRA)
     target_compile_definitions(rapl-configure-${RAPL_LIB} PRIVATE RAPLCAP_${RAPL_LIB})
   endif()
-  target_link_libraries(rapl-configure-${RAPL_LIB} raplcap-${RAPL_LIB})
+  target_link_libraries(rapl-configure-${RAPL_LIB} PRIVATE raplcap-${RAPL_LIB})
   install(TARGETS rapl-configure-${RAPL_LIB} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   configure_file(
@@ -21,7 +21,7 @@ endif()
 if(POWERCAP_FOUND)
   set(RAPL_LIB "powercap")
   add_executable(rapl-configure-${RAPL_LIB} rapl-configure.c)
-  target_link_libraries(rapl-configure-${RAPL_LIB} raplcap-${RAPL_LIB})
+  target_link_libraries(rapl-configure-${RAPL_LIB} PRIVATE raplcap-${RAPL_LIB})
   install(TARGETS rapl-configure-${RAPL_LIB} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   configure_file(
@@ -34,7 +34,7 @@ endif()
 if(IntelPowerGadgetLib OR WIN32)
   set(RAPL_LIB "ipg")
   add_executable(rapl-configure-${RAPL_LIB} rapl-configure.c)
-  target_link_libraries(rapl-configure-${RAPL_LIB} raplcap-${RAPL_LIB})
+  target_link_libraries(rapl-configure-${RAPL_LIB} PRIVATE raplcap-${RAPL_LIB})
   install(TARGETS rapl-configure-${RAPL_LIB} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   configure_file(

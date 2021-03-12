@@ -3,7 +3,7 @@ include_directories(${POWERCAP_INCLUDE_DIRS})
 # Libraries
 
 add_library(raplcap-powercap raplcap-powercap.c)
-target_link_libraries(raplcap-powercap -L${POWERCAP_LIBDIR} ${POWERCAP_LIBRARIES})
+target_link_libraries(raplcap-powercap PRIVATE -L${POWERCAP_LIBDIR} ${POWERCAP_LIBRARIES})
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-powercap PROPERTIES VERSION ${PROJECT_VERSION}
                                                     SOVERSION ${PROJECT_VERSION_MAJOR})
@@ -12,12 +12,12 @@ endif()
 # Tests
 
 add_executable(raplcap-powercap-unit-test ${CMAKE_SOURCE_DIR}/test/raplcap-unit-test.c)
-target_link_libraries(raplcap-powercap-unit-test raplcap-powercap)
+target_link_libraries(raplcap-powercap-unit-test PRIVATE raplcap-powercap)
 add_test(raplcap-powercap-unit-test raplcap-powercap-unit-test)
 
 # must be run manually
 add_executable(raplcap-powercap-integration-test ${CMAKE_SOURCE_DIR}/test/raplcap-integration-test.c)
-target_link_libraries(raplcap-powercap-integration-test raplcap-powercap)
+target_link_libraries(raplcap-powercap-integration-test PRIVATE raplcap-powercap)
 
 # pkg-config
 
