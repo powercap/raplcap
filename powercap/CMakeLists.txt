@@ -6,7 +6,7 @@ add_library(raplcap-powercap raplcap-powercap.c)
 target_link_libraries(raplcap-powercap -L${POWERCAP_LIBDIR} ${POWERCAP_LIBRARIES})
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-powercap PROPERTIES VERSION ${PROJECT_VERSION}
-                                                    SOVERSION ${VERSION_MAJOR})
+                                                    SOVERSION ${PROJECT_VERSION_MAJOR})
 endif()
 
 # Tests

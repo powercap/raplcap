@@ -7,7 +7,7 @@ add_library(raplcap-msr raplcap-msr.c
 target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr")
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-msr PROPERTIES VERSION ${PROJECT_VERSION}
-                                               SOVERSION ${VERSION_MAJOR})
+                                               SOVERSION ${PROJECT_VERSION_MAJOR})
 endif()
 
 # Tests
