@@ -8,8 +8,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 add_compile_options(-Wall)
 
-include_directories(${PROJECT_SOURCE_DIR}/inc)
-
 if(CMAKE_HOST_UNIX)
   include(GNUInstallDirs)
 else()
@@ -22,10 +20,6 @@ endif()
 # Tests
 
 enable_testing()
-
-# Install
-
-install(FILES inc/raplcap.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 # Uninstall
 

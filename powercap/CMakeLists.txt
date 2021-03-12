@@ -1,8 +1,10 @@
-include_directories(${POWERCAP_INCLUDE_DIRS})
-
 # Libraries
 
 add_library(raplcap-powercap raplcap-powercap.c)
+target_include_directories(raplcap-powercap PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+                                                   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
+target_include_directories(raplcap-powercap PRIVATE ${POWERCAP_INCLUDE_DIRS})
+set_target_properties(raplcap-powercap PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h")
 target_link_libraries(raplcap-powercap PRIVATE -L${POWERCAP_LIBDIR} ${POWERCAP_LIBRARIES})
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-powercap PROPERTIES VERSION ${PROJECT_VERSION}
@@ -37,5 +39,9 @@ configure_file(
 
 # Install
 
-install(TARGETS raplcap-powercap DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS raplcap-powercap
+        EXPORT RAPLCapTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/raplcap-powercap.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

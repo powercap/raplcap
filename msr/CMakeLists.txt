@@ -4,6 +4,9 @@ add_library(raplcap-msr raplcap-msr.c
                         raplcap-msr-common.c
                         raplcap-msr-sys-linux.c
                         raplcap-cpuid.c)
+target_include_directories(raplcap-msr PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
+set_target_properties(raplcap-msr PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h;raplcap-msr.h")
 target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr")
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-msr PROPERTIES VERSION ${PROJECT_VERSION}
@@ -19,6 +22,7 @@ add_test(raplcap-msr-unit-test raplcap-msr-unit-test)
 add_executable(raplcap-msr-common-unit-test test/raplcap-msr-common-test.c
                                             raplcap-msr-common.c
                                             raplcap-cpuid.c)
+target_include_directories(raplcap-msr-common-unit-test PRIVATE ${PROJECT_SOURCE_DIR}/inc)
 add_test(raplcap-msr-common-unit-test raplcap-msr-common-unit-test)
 
 # must be run manually
@@ -43,6 +47,9 @@ configure_file(
 
 # Install
 
-install(TARGETS raplcap-msr DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS raplcap-msr
+        EXPORT RAPLCapTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-install(FILES raplcap-msr.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
