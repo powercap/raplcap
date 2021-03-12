@@ -12,6 +12,7 @@
 #include "raplcap-msr-common.h"
 
 #define HAS_SHORT_TERM(ctx, zone) (ctx->cfg[zone].constraints > 1)
+#define HAS_MAX_POWER(ctx, zone) (ctx->cfg[zone].constraints > 2)
 
 #define PU_MASK   0xF
 #define PU_SHIFT  0
@@ -22,6 +23,8 @@
 #define PL_MASK   0x7FFF
 #define PL1_SHIFT 0
 #define PL2_SHIFT 32
+#define PL4_MASK  0x1FFF
+#define PL4_SHIFT 0
 #define TL_MASK   0x7F
 #define TL1_SHIFT 17
 #define TL2_SHIFT 49
@@ -224,6 +227,14 @@ static const raplcap_msr_zone_cfg CFG_DEFAULT[RAPLCAP_NZONES] = {
   CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2)  // PSYS
 };
 
+static const raplcap_msr_zone_cfg CFG_DEFAULT_PL4[RAPLCAP_NZONES] = {
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 3), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2)  // PSYS
+};
+
 static const raplcap_msr_zone_cfg CFG_ATOM[RAPLCAP_NZONES] = {
   CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
   CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // CORE
@@ -284,9 +295,6 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_COMETLAKE:
     case CPUID_MODEL_COMETLAKE_L:
     //
-    case CPUID_MODEL_TIGERLAKE_L:
-    case CPUID_MODEL_TIGERLAKE:
-    //
     case CPUID_MODEL_ATOM_GOLDMONT:
     case CPUID_MODEL_ATOM_GOLDMONT_D:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
@@ -296,6 +304,15 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->energy_units_dram = ctx->energy_units;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT;
+      break;
+    //----
+    case CPUID_MODEL_TIGERLAKE_L:
+    case CPUID_MODEL_TIGERLAKE:
+      ctx->power_units = from_msr_pu_default(units_msrval);
+      ctx->energy_units = from_msr_eu_default(units_msrval);
+      ctx->energy_units_dram = ctx->energy_units;
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_DEFAULT_PL4;
       break;
     //----
     case CPUID_MODEL_HASWELL_X:

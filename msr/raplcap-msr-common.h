@@ -108,6 +108,26 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
                         const raplcap_limit* limit_long, const raplcap_limit* limit_short);
 
 /**
+ * Parse msrval to determine if PL4 is locked.
+ */
+int msr_is_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
+
+/**
+ * Set bit fields on msrval to lock/unlock PL4 (in practice a zone can't be unlocked). Returns modified msrval.
+ */
+uint64_t msr_set_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked);
+
+/**
+ * Parse msrval and translate bit fields to populate limit.
+ */
+double msr_get_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval);
+
+/**
+ * Set bit fields on msrval for watts > 0.
+ */
+uint64_t msr_set_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, double watts);
+
+/**
  * Get the energy counter value in Joules.
  */
 double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone);
