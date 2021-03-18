@@ -8,14 +8,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 add_compile_options(-Wall)
 
-if(CMAKE_HOST_UNIX)
-  include(GNUInstallDirs)
-else()
-  set(CMAKE_INSTALL_BINDIR bin)
-  set(CMAKE_INSTALL_LIBDIR lib)
-  set(CMAKE_INSTALL_INCLUDEDIR include)
-  set(CMAKE_INSTALL_MANDIR share/man)
-endif()
+include(GNUInstallDirs)
 
 # Tests
 
