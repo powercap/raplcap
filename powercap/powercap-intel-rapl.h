@@ -44,6 +44,7 @@ typedef struct powercap_intel_rapl_zone_files {
   powercap_zone zone;
   powercap_constraint constraint_long;
   powercap_constraint constraint_short;
+  powercap_constraint constraint_peak;
 } powercap_intel_rapl_zone_files;
 
 /**
@@ -62,7 +63,8 @@ typedef struct powercap_intel_rapl_parent {
  */
 typedef enum powercap_intel_rapl_constraint {
   POWERCAP_INTEL_RAPL_CONSTRAINT_LONG,
-  POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT
+  POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT,
+  POWERCAP_INTEL_RAPL_CONSTRAINT_PEAK
 } powercap_intel_rapl_constraint;
 
 /**

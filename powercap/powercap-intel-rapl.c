@@ -28,6 +28,7 @@
 
 #define CONSTRAINT_NAME_LONG "long_term"
 #define CONSTRAINT_NAME_SHORT "short_term"
+#define CONSTRAINT_NAME_PEAK "peak_power"
 
 #define ZONE_NAME_PREFIX_PKG "package"
 #define ZONE_NAME_CORE "core"
@@ -127,6 +128,8 @@ static powercap_constraint* get_constraint_by_rapl_name(powercap_intel_rapl_zone
     return &fds->constraint_long;
   } else if (!strncmp(name, CONSTRAINT_NAME_SHORT, sizeof(CONSTRAINT_NAME_SHORT))) {
     return &fds->constraint_short;
+  } else if (!strncmp(name, CONSTRAINT_NAME_PEAK, sizeof(CONSTRAINT_NAME_PEAK))) {
+    return &fds->constraint_peak;
   } else {
     raplcap_log(ERROR, "powercap-intel-rapl: Unrecognized constraint name: %s\n", name);
     errno = EINVAL;
@@ -208,6 +211,8 @@ static const powercap_constraint* get_constraint_files(const powercap_intel_rapl
       return &fds->constraint_long;
     case POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT:
       return &fds->constraint_short;
+    case POWERCAP_INTEL_RAPL_CONSTRAINT_PEAK:
+      return &fds->constraint_peak;
     default:
       // somebody passed a bad constraint type
       raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_intel_rapl_constraint: %d\n", constraint);
