@@ -254,7 +254,7 @@ int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
     return -1;
   }
   msrval = msr_set_limits(&state->ctx, zone, msrval, limit_long, limit_short);
-  return msr_sys_write(state->sys, msrval, pkg, 0, msr);
+  return msr_sys_write(state->sys, msrval, pkg, die, msr);
 }
 
 double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
@@ -304,7 +304,7 @@ int raplcap_msr_pd_set_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t di
     return -1;
   }
   msrval = msr_set_zone_clamped(&state->ctx, zone, msrval, &clamped, &clamped);
-  return msr_sys_write(state->sys, msrval, pkg, 0, msr);
+  return msr_sys_write(state->sys, msrval, pkg, die, msr);
 }
 
 int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped) {
@@ -335,7 +335,7 @@ int raplcap_msr_pd_set_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die
     return -1;
   }
   msrval = msr_set_zone_locked(&state->ctx, zone, msrval, 1);
-  return msr_sys_write(state->sys, msrval, pkg, 0, msr);
+  return msr_sys_write(state->sys, msrval, pkg, die, msr);
 }
 
 int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {

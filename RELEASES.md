@@ -11,6 +11,10 @@
 * Increased minimum CMake version from 2.8.12 to 3.1
 * [msr] Updated for the Intel Software Developer's Manual, November 2020 release
 
+### Fixed
+
+* [msr] Writing to wrong die MSR in 'raplcap_pd_set_limits', 'raplcap_msr_pd_set_zone_clamped', and 'raplcap_msr_pd_set_zone_locked'
+
 
 ## [v0.5.0] - 2020-09-02
 
