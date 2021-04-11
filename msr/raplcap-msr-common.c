@@ -497,6 +497,35 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
   return msrval;
 }
 
+int msr_is_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  const int ret = (msrval >> 31 & LCK_MASK) == 0x1;
+  raplcap_log(DEBUG, "msr_is_pl4_locked: zone=%d, locked=%d\n", zone, ret);
+  return ret;
+}
+
+uint64_t msr_set_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked) {
+  assert(ctx != NULL);
+  raplcap_log(DEBUG, "msr_set_zone_locked: zone=%d, locked=%d\n", zone, locked);
+  return replace_bits(msrval, locked ? 1 : 0, 31, 31);
+}
+
+double msr_get_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
+  assert(ctx != NULL);
+  double watts = ctx->cfg[zone].from_msr_pl((msrval >> PL4_SHIFT) & PL4_MASK, ctx->power_units);
+  raplcap_log(DEBUG, "msr_get_pl4_limit: zone=%d, power=%.12f W\n", zone, watts);
+  return watts;
+}
+
+uint64_t msr_set_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, double watts) {
+  assert(ctx != NULL);
+  raplcap_log(DEBUG, "msr_set_pl4_limit: zone=%d, power=%.12f W\n", zone, watts);
+  if (watts > 0) {
+    msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(watts, ctx->power_units), 0, 12);
+  }
+  return msrval;
+}
+
 double msr_get_energy_counter(const raplcap_msr_ctx* ctx, uint64_t msrval, raplcap_zone zone) {
   assert(ctx != NULL);
   const double joules = ((msrval >> EY_SHIFT) & EY_MASK) *
