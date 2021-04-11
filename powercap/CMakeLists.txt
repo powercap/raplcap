@@ -1,6 +1,6 @@
 # Libraries
 
-add_library(raplcap-powercap raplcap-powercap.c)
+add_library(raplcap-powercap raplcap-powercap.c powercap-intel-rapl.c)
 target_include_directories(raplcap-powercap PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
                                                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
 target_include_directories(raplcap-powercap PRIVATE ${POWERCAP_INCLUDE_DIRS})
