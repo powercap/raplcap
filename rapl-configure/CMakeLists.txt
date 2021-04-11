@@ -24,7 +24,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   endif()
 endif()
 
-if(POWERCAP_FOUND)
+if(Powercap_FOUND)
   add_rapl_configure("powercap")
 endif()
 
