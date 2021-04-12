@@ -210,6 +210,20 @@ int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, 
   return ret;
 }
 
+int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                                       raplcap_constraint constraint) {
+  const raplcap_msr* state = get_state(rc, pkg, die);
+  if (state == NULL) {
+    return -1;
+  }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    raplcap_log(ERROR, "raplcap_pd_is_constraint_supported: Unknown constraint: %d\n", constraint);
+    errno = EINVAL;
+    return -1;
+  }
+  return msr_is_constraint_supported(&state->ctx, zone, constraint);
+}
+
 // Enables or disables both the "enabled" and "clamped" bits for all constraints
 int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int enabled) {
   uint64_t msrval;

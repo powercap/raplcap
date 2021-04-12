@@ -254,6 +254,16 @@ int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, 
   return zone == RAPLCAP_ZONE_PACKAGE;
 }
 
+int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                                       raplcap_constraint constraint) {
+  if (get_state(rc, pkg, die) == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+  // only package long term constraint is supported
+  return zone == RAPLCAP_ZONE_PACKAGE && constraint == RAPLCAP_CONSTRAINT_LONG_TERM;
+}
+
 int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   // not supported by IPG
   (void) rc;

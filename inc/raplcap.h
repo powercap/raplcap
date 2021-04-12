@@ -129,6 +129,19 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg);
 int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
+ * Check if a zone constraint is supported.
+ *
+ * @param rc
+ * @param pkg
+ * @param die
+ * @param zone
+ * @param constraint
+ * @return 0 if unsupported, 1 if supported, a negative value on error
+ */
+int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                                       raplcap_constraint constraint);
+
+/**
  * Check if a zone is enabled.
  * Constraints can technically be enabled/disabled separately, but for simplicity and compatibility with lower-level
  * RAPL interfaces, we define a zone to be enabled only if all of its constraints are enabled (disabled otherwise).

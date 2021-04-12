@@ -429,6 +429,20 @@ int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, 
   return ret;
 }
 
+int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                                       raplcap_constraint constraint) {
+  const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
+  int ret;
+  if (p == NULL) {
+    return -1;
+  }
+  ret = powercap_intel_rapl_is_constraint_supported(p, zone, constraint);
+  raplcap_log(DEBUG,
+              "raplcap_pd_is_constraint_supported: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d, supported=%d\n",
+              pkg, die, zone, constraint, ret);
+  return ret;
+}
+
 int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
   int ret;
