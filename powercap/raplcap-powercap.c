@@ -546,6 +546,34 @@ int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
   return 0;
 }
 
+int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, raplcap_limit* limit) {
+  const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
+  if (p == NULL) {
+    return -1;
+  }
+  raplcap_log(DEBUG, "raplcap_pd_get_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
+              pkg, die, zone, constraint);
+  if (limit != NULL && get_constraint(p, zone, constraint, limit)) {
+    return -1;
+  }
+  return 0;
+}
+
+int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, const raplcap_limit* limit) {
+  const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
+  if (p == NULL) {
+    return -1;
+  }
+  raplcap_log(DEBUG, "raplcap_pd_set_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
+              pkg, die, zone, constraint);
+  if (limit != NULL && set_constraint(p, zone, constraint, limit)) {
+    return -1;
+  }
+  return 0;
+}
+
 double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   uint64_t uj;
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);

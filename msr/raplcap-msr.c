@@ -271,6 +271,92 @@ int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
   return msr_sys_write(state->sys, msrval, pkg, die, msr);
 }
 
+int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, raplcap_limit* limit) {
+  uint64_t msrval;
+  const raplcap_msr* state = get_state(rc, pkg, die);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  int ret = 0;
+  raplcap_log(DEBUG, "raplcap_pd_get_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
+              pkg, die, zone, constraint);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  switch (constraint) {
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+        return -1;
+      }
+      msr_get_limits(&state->ctx, zone, msrval, limit, NULL);
+      break;
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+        return -1;
+      }
+      msr_get_limits(&state->ctx, zone, msrval, NULL, limit);
+      break;
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, MSR_VR_CURRENT_CONFIG)) {
+        return -1;
+      }
+      if (limit) {
+        limit->watts = msr_get_pl4_limit(&state->ctx, zone, msrval);
+        limit->seconds = 0;
+      }
+      break;
+    default:
+      raplcap_log(ERROR, "raplcap_pd_get_limit: Unknown constraint: %d\n", constraint);
+      errno = EINVAL;
+      ret = -1;
+      break;
+  }
+  return ret;
+}
+
+int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, const raplcap_limit* limit) {
+  uint64_t msrval;
+  const raplcap_msr* state = get_state(rc, pkg, die);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  int ret = 0;
+  raplcap_log(DEBUG, "raplcap_pd_set_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
+              pkg, die, zone, constraint);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  switch (constraint) {
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+        return -1;
+      }
+      msrval = msr_set_limits(&state->ctx, zone, msrval, limit, NULL);
+      ret = msr_sys_write(state->sys, msrval, pkg, die, msr);
+      break;
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+        return -1;
+      }
+      msrval = msr_set_limits(&state->ctx, zone, msrval, NULL, limit);
+      ret = msr_sys_write(state->sys, msrval, pkg, die, msr);
+      break;
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, MSR_VR_CURRENT_CONFIG)) {
+        return -1;
+      }
+      if (limit) {
+        msrval = msr_set_pl4_limit(&state->ctx, zone, msrval, limit->watts);
+        ret = msr_sys_write(state->sys, msrval, pkg, die, MSR_VR_CURRENT_CONFIG);
+      }
+      break;
+    default:
+      raplcap_log(ERROR, "raplcap_pd_set_limit: Unknown constraint: %d\n", constraint);
+      errno = EINVAL;
+      ret = -1;
+      break;
+  }
+  return ret;
+}
+
 double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   uint64_t msrval;
   const raplcap_msr* state = get_state(rc, pkg, die);

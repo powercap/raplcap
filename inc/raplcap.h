@@ -167,7 +167,7 @@ int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, ra
 int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int enabled);
 
 /**
- * Get the limits for a zone, if it is supported.
+ * Get the long and/or short term constraint limits for a zone, if it is supported.
  * Not all zones use limit_short.
  *
  * @param rc
@@ -182,7 +182,7 @@ int raplcap_pd_get_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
                           raplcap_limit* limit_long, raplcap_limit* limit_short);
 
 /**
- * Set the limits for a zone, if it is supported.
+ * Set the long and/or short term constraint limits for a zone, if it is supported.
  * Not all zones use limit_short.
  * If the power or time window value is 0, it will not be written or the current value may be used.
  *
@@ -196,6 +196,34 @@ int raplcap_pd_get_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
  */
 int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
                           const raplcap_limit* limit_long, const raplcap_limit* limit_short);
+
+/**
+ * Get a zone constraint's limit, if it is supported.
+ *
+ * @param rc
+ * @param pkg
+ * @param die
+ * @param zone
+ * @param constraint
+ * @param limit
+ * @return 0 on success, a negative value on error
+ */
+int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, raplcap_limit* limit);
+
+/**
+ * Set a zone constraint's limit, if it is supported.
+ *
+ * @param rc
+ * @param pkg
+ * @param die
+ * @param zone
+ * @param constraint
+ * @param limit
+ * @return 0 on success, a negative value on error
+ */
+int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, const raplcap_limit* limit);
 
 /**
  * Get the current energy counter value for a zone in Joules.

@@ -333,6 +333,34 @@ int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
   return -1;
 }
 
+int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, raplcap_limit* limit) {
+  switch (constraint) {
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
+      return raplcap_pd_get_limits(rc, pkg, die, zone, limit, NULL);
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
+      return raplcap_pd_get_limits(rc, pkg, die, zone, NULL, limit);
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
+      // not supported by IPG
+      errno = ENOSYS;
+      break;
+  }
+  return -1;
+}
+
+int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                         raplcap_constraint constraint, const raplcap_limit* limit) {
+  // not supported by IPG
+  (void) rc;
+  (void) pkg;
+  (void) die;
+  (void) zone;
+  (void) constraint;
+  (void) limit;
+  errno = ENOSYS;
+  return -1;
+}
+
 double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   int nResult = 0;
   double data[MSR_FUNC_N_RESULTS_MAX] = { 0 };
