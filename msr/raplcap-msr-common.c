@@ -368,6 +368,11 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   return (msrval & ~mask) | ((data << first) & mask);
 }
 
+int msr_is_constraint_pl4_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
+  assert(ctx != NULL);
+  return HAS_MAX_POWER(ctx, zone);
+}
+
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         int* en_long, int* en_short) {
   assert(ctx != NULL);

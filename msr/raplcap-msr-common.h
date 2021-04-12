@@ -62,6 +62,11 @@ uint32_t msr_get_supported_cpu_model(void);
 void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_msrval);
 
 /**
+ * Check if the PL4 constraint is supported for this zone.
+ */
+int msr_is_constraint_pl4_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone);
+
+/**
  * Parse msrval to determine if zone is enabled.
  */
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
