@@ -368,9 +368,28 @@ static uint64_t replace_bits(uint64_t msrval, uint64_t data, uint8_t first, uint
   return (msrval & ~mask) | ((data << first) & mask);
 }
 
-int msr_is_constraint_pl4_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
+int msr_is_constraint_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone, raplcap_constraint constraint) {
   assert(ctx != NULL);
-  return HAS_MAX_POWER(ctx, zone);
+  int ret;
+  switch (constraint) {
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
+      ret = 1;
+      break;
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
+      ret = HAS_SHORT_TERM(ctx, zone);
+      break;
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
+      ret = HAS_MAX_POWER(ctx, zone);
+      break;
+    default:
+      ret = -1;
+      raplcap_log(ERROR, "Unknown constraint: %d\n", constraint);
+      raplcap_log(ERROR, "Please report a bug if you see this message, it should never occur!\n");
+      assert(0);
+      break;
+  }
+  raplcap_log(DEBUG, "msr_is_constraint_supported: zone=%d, constraint=%d, supported=%d\n", zone, constraint, ret);
+  return ret;
 }
 
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
