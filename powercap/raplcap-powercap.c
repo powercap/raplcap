@@ -458,7 +458,7 @@ int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, r
 }
 
 static int get_constraint(const powercap_intel_rapl_parent* p, raplcap_zone z,
-                          powercap_intel_rapl_constraint constraint, raplcap_limit* limit) {
+                          raplcap_constraint constraint, raplcap_limit* limit) {
   assert(p != NULL);
   assert(limit != NULL);
   static const double ONE_MILLION = 1000000.0;
@@ -486,17 +486,17 @@ int raplcap_pd_get_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_pd_get_limits: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
-  if ((limit_long != NULL && get_constraint(p, zone, POWERCAP_INTEL_RAPL_CONSTRAINT_LONG, limit_long)) ||
+  if ((limit_long != NULL && get_constraint(p, zone, RAPLCAP_CONSTRAINT_LONG_TERM, limit_long)) ||
       (limit_short != NULL &&
-       powercap_intel_rapl_is_constraint_supported(p, zone, POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT) > 0 &&
-       get_constraint(p, zone, POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT, limit_short))) {
+       powercap_intel_rapl_is_constraint_supported(p, zone, RAPLCAP_CONSTRAINT_SHORT_TERM) > 0 &&
+       get_constraint(p, zone, RAPLCAP_CONSTRAINT_SHORT_TERM, limit_short))) {
     return -1;
   }
   return 0;
 }
 
 static int set_constraint(const powercap_intel_rapl_parent* p, raplcap_zone z,
-                          powercap_intel_rapl_constraint constraint, const raplcap_limit* limit) {
+                          raplcap_constraint constraint, const raplcap_limit* limit) {
   assert(p != NULL);
   assert(limit != NULL);
   static const uint64_t ONE_MILLION = 1000000;
@@ -523,10 +523,10 @@ int raplcap_pd_set_limits(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_pd_set_limits: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
-  if ((limit_long != NULL && set_constraint(p, zone, POWERCAP_INTEL_RAPL_CONSTRAINT_LONG, limit_long)) ||
+  if ((limit_long != NULL && set_constraint(p, zone, RAPLCAP_CONSTRAINT_LONG_TERM, limit_long)) ||
       (limit_short != NULL &&
-       powercap_intel_rapl_is_constraint_supported(p, zone, POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT) > 0 &&
-       set_constraint(p, zone, POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT, limit_short))) {
+       powercap_intel_rapl_is_constraint_supported(p, zone, RAPLCAP_CONSTRAINT_SHORT_TERM) > 0 &&
+       set_constraint(p, zone, RAPLCAP_CONSTRAINT_SHORT_TERM, limit_short))) {
     return -1;
   }
   return 0;

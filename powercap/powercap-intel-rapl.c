@@ -200,22 +200,22 @@ static const powercap_zone* get_zone_files(const powercap_intel_rapl_parent* par
   return fds == NULL ? NULL : &fds->zone;
 }
 
-static const powercap_constraint* get_constraint_files(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint) {
+static const powercap_constraint* get_constraint_files(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint) {
   assert(parent != NULL);
   const powercap_intel_rapl_zone_files* fds = get_files(parent, zone);
   if (fds == NULL) {
     return NULL;
   }
   switch (constraint) {
-    case POWERCAP_INTEL_RAPL_CONSTRAINT_LONG:
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
       return &fds->constraint_long;
-    case POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT:
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
       return &fds->constraint_short;
-    case POWERCAP_INTEL_RAPL_CONSTRAINT_PEAK:
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
       return &fds->constraint_peak;
     default:
       // somebody passed a bad constraint type
-      raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_intel_rapl_constraint: %d\n", constraint);
+      raplcap_log(ERROR, "powercap-intel-rapl: Bad raplcap_constraint: %d\n", constraint);
       errno = EINVAL;
       return NULL;
   }
@@ -247,7 +247,7 @@ static int get_zone_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zo
   }
 }
 
-static int get_constraint_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, powercap_constraint_file file) {
+static int get_constraint_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, powercap_constraint_file file) {
   assert(parent != NULL);
   const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
   if (fds == NULL) {
@@ -385,7 +385,7 @@ int powercap_intel_rapl_is_zone_supported(const powercap_intel_rapl_parent* pare
   return powercap_intel_rapl_is_zone_file_supported(parent, zone, POWERCAP_ZONE_FILE_NAME);
 }
 
-static int powercap_intel_rapl_is_constraint_file_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, powercap_constraint_file file) {
+static int powercap_intel_rapl_is_constraint_file_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, powercap_constraint_file file) {
   int fd;
   if (parent == NULL || (fd = get_constraint_fd(parent, zone, constraint, file)) < 0) {
     errno = EINVAL;
@@ -394,7 +394,7 @@ static int powercap_intel_rapl_is_constraint_file_supported(const powercap_intel
   return fd > 0 ? 1 : 0;
 }
 
-int powercap_intel_rapl_is_constraint_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint) {
+int powercap_intel_rapl_is_constraint_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint) {
   // POWERCAP_CONSTRAINT_FILE_POWER_LIMIT_UW is picked arbitrarily, but it is a required file
   return powercap_intel_rapl_is_constraint_file_supported(parent, zone, constraint, POWERCAP_CONSTRAINT_FILE_POWER_LIMIT_UW);
 }
@@ -431,22 +431,22 @@ int powercap_intel_rapl_get_energy_uj(const powercap_intel_rapl_parent* parent, 
   return fds == NULL ? -errno : powercap_zone_get_energy_uj(fds, val);
 }
 
-int powercap_intel_rapl_get_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t* val) {
+int powercap_intel_rapl_get_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t* val) {
   const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
   return fds == NULL ? -errno : powercap_constraint_get_power_limit_uw(fds, val);
 }
 
-int powercap_intel_rapl_set_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t val) {
+int powercap_intel_rapl_set_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t val) {
   const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
   return fds == NULL ? -errno : powercap_constraint_set_power_limit_uw(fds, val);
 }
 
-int powercap_intel_rapl_get_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t* val) {
+int powercap_intel_rapl_get_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t* val) {
   const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
   return fds == NULL ? -errno : powercap_constraint_get_time_window_us(fds, val);
 }
 
-int powercap_intel_rapl_set_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t val) {
+int powercap_intel_rapl_set_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t val) {
   const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
   return fds == NULL ? -errno : powercap_constraint_set_time_window_us(fds, val);
 }

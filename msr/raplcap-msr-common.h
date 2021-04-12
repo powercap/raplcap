@@ -30,6 +30,7 @@ extern "C" {
 #define MSR_VR_CURRENT_CONFIG     0x601
 
 #define RAPLCAP_NZONES (RAPLCAP_ZONE_PSYS + 1)
+#define RAPLCAP_NCONSTRAINTS (RAPLCAP_CONSTRAINT_PEAK_POWER + 1)
 
 typedef uint64_t (fn_to_msr) (double value, double units);
 typedef double (fn_from_msr) (uint64_t bits, double units);

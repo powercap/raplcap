@@ -59,15 +59,6 @@ typedef struct powercap_intel_rapl_parent {
 } powercap_intel_rapl_parent;
 
 /**
- * Long/short term constraint enumeration.
- */
-typedef enum powercap_intel_rapl_constraint {
-  POWERCAP_INTEL_RAPL_CONSTRAINT_LONG,
-  POWERCAP_INTEL_RAPL_CONSTRAINT_SHORT,
-  POWERCAP_INTEL_RAPL_CONSTRAINT_PEAK
-} powercap_intel_rapl_constraint;
-
-/**
  * Get the number of top-level (parent) RAPL instances found.
  * Returns 0 and sets errno if none are found.
  */
@@ -98,7 +89,7 @@ int powercap_intel_rapl_is_zone_supported(const powercap_intel_rapl_parent* pare
  * Check if a constraint is supported for a zone.
  * Returns 1 if supported, 0 if unsupported, a negative value in case of error.
  */
-int powercap_intel_rapl_is_constraint_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint);
+int powercap_intel_rapl_is_constraint_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint);
 
 /**
  * Get the zone name.
@@ -130,22 +121,22 @@ int powercap_intel_rapl_get_energy_uj(const powercap_intel_rapl_parent* parent, 
 /**
  * Get the power limit in microwatts.
  */
-int powercap_intel_rapl_get_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t* val);
+int powercap_intel_rapl_get_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t* val);
 
 /**
  * Set the power limit in microwatts.
  */
-int powercap_intel_rapl_set_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t val);
+int powercap_intel_rapl_set_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t val);
 
 /**
  * Get the time window in microseconds.
  */
-int powercap_intel_rapl_get_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t* val);
+int powercap_intel_rapl_get_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t* val);
 
 /**
  * Set the time window in microseconds.
  */
-int powercap_intel_rapl_set_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_intel_rapl_constraint constraint, uint64_t val);
+int powercap_intel_rapl_set_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t val);
 
 #pragma GCC visibility pop
 

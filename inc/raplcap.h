@@ -65,6 +65,15 @@ typedef enum raplcap_zone {
 } raplcap_zone;
 
 /**
+ * Available RAPL constraints
+ */
+typedef enum raplcap_constraint {
+  RAPLCAP_CONSTRAINT_LONG_TERM,
+  RAPLCAP_CONSTRAINT_SHORT_TERM,
+  RAPLCAP_CONSTRAINT_PEAK_POWER,
+} raplcap_constraint;
+
+/**
  * Initialize a RAPLCap context.
  *
  * @param rc
