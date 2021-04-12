@@ -442,6 +442,76 @@ int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zo
   return raplcap_msr_pd_set_zone_locked(rc, pkg, 0, zone);
 }
 
+int raplcap_msr_pd_is_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                             raplcap_constraint constraint) {
+  uint64_t msrval;
+  const raplcap_msr* state = get_state(rc, pkg, die);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  int ret;
+  raplcap_log(DEBUG, "raplcap_msr_pd_is_locked: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
+              pkg, die, zone, constraint);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  switch (constraint) {
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+        return -1;
+      }
+      ret = msr_is_zone_locked(&state->ctx, zone, msrval);
+      break;
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, MSR_VR_CURRENT_CONFIG)) {
+        return -1;
+      }
+      ret = msr_is_pl4_locked(&state->ctx, zone, msrval);
+      break;
+    default:
+      raplcap_log(ERROR, "raplcap_msr_pd_is_locked: Unknown constraint: %d\n", constraint);
+      errno = EINVAL;
+      ret = -1;
+      break;
+  }
+  return ret;
+}
+
+int raplcap_msr_pd_set_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                              raplcap_constraint constraint) {
+  uint64_t msrval;
+  const raplcap_msr* state = get_state(rc, pkg, die);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  int ret;
+  raplcap_log(DEBUG, "raplcap_msr_pd_set_locked: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
+              pkg, die, zone, constraint);
+  if (state == NULL || msr < 0) {
+    return -1;
+  }
+  switch (constraint) {
+    case RAPLCAP_CONSTRAINT_LONG_TERM:
+    case RAPLCAP_CONSTRAINT_SHORT_TERM:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+        return -1;
+      }
+      msrval = msr_set_zone_locked(&state->ctx, zone, msrval, 1);
+      ret = msr_sys_write(state->sys, msrval, pkg, die, msr);
+      break;
+    case RAPLCAP_CONSTRAINT_PEAK_POWER:
+      if (msr_sys_read(state->sys, &msrval, pkg, die, MSR_VR_CURRENT_CONFIG)) {
+        return -1;
+      }
+      msrval = msr_set_pl4_locked(&state->ctx, zone, msrval, 1);
+      ret = msr_sys_write(state->sys, msrval, pkg, die, MSR_VR_CURRENT_CONFIG);
+      break;
+    default:
+      raplcap_log(ERROR, "raplcap_msr_pd_set_locked: Unknown constraint: %d\n", constraint);
+      errno = EINVAL;
+      ret = -1;
+      break;
+  }
+  return ret;
+}
+
 double raplcap_msr_pd_get_time_units(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_ENERGY);

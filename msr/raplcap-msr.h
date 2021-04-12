@@ -62,6 +62,33 @@ int raplcap_msr_pd_is_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die,
 int raplcap_msr_pd_set_zone_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone);
 
 /**
+ * Check if a constraint is locked (affects other constraints that share a MSR).
+ *
+ * @param rc
+ * @param pkg
+ * @param die
+ * @param zone
+ * @param constraint
+ * @return 0 if unlocked, 1 if locked, a negative value on error
+ */
+int raplcap_msr_pd_is_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                             raplcap_constraint constraint);
+
+/**
+ * Lock a constraint (affects other constraints that share a MSR)
+ * Note: once locked, a constraint cannot be unlocked until CPU is reset.
+ *
+ * @param rc
+ * @param pkg
+ * @param die
+ * @param zone
+ * @param constraint
+ * @return 0 on success, a negative value on error
+ */
+int raplcap_msr_pd_set_locked(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
+                              raplcap_constraint constraint);
+
+/**
  * Get the time units for a zone in seconds.
  *
  * @param rc
