@@ -356,6 +356,7 @@ static int fds_destroy_all(powercap_intel_rapl_zone_files* files) {
   ret |= powercap_zone_close(&files->zone);
   ret |= powercap_constraint_close(&files->constraint_long);
   ret |= powercap_constraint_close(&files->constraint_short);
+  ret |= powercap_constraint_close(&files->constraint_peak);
   return ret;
 }
 
