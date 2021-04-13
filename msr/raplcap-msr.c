@@ -48,7 +48,6 @@ static const off_t ZONE_OFFSETS_ENERGY[RAPLCAP_NZONES] = {
 static off_t zone_to_msr_offset(raplcap_zone zone, const off_t* offsets) {
   assert(offsets != NULL);
   if ((int) zone < 0 || (int) zone >= RAPLCAP_NZONES) {
-    raplcap_log(ERROR, "zone_to_msr_offset: Unknown zone: %d\n", zone);
     errno = EINVAL;
     return -1;
   }
@@ -71,7 +70,6 @@ int raplcap_init(raplcap* rc) {
     return -1;
   }
   if ((state = malloc(sizeof(*state))) == NULL) {
-    raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
   if ((state->sys = msr_sys_init(&n_pkg, &n_die)) == NULL) {
@@ -141,7 +139,7 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
     return 0;
   }
   if (pkg >= n_pkg) {
-    raplcap_log(ERROR, "raplcap_get_num_die: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_pkg);
+    raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_pkg);
     errno = EINVAL;
     return 0;
   }
@@ -157,7 +155,7 @@ static raplcap_msr* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
   }
   if ((state = (raplcap_msr*) rc->state) == NULL) {
     // unfortunately can't detect if the context just contains garbage
-    raplcap_log(ERROR, "get_state: Context is not initialized\n");
+    raplcap_log(ERROR, "Context is not initialized\n");
     errno = EINVAL;
     return NULL;
   }
@@ -165,12 +163,12 @@ static raplcap_msr* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
     return NULL;
   }
   if (pkg >= n_pkg) {
-    raplcap_log(ERROR, "get_state: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_pkg);
+    raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_pkg);
     errno = EINVAL;
     return NULL;
   }
   if (die >= n_die) {
-    raplcap_log(ERROR, "get_state: Die %"PRIu32" not in range [0, %"PRIu32")\n", die, n_die);
+    raplcap_log(ERROR, "Die %"PRIu32" not in range [0, %"PRIu32")\n", die, n_die);
     errno = EINVAL;
     return NULL;
   }
@@ -200,7 +198,6 @@ int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, 
   const raplcap_msr* state = get_state(rc, pkg, die);
   const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
   int ret;
-  raplcap_log(DEBUG, "raplcap_pd_is_zone_supported: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
   if (state == NULL || msr < 0) {
     return -1;
   }
@@ -217,7 +214,6 @@ int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t
     return -1;
   }
   if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
-    raplcap_log(ERROR, "raplcap_pd_is_constraint_supported: Unknown constraint: %d\n", constraint);
     errno = EINVAL;
     return -1;
   }
@@ -282,6 +278,10 @@ int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
   if (state == NULL || msr < 0) {
     return -1;
   }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
+    return -1;
+  }
   switch (constraint) {
     case RAPLCAP_CONSTRAINT_LONG_TERM:
       if (msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
@@ -305,7 +305,7 @@ int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
       }
       break;
     default:
-      raplcap_log(ERROR, "raplcap_pd_get_limit: Unknown constraint: %d\n", constraint);
+      // reachable
       errno = EINVAL;
       ret = -1;
       break;
@@ -322,6 +322,10 @@ int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
   raplcap_log(DEBUG, "raplcap_pd_set_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
               pkg, die, zone, constraint);
   if (state == NULL || msr < 0) {
+    return -1;
+  }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
     return -1;
   }
   switch (constraint) {
@@ -349,7 +353,7 @@ int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
       }
       break;
     default:
-      raplcap_log(ERROR, "raplcap_pd_set_limit: Unknown constraint: %d\n", constraint);
+      // unreachable
       errno = EINVAL;
       ret = -1;
       break;
@@ -453,6 +457,10 @@ int raplcap_msr_pd_is_locked(const raplcap* rc, uint32_t pkg, uint32_t die, rapl
   if (state == NULL || msr < 0) {
     return -1;
   }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
+    return -1;
+  }
   switch (constraint) {
     case RAPLCAP_CONSTRAINT_LONG_TERM:
     case RAPLCAP_CONSTRAINT_SHORT_TERM:
@@ -468,7 +476,7 @@ int raplcap_msr_pd_is_locked(const raplcap* rc, uint32_t pkg, uint32_t die, rapl
       ret = msr_is_pl4_locked(&state->ctx, zone, msrval);
       break;
     default:
-      raplcap_log(ERROR, "raplcap_msr_pd_is_locked: Unknown constraint: %d\n", constraint);
+      // unreachable
       errno = EINVAL;
       ret = -1;
       break;
@@ -485,6 +493,10 @@ int raplcap_msr_pd_set_locked(const raplcap* rc, uint32_t pkg, uint32_t die, rap
   raplcap_log(DEBUG, "raplcap_msr_pd_set_locked: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
               pkg, die, zone, constraint);
   if (state == NULL || msr < 0) {
+    return -1;
+  }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
     return -1;
   }
   switch (constraint) {
@@ -504,7 +516,7 @@ int raplcap_msr_pd_set_locked(const raplcap* rc, uint32_t pkg, uint32_t die, rap
       ret = msr_sys_write(state->sys, msrval, pkg, die, MSR_VR_CURRENT_CONFIG);
       break;
     default:
-      raplcap_log(ERROR, "raplcap_msr_pd_set_locked: Unknown constraint: %d\n", constraint);
+      // unreachable
       errno = EINVAL;
       ret = -1;
       break;
