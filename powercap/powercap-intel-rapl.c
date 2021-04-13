@@ -17,6 +17,7 @@
 #include <powercap.h>
 #include <powercap-sysfs.h>
 
+#define RAPLCAP_IMPL "raplcap-powercap"
 #include "powercap-intel-rapl.h"
 #include "raplcap-common.h"
 
@@ -123,13 +124,11 @@ static powercap_constraint* get_constraint_by_rapl_name(powercap_intel_rapl_zone
   char name[MAX_NAME_SIZE];
   if (powercap_sysfs_constraint_get_name(CONTROL_TYPE, zones, depth, constraint, name, sizeof(name)) < 0) {
     if (depth == 1) {
-      raplcap_log(ERROR,
-                  "powercap-intel-rapl: Failed to get constraint name at zone: %"PRIu32", constraint: %"PRIu32"\n",
-                  zones[0], constraint);
+      raplcap_log(ERROR, "Failed to get constraint name at zone: %"PRIu32", constraint: %"PRIu32": %s\n",
+                  zones[0], constraint, strerror(errno));
     } else {
-      raplcap_log(ERROR,
-                  "powercap-intel-rapl: Failed to get constraint name at zone: %"PRIu32":%"PRIu32", constraint: %"PRIu32"\n",
-                  zones[0], zones[1], constraint);
+      raplcap_log(ERROR, "Failed to get constraint name at zone: %"PRIu32":%"PRIu32", constraint: %"PRIu32": %s\n",
+                  zones[0], zones[1], constraint, strerror(errno));
     }
     return NULL;
   }
@@ -140,8 +139,14 @@ static powercap_constraint* get_constraint_by_rapl_name(powercap_intel_rapl_zone
   } else if (!strncmp(name, CONSTRAINT_NAME_PEAK, sizeof(CONSTRAINT_NAME_PEAK))) {
     return &fds->constraints[RAPLCAP_CONSTRAINT_PEAK_POWER];
   } else {
-    raplcap_log(ERROR, "powercap-intel-rapl: Unrecognized constraint name: %s\n", name);
-    errno = EINVAL;
+    if (depth == 1) {
+      raplcap_log(ERROR, "Unrecognized constraint name at zone: %"PRIu32", constraint: %"PRIu32"\n",
+                  zones[0], constraint);
+    } else {
+      raplcap_log(ERROR, "Unrecognized constraint name at zone: %"PRIu32":%"PRIu32", constraint: %"PRIu32"\n",
+                  zones[0], zones[1], constraint);
+    }
+    errno = ENOTSUP;
   }
   return NULL;
 }
@@ -151,29 +156,27 @@ static int open_all(const uint32_t* zones, uint32_t depth, powercap_intel_rapl_z
   powercap_constraint* pc;
   uint32_t i = 0;
   if (powercap_zone_open(&fds->zone, CONTROL_TYPE, zones, depth, ro)) {
-    raplcap_perror(ERROR, "powercap-intel-rapl: powercap_zone_open");
-    return -errno;
+    return -1;
   }
   errno = 0;
   // constraint 0 is supposed to be long_term and constraint 1 (if exists) should be short_term
   // note: never actually seen this problem, but not 100% sure it can't happen, so check anyway...
   while (!powercap_sysfs_constraint_exists(CONTROL_TYPE, zones, depth, i)) {
     if ((pc = get_constraint_by_rapl_name(fds, zones, depth, i)) == NULL) {
-      return -errno;
+      return -1;
     }
     // "power_limit_uw" is picked arbitrarily, but it is a required file
     if (pc->power_limit_uw) {
       if (depth == 1) {
-        raplcap_log(ERROR, "powercap-intel-rapl: Duplicate constraint detected at zone: %"PRIu32"\n", zones[0]);
+        raplcap_log(ERROR, "Duplicate constraint detected at zone: %"PRIu32"\n", zones[0]);
       } else {
-        raplcap_log(ERROR, "powercap-intel-rapl: Duplicate constraint detected at zone: %"PRIu32":%"PRIu32"\n", zones[0], zones[1]);
+        raplcap_log(ERROR, "Duplicate constraint detected at zone: %"PRIu32":%"PRIu32"\n", zones[0], zones[1]);
       }
       errno = EINVAL;
-      return -errno;
+      return -1;
     }
     if (powercap_constraint_open(pc, CONTROL_TYPE, zones, depth, i, ro)) {
-      raplcap_perror(ERROR, "powercap-intel-rapl: powercap_constraint_open");
-      return -errno;
+      return -1;
     }
     i++;
   }
@@ -200,9 +203,9 @@ static int get_zone_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zo
       return parent->zones[zone].zone.name;
     default:
       // unreachable
-      raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_zone_file: %d\n", file);
+      raplcap_log(ERROR, "Bad powercap_zone_file: %d\n", file);
       errno = EINVAL;
-      return -errno;
+      return -1;
   }
 }
 
@@ -225,9 +228,9 @@ static int get_constraint_fd(const powercap_intel_rapl_parent* parent, raplcap_z
       return parent->zones[zone].constraints[constraint].name;
     default:
       // unreachable
-      raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_constraint_file: %d\n", file);
+      raplcap_log(ERROR, "Bad powercap_constraint_file: %d\n", file);
       errno = EINVAL;
-      return -errno;
+      return -1;
   }
 }
 
@@ -235,6 +238,11 @@ static powercap_intel_rapl_zone_files* get_files_by_name(powercap_intel_rapl_par
   assert(parent != NULL);
   char name[MAX_NAME_SIZE];
   if (powercap_sysfs_zone_get_name(CONTROL_TYPE, zones, depth, name, sizeof(name)) < 0) {
+    if (depth == 1) {
+      raplcap_log(ERROR, "Failed to get name at zone: %"PRIu32": %s\n", zones[0], strerror(errno));
+    } else {
+      raplcap_log(ERROR, "Failed to get name at zone: %"PRIu32":%"PRIu32": %s\n", zones[0], zones[1], strerror(errno));
+    }
     return NULL;
   }
   if (!strncmp(name, ZONE_NAME_PREFIX_PKG, sizeof(ZONE_NAME_PREFIX_PKG) - 1)) {
@@ -248,8 +256,12 @@ static powercap_intel_rapl_zone_files* get_files_by_name(powercap_intel_rapl_par
   } else if (!strncmp(name, ZONE_NAME_PSYS, sizeof(ZONE_NAME_PSYS))) {
     return &parent->zones[RAPLCAP_ZONE_PSYS];
   } else {
-    raplcap_log(ERROR, "powercap-intel-rapl: Unrecognized zone name: %s\n", name);
-    errno = EINVAL;
+    if (depth == 1) {
+      raplcap_log(ERROR, "Unrecognized name at zone: %"PRIu32": %s\n", zones[0], name);
+    } else {
+      raplcap_log(ERROR, "Unrecognized name at zone: %"PRIu32":%"PRIu32": %s\n", zones[0], zones[1], name);
+    }
+    errno = ENOTSUP;
   }
   return NULL;
 }
@@ -260,38 +272,34 @@ uint32_t powercap_intel_rapl_get_num_instances(void) {
     n++;
   }
   if (!n) {
-    raplcap_log(ERROR, "powercap-intel-rapl: No top-level "CONTROL_TYPE" zones found - is its kernel module loaded?\n");
     errno = ENOENT;
   }
   return n;
 }
 
 int powercap_intel_rapl_init(uint32_t id, powercap_intel_rapl_parent* parent, int read_only) {
+  assert(parent);
   int ret;
   int err_save;
   uint32_t zones[2] = { id, 0 };
   powercap_intel_rapl_zone_files* files;
-  if (parent == NULL) {
-    errno = EINVAL;
-    return -errno;
-  }
   // first need the parent zone
   if ((files = get_files_by_name(parent, zones, 1)) == NULL) {
-    return -errno;
+    return -1;
   }
   // force all fds to 0 so we don't try to operate on invalid descriptors
   memset(parent, 0, sizeof(*parent));
   // first populate parent zone
   if (!(ret = open_all(zones, 1, files, read_only))) {
     // get subordinate power zones
-    while(!powercap_sysfs_zone_exists(CONTROL_TYPE, zones, 2) && !ret) {
+    while (!powercap_sysfs_zone_exists(CONTROL_TYPE, zones, 2) && !ret) {
       if ((files = get_files_by_name(parent, zones, 2)) == NULL) {
-        ret = -errno;
+        ret = -1;
       } else if (files->zone.name) {
         // zone has already been opened ("name" is picked arbitrarily, but it is a required file)
-        raplcap_log(ERROR, "powercap-intel-rapl: Duplicate zone type detected at %"PRIu32":%"PRIu32"\n", zones[0], zones[1]);
-        errno = EBUSY;
-        ret = -errno;
+        raplcap_log(ERROR, "Duplicate zone type detected at %"PRIu32":%"PRIu32"\n", zones[0], zones[1]);
+        errno = ENOTSUP;
+        ret = -1;
       } else {
         ret = open_all(zones, 2, files, read_only);
         zones[1]++;

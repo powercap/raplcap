@@ -41,22 +41,21 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
   }
   if ((state = (raplcap_powercap*) rc->state) == NULL) {
     // unfortunately can't detect if the context just contains garbage
-    raplcap_log(ERROR, "get_parent_zone: Context is not initialized\n");
+    raplcap_log(ERROR, "Context is not initialized\n");
     errno = EINVAL;
     return NULL;
   }
   if (pkg >= state->n_pkg) {
-    raplcap_log(ERROR, "get_parent_zone: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
+    raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
     errno = EINVAL;
     return NULL;
   }
   if (die >= state->n_die) {
-    raplcap_log(ERROR, "get_parent_zone: Die %"PRIu32" not in range [0, %"PRIu32")\n", die, state->n_die);
+    raplcap_log(ERROR, "Die %"PRIu32" not in range [0, %"PRIu32")\n", die, state->n_die);
     errno = EINVAL;
     return NULL;
   }
-  if ((int) zone < 0 || (int) zone > RAPLCAP_ZONE_PSYS) {
-    raplcap_log(ERROR, "get_parent_zone: Unknown zone: %d\n", zone);
+  if ((int) zone < 0 || (int) zone >= RAPLCAP_NZONES) {
     errno = EINVAL;
     return NULL;
   }
@@ -72,9 +71,6 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
 
 static uint32_t count_parent_zones(void) {
   uint32_t n = powercap_intel_rapl_get_num_instances();
-  if (n == 0) {
-    raplcap_perror(ERROR, "count_parent_zones: powercap_intel_rapl_get_num_instances");
-  }
   raplcap_log(DEBUG, "count_parent_zones: n=%"PRIu32"\n", n);
   return n;
 }
@@ -290,17 +286,16 @@ int raplcap_init(raplcap* rc) {
   }
   // get the number of packages
   if ((n_parent_zones = count_parent_zones()) == 0) {
+    raplcap_perror(ERROR, "raplcap_init: No RAPL zones found");
     return -1;
   }
   if (get_topology(n_parent_zones, &n_pkg, &n_die) < 0) {
     return -1;
   }
   if ((state = malloc(sizeof(raplcap_powercap))) == NULL) {
-    raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
   if ((state->parent_zones = malloc(n_parent_zones * sizeof(powercap_intel_rapl_parent))) == NULL) {
-    raplcap_perror(ERROR, "raplcap_init: malloc");
     free(state);
     return -1;
   }
