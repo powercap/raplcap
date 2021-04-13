@@ -37,25 +37,22 @@ extern "C" {
 
 #pragma GCC visibility push(hidden)
 
+#define RAPLCAP_NZONES (RAPLCAP_ZONE_PSYS + 1)
+#define RAPLCAP_NCONSTRAINTS (RAPLCAP_CONSTRAINT_PEAK_POWER + 1)
+
 /**
  * Files for each zone.
  */
 typedef struct powercap_intel_rapl_zone_files {
   powercap_zone zone;
-  powercap_constraint constraint_long;
-  powercap_constraint constraint_short;
-  powercap_constraint constraint_peak;
+  powercap_constraint constraints[RAPLCAP_CONSTRAINT_PEAK_POWER + 1];
 } powercap_intel_rapl_zone_files;
 
 /**
  * All files for a top-level RAPL instance.
  */
 typedef struct powercap_intel_rapl_parent {
-  powercap_intel_rapl_zone_files pkg;
-  powercap_intel_rapl_zone_files core;
-  powercap_intel_rapl_zone_files uncore;
-  powercap_intel_rapl_zone_files dram;
-  powercap_intel_rapl_zone_files psys;
+  powercap_intel_rapl_zone_files zones[RAPLCAP_ZONE_PSYS + 1];
 } powercap_intel_rapl_parent;
 
 /**
@@ -81,13 +78,13 @@ int powercap_intel_rapl_destroy(powercap_intel_rapl_parent* parent);
  * The DRAM power zone is usually only available on server-side hardware.
  * Some systems may expose zones like DRAM without actually supporting power caps for them.
  * The PSys power zone may be available on Skylake processors and later.
- * Returns 1 if supported, 0 if unsupported, a negative value in case of error.
+ * Returns 1 if supported, 0 if unsupported.
  */
 int powercap_intel_rapl_is_zone_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone);
 
 /**
  * Check if a constraint is supported for a zone.
- * Returns 1 if supported, 0 if unsupported, a negative value in case of error.
+ * Returns 1 if supported, 0 if unsupported.
  */
 int powercap_intel_rapl_is_constraint_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint);
 

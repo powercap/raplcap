@@ -254,23 +254,13 @@ static int sort_parent_zones(const void* a, const void* b) {
   char name_b[ZONE_NAME_MAX_SIZE] = { 0 };
   const powercap_intel_rapl_parent* zone_a = (const powercap_intel_rapl_parent*) a;
   const powercap_intel_rapl_parent* zone_b = (const powercap_intel_rapl_parent*) b;
-  int ret;
+  int ret = 0;
   // first check if either zone is PSYS, which must be placed at the end of the sorted array (after PACKAGE zones)
   // in the current powercap design, PSYS zones exist as their own parent zones, without child zones
-  ret = powercap_intel_rapl_is_zone_supported(zone_a, RAPLCAP_ZONE_PSYS);
-  if (ret < 0) {
-    raplcap_perror(ERROR, "sort_parent_zones: powercap_intel_rapl_is_zone_supported");
-    return 0;
-  }
-  if (ret > 0) {
+  if (powercap_intel_rapl_is_zone_supported(zone_a, RAPLCAP_ZONE_PSYS)) {
     return 1; // a >= b
   }
-  ret = powercap_intel_rapl_is_zone_supported(zone_b, RAPLCAP_ZONE_PSYS);
-  if (ret < 0) {
-    raplcap_perror(ERROR, "sort_parent_zones: powercap_intel_rapl_is_zone_supported");
-    return 0;
-  }
-  if (ret > 0) {
+  if (powercap_intel_rapl_is_zone_supported(zone_b, RAPLCAP_ZONE_PSYS)) {
     return -1; // a < b
   }
   // now assume PACKAGE zones and sort by name
@@ -282,7 +272,6 @@ static int sort_parent_zones(const void* a, const void* b) {
     }
   } else {
     raplcap_perror(ERROR, "sort_parent_zones: powercap_intel_rapl_get_name");
-    ret = 0;
   }
   return ret;
 }
@@ -420,10 +409,9 @@ int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, 
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
   int ret;
   if (p == NULL) {
-    ret = -1;
-  } else if ((ret = powercap_intel_rapl_is_zone_supported(p, zone)) < 0) {
-    raplcap_perror(ERROR, "raplcap_pd_is_zone_supported: powercap_intel_rapl_is_zone_supported");
+    return -1;
   }
+  ret = powercap_intel_rapl_is_zone_supported(p, zone);
   raplcap_log(DEBUG, "raplcap_pd_is_zone_supported: pkg=%"PRIu32", die=%"PRIu32", zone=%d, supported=%d\n",
               pkg, die, zone, ret);
   return ret;
@@ -434,6 +422,10 @@ int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
   int ret;
   if (p == NULL) {
+    return -1;
+  }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
     return -1;
   }
   ret = powercap_intel_rapl_is_constraint_supported(p, zone, constraint);
@@ -552,6 +544,10 @@ int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
   if (p == NULL) {
     return -1;
   }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
+    return -1;
+  }
   raplcap_log(DEBUG, "raplcap_pd_get_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",
               pkg, die, zone, constraint);
   if (limit != NULL && get_constraint(p, zone, constraint, limit)) {
@@ -564,6 +560,10 @@ int raplcap_pd_set_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
                          raplcap_constraint constraint, const raplcap_limit* limit) {
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
   if (p == NULL) {
+    return -1;
+  }
+  if ((int) constraint < 0 || (int) constraint >= RAPLCAP_NCONSTRAINTS) {
+    errno = EINVAL;
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_pd_set_limit: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d\n",

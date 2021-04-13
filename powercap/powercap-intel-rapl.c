@@ -122,14 +122,23 @@ static powercap_constraint* get_constraint_by_rapl_name(powercap_intel_rapl_zone
   assert(fds != NULL);
   char name[MAX_NAME_SIZE];
   if (powercap_sysfs_constraint_get_name(CONTROL_TYPE, zones, depth, constraint, name, sizeof(name)) < 0) {
+    if (depth == 1) {
+      raplcap_log(ERROR,
+                  "powercap-intel-rapl: Failed to get constraint name at zone: %"PRIu32", constraint: %"PRIu32"\n",
+                  zones[0], constraint);
+    } else {
+      raplcap_log(ERROR,
+                  "powercap-intel-rapl: Failed to get constraint name at zone: %"PRIu32":%"PRIu32", constraint: %"PRIu32"\n",
+                  zones[0], zones[1], constraint);
+    }
     return NULL;
   }
   if (!strncmp(name, CONSTRAINT_NAME_LONG, sizeof(CONSTRAINT_NAME_LONG))) {
-    return &fds->constraint_long;
+    return &fds->constraints[RAPLCAP_CONSTRAINT_LONG_TERM];
   } else if (!strncmp(name, CONSTRAINT_NAME_SHORT, sizeof(CONSTRAINT_NAME_SHORT))) {
-    return &fds->constraint_short;
+    return &fds->constraints[RAPLCAP_CONSTRAINT_SHORT_TERM];
   } else if (!strncmp(name, CONSTRAINT_NAME_PEAK, sizeof(CONSTRAINT_NAME_PEAK))) {
-    return &fds->constraint_peak;
+    return &fds->constraints[RAPLCAP_CONSTRAINT_PEAK_POWER];
   } else {
     raplcap_log(ERROR, "powercap-intel-rapl: Unrecognized constraint name: %s\n", name);
     errno = EINVAL;
@@ -145,6 +154,7 @@ static int open_all(const uint32_t* zones, uint32_t depth, powercap_intel_rapl_z
     raplcap_perror(ERROR, "powercap-intel-rapl: powercap_zone_open");
     return -errno;
   }
+  errno = 0;
   // constraint 0 is supposed to be long_term and constraint 1 (if exists) should be short_term
   // note: never actually seen this problem, but not 100% sure it can't happen, so check anyway...
   while (!powercap_sysfs_constraint_exists(CONTROL_TYPE, zones, depth, i)) {
@@ -173,74 +183,23 @@ static int open_all(const uint32_t* zones, uint32_t depth, powercap_intel_rapl_z
   return 0;
 }
 
-static const powercap_intel_rapl_zone_files* get_files(const powercap_intel_rapl_parent* parent, raplcap_zone zone) {
-  assert(parent != NULL);
-  switch (zone) {
-    case RAPLCAP_ZONE_PACKAGE:
-      return &parent->pkg;
-    case RAPLCAP_ZONE_CORE:
-      return &parent->core;
-    case RAPLCAP_ZONE_UNCORE:
-      return &parent->uncore;
-    case RAPLCAP_ZONE_DRAM:
-      return &parent->dram;
-    case RAPLCAP_ZONE_PSYS:
-      return &parent->psys;
-    default:
-      // somebody passed a bad zone type
-      raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_intel_rapl_zone: %d\n", zone);
-      errno = EINVAL;
-      return NULL;
-  }
-}
-
-static const powercap_zone* get_zone_files(const powercap_intel_rapl_parent* parent, raplcap_zone zone) {
-  assert(parent != NULL);
-  const powercap_intel_rapl_zone_files* fds = get_files(parent, zone);
-  return fds == NULL ? NULL : &fds->zone;
-}
-
-static const powercap_constraint* get_constraint_files(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint) {
-  assert(parent != NULL);
-  const powercap_intel_rapl_zone_files* fds = get_files(parent, zone);
-  if (fds == NULL) {
-    return NULL;
-  }
-  switch (constraint) {
-    case RAPLCAP_CONSTRAINT_LONG_TERM:
-      return &fds->constraint_long;
-    case RAPLCAP_CONSTRAINT_SHORT_TERM:
-      return &fds->constraint_short;
-    case RAPLCAP_CONSTRAINT_PEAK_POWER:
-      return &fds->constraint_peak;
-    default:
-      // somebody passed a bad constraint type
-      raplcap_log(ERROR, "powercap-intel-rapl: Bad raplcap_constraint: %d\n", constraint);
-      errno = EINVAL;
-      return NULL;
-  }
-}
-
 static int get_zone_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_zone_file file) {
-  assert(parent != NULL);
-  const powercap_zone* fds = get_zone_files(parent, zone);
-  if (fds == NULL) {
-    return -errno;
-  }
+  assert((int) file >= 0 && (int) file <= POWERCAP_ZONE_FILE_NAME);
   switch (file) {
     case POWERCAP_ZONE_FILE_MAX_ENERGY_RANGE_UJ:
-      return fds->max_energy_range_uj;
+      return parent->zones[zone].zone.max_energy_range_uj;
     case POWERCAP_ZONE_FILE_ENERGY_UJ:
-      return fds->energy_uj;
+      return parent->zones[zone].zone.energy_uj;
     case POWERCAP_ZONE_FILE_MAX_POWER_RANGE_UW:
-      return fds->max_power_range_uw;
+      return parent->zones[zone].zone.max_power_range_uw;
     case POWERCAP_ZONE_FILE_POWER_UW:
-      return fds->power_uw;
+      return parent->zones[zone].zone.power_uw;
     case POWERCAP_ZONE_FILE_ENABLED:
-      return fds->enabled;
+      return parent->zones[zone].zone.enabled;
     case POWERCAP_ZONE_FILE_NAME:
-      return fds->name;
+      return parent->zones[zone].zone.name;
     default:
+      // unreachable
       raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_zone_file: %d\n", file);
       errno = EINVAL;
       return -errno;
@@ -248,27 +207,24 @@ static int get_zone_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zo
 }
 
 static int get_constraint_fd(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, powercap_constraint_file file) {
-  assert(parent != NULL);
-  const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
-  if (fds == NULL) {
-    return -errno;
-  }
+  assert((int) file >= 0 && (int) file <= POWERCAP_CONSTRAINT_FILE_NAME);
   switch (file) {
     case POWERCAP_CONSTRAINT_FILE_POWER_LIMIT_UW:
-      return fds->power_limit_uw;
+      return parent->zones[zone].constraints[constraint].power_limit_uw;
     case POWERCAP_CONSTRAINT_FILE_TIME_WINDOW_US:
-      return fds->time_window_us;
+      return parent->zones[zone].constraints[constraint].time_window_us;
     case POWERCAP_CONSTRAINT_FILE_MAX_POWER_UW:
-      return fds->max_power_uw;
+      return parent->zones[zone].constraints[constraint].max_power_uw;
     case POWERCAP_CONSTRAINT_FILE_MIN_POWER_UW:
-      return fds->min_power_uw;
+      return parent->zones[zone].constraints[constraint].min_power_uw;
     case POWERCAP_CONSTRAINT_FILE_MAX_TIME_WINDOW_US:
-      return fds->max_time_window_us;
+      return parent->zones[zone].constraints[constraint].max_time_window_us;
     case POWERCAP_CONSTRAINT_FILE_MIN_TIME_WINDOW_US:
-      return fds->min_time_window_us;
+      return parent->zones[zone].constraints[constraint].min_time_window_us;
     case POWERCAP_CONSTRAINT_FILE_NAME:
-      return fds->name;
+      return parent->zones[zone].constraints[constraint].name;
     default:
+      // unreachable
       raplcap_log(ERROR, "powercap-intel-rapl: Bad powercap_constraint_file: %d\n", file);
       errno = EINVAL;
       return -errno;
@@ -282,15 +238,15 @@ static powercap_intel_rapl_zone_files* get_files_by_name(powercap_intel_rapl_par
     return NULL;
   }
   if (!strncmp(name, ZONE_NAME_PREFIX_PKG, sizeof(ZONE_NAME_PREFIX_PKG) - 1)) {
-    return &parent->pkg;
+    return &parent->zones[RAPLCAP_ZONE_PACKAGE];
   } else if (!strncmp(name, ZONE_NAME_CORE, sizeof(ZONE_NAME_CORE))) {
-    return &parent->core;
+    return &parent->zones[RAPLCAP_ZONE_CORE];
   } else if (!strncmp(name, ZONE_NAME_UNCORE, sizeof(ZONE_NAME_UNCORE))) {
-    return &parent->uncore;
+    return &parent->zones[RAPLCAP_ZONE_UNCORE];
   } else if (!strncmp(name, ZONE_NAME_DRAM, sizeof(ZONE_NAME_DRAM))) {
-    return &parent->dram;
+    return &parent->zones[RAPLCAP_ZONE_DRAM];
   } else if (!strncmp(name, ZONE_NAME_PSYS, sizeof(ZONE_NAME_PSYS))) {
-    return &parent->psys;
+    return &parent->zones[RAPLCAP_ZONE_PSYS];
   } else {
     raplcap_log(ERROR, "powercap-intel-rapl: Unrecognized zone name: %s\n", name);
     errno = EINVAL;
@@ -352,102 +308,100 @@ int powercap_intel_rapl_init(uint32_t id, powercap_intel_rapl_parent* parent, in
 
 static int fds_destroy_all(powercap_intel_rapl_zone_files* files) {
   assert(files != NULL);
+  size_t i;
   int ret = 0;
   ret |= powercap_zone_close(&files->zone);
-  ret |= powercap_constraint_close(&files->constraint_long);
-  ret |= powercap_constraint_close(&files->constraint_short);
-  ret |= powercap_constraint_close(&files->constraint_peak);
+  for (i = 0; i < RAPLCAP_NCONSTRAINTS; i++) {
+    ret |= powercap_constraint_close(&files->constraints[i]);
+  }
   return ret;
 }
 
 int powercap_intel_rapl_destroy(powercap_intel_rapl_parent* parent) {
+  size_t i;
   int ret = 0;
   if (parent != NULL) {
-    ret |= fds_destroy_all(&parent->pkg);
-    ret |= fds_destroy_all(&parent->core);
-    ret |= fds_destroy_all(&parent->uncore);
-    ret |= fds_destroy_all(&parent->dram);
-    ret |= fds_destroy_all(&parent->psys);
+    for (i = 0; i < RAPLCAP_NZONES; i++) {
+      ret |= fds_destroy_all(&parent->zones[i]);
+    }
   }
   return ret;
 }
 
-static int powercap_intel_rapl_is_zone_file_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, powercap_zone_file file) {
-  int fd;
-  if (parent == NULL || (fd = get_zone_fd(parent, zone, file)) < 0) {
-    errno = EINVAL;
-    return -errno;
-  }
-  return fd > 0 ? 1 : 0;
-}
-
 int powercap_intel_rapl_is_zone_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone) {
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
   // POWERCAP_ZONE_FILE_NAME is picked arbitrarily, but it is a required file
-  return powercap_intel_rapl_is_zone_file_supported(parent, zone, POWERCAP_ZONE_FILE_NAME);
-}
-
-static int powercap_intel_rapl_is_constraint_file_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, powercap_constraint_file file) {
-  int fd;
-  if (parent == NULL || (fd = get_constraint_fd(parent, zone, constraint, file)) < 0) {
-    errno = EINVAL;
-    return -errno;
-  }
-  return fd > 0 ? 1 : 0;
+  return get_zone_fd(parent, zone, POWERCAP_ZONE_FILE_NAME) > 0 ? 1 : 0;
 }
 
 int powercap_intel_rapl_is_constraint_supported(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint) {
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  assert((int) constraint >= 0 && (int) constraint < RAPLCAP_NCONSTRAINTS);
   // POWERCAP_CONSTRAINT_FILE_POWER_LIMIT_UW is picked arbitrarily, but it is a required file
-  return powercap_intel_rapl_is_constraint_file_supported(parent, zone, constraint, POWERCAP_CONSTRAINT_FILE_POWER_LIMIT_UW);
+  return get_constraint_fd(parent, zone, constraint, POWERCAP_CONSTRAINT_FILE_POWER_LIMIT_UW) > 0 ? 1 : 0;
 }
 
 ssize_t powercap_intel_rapl_get_name(const powercap_intel_rapl_parent* parent, raplcap_zone zone, char* buf, size_t size) {
-  const powercap_zone* fds = get_zone_files(parent, zone);
-  return fds == NULL ? -errno : powercap_zone_get_name(fds, buf, size);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  return powercap_zone_get_name(&parent->zones[zone].zone, buf, size);
 }
 
 int powercap_intel_rapl_is_enabled(const powercap_intel_rapl_parent* parent, raplcap_zone zone) {
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
   int enabled = -1;
   int ret;
-  const powercap_zone* fds = get_zone_files(parent, zone);
-  if (fds == NULL) {
-    enabled = -errno;
-  } else if ((ret = powercap_zone_get_enabled(fds, &enabled))) {
+  if ((ret = powercap_zone_get_enabled(&parent->zones[zone].zone, &enabled))) {
     enabled = ret;
   }
   return enabled;
 }
 
 int powercap_intel_rapl_set_enabled(const powercap_intel_rapl_parent* parent, raplcap_zone zone, int enabled) {
-  const powercap_zone* fds = get_zone_files(parent, zone);
-  return fds == NULL ? -errno : powercap_zone_set_enabled(fds, enabled);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  return powercap_zone_set_enabled(&parent->zones[zone].zone, enabled);
 }
 
 int powercap_intel_rapl_get_max_energy_range_uj(const powercap_intel_rapl_parent* parent, raplcap_zone zone, uint64_t* val) {
-  const powercap_zone* fds = get_zone_files(parent, zone);
-  return fds == NULL ? -errno : powercap_zone_get_max_energy_range_uj(fds, val);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  return powercap_zone_get_max_energy_range_uj(&parent->zones[zone].zone, val);
 }
 
 int powercap_intel_rapl_get_energy_uj(const powercap_intel_rapl_parent* parent, raplcap_zone zone, uint64_t* val) {
-  const powercap_zone* fds = get_zone_files(parent, zone);
-  return fds == NULL ? -errno : powercap_zone_get_energy_uj(fds, val);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  return powercap_zone_get_energy_uj(&parent->zones[zone].zone, val);
 }
 
 int powercap_intel_rapl_get_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t* val) {
-  const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
-  return fds == NULL ? -errno : powercap_constraint_get_power_limit_uw(fds, val);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  assert((int) constraint >= 0 && (int) constraint < RAPLCAP_NCONSTRAINTS);
+  return powercap_constraint_get_power_limit_uw(&parent->zones[zone].constraints[constraint], val);
 }
 
 int powercap_intel_rapl_set_power_limit_uw(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t val) {
-  const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
-  return fds == NULL ? -errno : powercap_constraint_set_power_limit_uw(fds, val);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  assert((int) constraint >= 0 && (int) constraint < RAPLCAP_NCONSTRAINTS);
+  return powercap_constraint_set_power_limit_uw(&parent->zones[zone].constraints[constraint], val);
 }
 
 int powercap_intel_rapl_get_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t* val) {
-  const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
-  return fds == NULL ? -errno : powercap_constraint_get_time_window_us(fds, val);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  assert((int) constraint >= 0 && (int) constraint < RAPLCAP_NCONSTRAINTS);
+  return powercap_constraint_get_time_window_us(&parent->zones[zone].constraints[constraint], val);
 }
 
 int powercap_intel_rapl_set_time_window_us(const powercap_intel_rapl_parent* parent, raplcap_zone zone, raplcap_constraint constraint, uint64_t val) {
-  const powercap_constraint* fds = get_constraint_files(parent, zone, constraint);
-  return fds == NULL ? -errno : powercap_constraint_set_time_window_us(fds, val);
+  assert(parent);
+  assert((int) zone >= 0 && (int) zone < RAPLCAP_NZONES);
+  assert((int) constraint >= 0 && (int) constraint < RAPLCAP_NCONSTRAINTS);
+  return powercap_constraint_set_time_window_us(&parent->zones[zone].constraints[constraint], val);
 }
