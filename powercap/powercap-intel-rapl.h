@@ -2,20 +2,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * A simple interface for configuring RAPL through a powercap control type.
- * Note that not all RAPL zones support short_term constraints.
+ * Note that not all RAPL zones support all constraints.
  * Unless otherwise stated, all functions return 0 on success or a negative value on error.
  *
  * Setter functions do not verify that written values are accepted by RAPL.
- * Users may want to add a debug option to their software that follows writes/sets with a read/get.
- *
  * These operations do basic I/O - it may reasonably be expected that callers need to handle I/O errors.
- * For example, it has been seen that "powercap_intel_rapl_get_max_power_uw" sets errno=ENODATA for power zones.
  *
- * Prior to Cascade Lake CPUs (2019), RAPL top-level instances mapped one-to-one with physical sockets/packages.
- * Some systems now support multiple die on a physical socket/package, resulting in multiple top-level instances per
- * physical socket/package.
- * It is also possible that the scope of a top-level instances could change again in the future.
- * Thus, it should not be assumed that a 'powercap_intel_rapl_parent' instance maps one-to-one with a physical socket.
  * Intel's backward compatibility _appears_ to be in a zone's name, but even this is not explicitly guaranteed - it is
  * the user's responsibility to interpret what a top-level RAPL instance actually is.
  *
