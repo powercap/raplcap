@@ -175,24 +175,6 @@ static raplcap_msr* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
   return state;
 }
 
-int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
-  uint64_t msrval;
-  int en[2] = { 1, 1 };
-  int ret;
-  const raplcap_msr* state = get_state(rc, pkg, die);
-  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
-  raplcap_log(DEBUG, "raplcap_pd_is_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d\n", pkg, die, zone);
-  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
-    return -1;
-  }
-  msr_is_zone_enabled(&state->ctx, zone, msrval, &en[0], &en[1]);
-  ret = en[0] && en[1];
-  if (ret && !raplcap_msr_is_zone_clamped(rc, pkg, zone)) {
-    raplcap_log(INFO, "Zone is enabled but clamping is not\n");
-  }
-  return ret;
-}
-
 int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   uint64_t msrval;
   const raplcap_msr* state = get_state(rc, pkg, die);
@@ -210,6 +192,7 @@ int raplcap_pd_is_zone_supported(const raplcap* rc, uint32_t pkg, uint32_t die, 
 int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone,
                                        raplcap_constraint constraint) {
   const raplcap_msr* state = get_state(rc, pkg, die);
+  int ret;
   if (state == NULL) {
     return -1;
   }
@@ -217,7 +200,30 @@ int raplcap_pd_is_constraint_supported(const raplcap* rc, uint32_t pkg, uint32_t
     errno = EINVAL;
     return -1;
   }
-  return msr_is_constraint_supported(&state->ctx, zone, constraint);
+  ret = msr_is_constraint_supported(&state->ctx, zone, constraint);
+  raplcap_log(DEBUG,
+              "raplcap_pd_is_constraint_supported: pkg=%"PRIu32", die=%"PRIu32", zone=%d, constraint=%d, supported=%d\n",
+              pkg, die, zone, constraint, ret);
+  return ret;
+}
+
+int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
+  uint64_t msrval;
+  int en[2] = { 1, 1 };
+  int ret;
+  const raplcap_msr* state = get_state(rc, pkg, die);
+  const off_t msr = zone_to_msr_offset(zone, ZONE_OFFSETS_PL);
+  if (state == NULL || msr < 0 || msr_sys_read(state->sys, &msrval, pkg, die, msr)) {
+    return -1;
+  }
+  msr_is_zone_enabled(&state->ctx, zone, msrval, &en[0], &en[1]);
+  ret = en[0] && en[1];
+  if (ret && !raplcap_msr_is_zone_clamped(rc, pkg, zone)) {
+    raplcap_log(INFO, "Zone is enabled but clamping is not\n");
+  }
+  raplcap_log(DEBUG, "raplcap_pd_is_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
+              pkg, die, zone, ret);
+  return ret;
 }
 
 // Enables or disables both the "enabled" and "clamped" bits for all constraints
