@@ -434,8 +434,9 @@ int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, ra
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
   int ret;
   if (p == NULL) {
-    ret = -1;
-  } else if ((ret = powercap_intel_rapl_is_enabled(p, zone)) < 0) {
+    return -1;
+  }
+  if ((ret = powercap_intel_rapl_is_enabled(p, zone)) < 0) {
     raplcap_perror(ERROR, "powercap_intel_rapl_is_enabled");
   }
   raplcap_log(DEBUG, "raplcap_pd_is_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
@@ -446,14 +447,13 @@ int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, ra
 int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int enabled) {
   const powercap_intel_rapl_parent* p = get_parent_zone(rc, pkg, die, zone);
   int ret;
+  raplcap_log(DEBUG, "raplcap_pd_set_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
+              pkg, die, zone, enabled);
   if (p == NULL) {
-    ret = -1;
-  } else {
-    raplcap_log(DEBUG, "raplcap_pd_set_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
-                pkg, die, zone, enabled);
-    if ((ret = powercap_intel_rapl_set_enabled(p, zone, enabled)) != 0) {
-      raplcap_perror(ERROR, "powercap_intel_rapl_set_enabled");
-    }
+    return -1;
+  }
+  if ((ret = powercap_intel_rapl_set_enabled(p, zone, enabled)) != 0) {
+    raplcap_perror(ERROR, "powercap_intel_rapl_set_enabled");
   }
   return ret;
 }
