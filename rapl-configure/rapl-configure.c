@@ -104,6 +104,7 @@ static void print_usage(int exit_code) {
 static void print_limits(int enabled, int locked, int clamped,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short,
+                         double locked_peak, double watts_peak,
                          double joules, double joules_max) {
   // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
@@ -122,6 +123,12 @@ static void print_limits(int enabled, int locked, int clamped,
     printf("%13s: %.12f\n", "seconds_long", seconds_long);
     printf("%13s: %.12f\n", "watts_short", watts_short);
     printf("%13s: %.12f\n", "seconds_short", seconds_short);
+    if (locked_peak != PRINT_LIMIT_IGNORE) {
+      printf("%13s: %s\n", "locked_peak", (locked_peak ? "true" : "false"));
+    }
+    if (watts_peak > 0) {
+      printf("%13s: %.12f\n", "watts_peak", watts_peak);
+    }
   } else {
     printf("%13s: %.12f\n", "watts", watts_long);
     printf("%13s: %.12f\n", "seconds", seconds_long);
@@ -186,10 +193,12 @@ static int configure_limits(const rapl_configure_ctx* c) {
 static int get_limits(unsigned int pkg, unsigned int die, raplcap_zone zone) {
   raplcap_limit ll = { 0 };
   raplcap_limit ls = { 0 };
+  raplcap_limit lp = { 0 };
   double joules;
   double joules_max;
   int locked = PRINT_LIMIT_IGNORE;
   int clamped = PRINT_LIMIT_IGNORE;
+  int locked_peak = PRINT_LIMIT_IGNORE;
   int ret;
   int enabled = raplcap_pd_is_zone_enabled(NULL, pkg, die, zone);
   if (enabled < 0) {
@@ -209,11 +218,24 @@ static int get_limits(unsigned int pkg, unsigned int die, raplcap_zone zone) {
     perror("Failed to get limits");
     return ret;
   }
+  if (raplcap_pd_is_constraint_supported(NULL, pkg, die, zone, RAPLCAP_CONSTRAINT_PEAK_POWER)) {
+#ifdef RAPLCAP_msr
+    locked_peak = raplcap_msr_pd_is_locked(NULL, pkg, die, zone, RAPLCAP_CONSTRAINT_PEAK_POWER);
+    if (locked < 0) {
+      print_error_continue("Failed to determine if peak power is locked");
+    }
+#endif // RAPLCAP_msr
+    if ((ret = raplcap_pd_get_limit(NULL, pkg, die, zone, RAPLCAP_CONSTRAINT_PEAK_POWER, &lp))) {
+      perror("Failed to get peak power limit");
+      return ret;
+    }
+  }
   // we'll consider energy counter information to be optional
   joules = raplcap_pd_get_energy_counter(NULL, pkg, die, zone);
   joules_max = raplcap_pd_get_energy_counter_max(NULL, pkg, die, zone);
   print_limits(enabled, locked, clamped,
                ll.watts, ll.seconds, ls.watts, ls.seconds,
+               locked_peak, lp.watts,
                joules, joules_max);
   return ret;
 }
