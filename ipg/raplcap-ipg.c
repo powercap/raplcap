@@ -158,7 +158,6 @@ int raplcap_init(raplcap* rc) {
     rc = &rc_default;
   }
   if ((state = (raplcap_ipg*) malloc(sizeof(raplcap_ipg))) == NULL) {
-    raplcap_perror(ERROR, "raplcap_init: malloc");
     return -1;
   }
   rc->state = state;
@@ -228,17 +227,17 @@ static raplcap_ipg* get_state(const raplcap* rc, uint32_t pkg, uint32_t die) {
   }
   if ((state = (raplcap_ipg*) rc->state) == NULL) {
     // unfortunately can't detect if the context just contains garbage
-    raplcap_log(ERROR, "get_state: Context is not initialized\n");
+    raplcap_log(ERROR, "Context is not initialized\n");
     errno = EINVAL;
     return NULL;
   }
   if (pkg >= state->n_pkg) {
-    raplcap_log(ERROR, "get_state: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
+    raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
     errno = EINVAL;
     return NULL;
   }
   if (die != 0) {
-    raplcap_log(ERROR, "get_state: Multi-die systems not supported\n");
+    raplcap_log(ERROR, "Multi-die systems not supported\n");
     errno = ENOSYS;
     return NULL;
   }
@@ -389,7 +388,6 @@ double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32
   (void) pkg;
   (void) die;
   (void) zone;
-  raplcap_log(ERROR, "raplcap_pd_get_energy_counter_max: Getting energy counter max is not supported\n");
   errno = ENOSYS;
   return -1;
 }
