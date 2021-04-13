@@ -85,7 +85,7 @@ static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32
   // package and die IDs can appear in any order
   for (i = 0; i < n_parent_zones; i++) {
     if (powercap_sysfs_zone_get_name(CONTROL_TYPE, &i, 1, name, sizeof(name)) < 0) {
-      raplcap_perror(ERROR, "count_pkg_die: powercap_sysfs_zone_get_name");
+      raplcap_perror(ERROR, "powercap_sysfs_zone_get_name");
       return -1;
     }
     if (strncmp(name, ZONE_NAME_PREFIX_PACKAGE, sizeof(ZONE_NAME_PREFIX_PACKAGE) - 1)) {
@@ -95,7 +95,7 @@ static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32
     pkg = strtoul(&name[sizeof(ZONE_NAME_PREFIX_PACKAGE) / sizeof(ZONE_NAME_PREFIX_PACKAGE[0]) - 1], &endptr, 0);
     if (!pkg && endptr == name) {
       // failed to get pkg ID - something unexpected in name format
-      raplcap_log(ERROR, "count_pkg_die: Failed to parse package from zone name: %s\n", name);
+      raplcap_log(ERROR, "Failed to parse package from zone name: %s\n", name);
       errno = EINVAL;
       return -1;
     }
@@ -103,7 +103,7 @@ static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32
       // something is weird with the kernel zone naming if this happens - packages w/ smaller IDs are missing
       // NOTE: The presence of a PSYS zone should reduce the upper bound, even though the array index is still legal
       //       Package IDs are verified later
-      raplcap_log(ERROR, "count_pkg_die: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_parent_zones);
+      raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_parent_zones);
       errno = EINVAL;
       return -1;
     }
@@ -118,18 +118,18 @@ static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32
       die = strtoul(endptr + 1, &endptr2, 0);
       if (!die && (endptr + 1) == endptr2) {
         //. failed to get die - something unexpected in name format
-        raplcap_log(ERROR, "count_pkg_die: Failed to parse die from zone name: %s\n", name);
+        raplcap_log(ERROR, "Failed to parse die from zone name: %s\n", name);
         errno = EINVAL;
         return -1;
       }
     } else {
-      raplcap_log(ERROR, "count_pkg_die: Unsupported zone name format: %s\n", name);
+      raplcap_log(ERROR, "Unsupported zone name format: %s\n", name);
       errno = EINVAL;
       return -1;
     }
     // supports detecting duplicate die entries up to die ID 32
     if (pkg_die_mask[pkg] & (1 << die)) {
-      raplcap_log(ERROR, "count_pkg_die: Duplicate package/die detected, pkg=%"PRIu32", die=%"PRIu32"\n", pkg, die);
+      raplcap_log(ERROR, "Duplicate package/die detected, pkg=%"PRIu32", die=%"PRIu32"\n", pkg, die);
       errno = EINVAL;
       return -1;
     }
@@ -151,7 +151,7 @@ static int parse_pkg_die(const uint32_t* pkg_die_mask, uint32_t n_parent_zones, 
     n_pkg_die = __builtin_popcount(pkg_die_mask[i]);
     // only the lowest bits should be set, otherwise some die are missing
     if ((pkg_die_mask[i] >> n_pkg_die) != 0) {
-      raplcap_log(ERROR, "parse_pkg_die: Unexpected package/die mapping - possibly missing package die\n");
+      raplcap_log(ERROR, "Unexpected package/die mapping - possibly missing package die\n");
       errno = EINVAL;
       return -1;
     }
@@ -159,14 +159,14 @@ static int parse_pkg_die(const uint32_t* pkg_die_mask, uint32_t n_parent_zones, 
       *n_die = n_pkg_die;
     } else if (n_pkg_die != *n_die) {
       // currently only support uniform package die counts, so verify that every package has matching die count
-      raplcap_log(ERROR, "parse_pkg_die: Unsupported heterogeneity in package/die configuration\n");
+      raplcap_log(ERROR, "Unsupported heterogeneity in package/die configuration\n");
       errno = EINVAL;
       return -1;
     }
   }
   // verify that packages aren't missing from range [0, n_pkgs)
   if (max_pkg_id != *n_pkgs - 1) {
-    raplcap_log(ERROR, "parse_pkg_die: Unexpected package/die mapping - possibly missing package\n");
+    raplcap_log(ERROR, "Unexpected package/die mapping - possibly missing package\n");
     errno = EINVAL;
     return -1;
   }
@@ -267,7 +267,7 @@ static int sort_parent_zones(const void* a, const void* b) {
       raplcap_log(DEBUG, "sort_parent_zones: Zones are out of order\n");
     }
   } else {
-    raplcap_perror(ERROR, "sort_parent_zones: powercap_intel_rapl_get_name");
+    raplcap_perror(ERROR, "powercap_intel_rapl_get_name");
   }
   return ret;
 }
@@ -286,7 +286,7 @@ int raplcap_init(raplcap* rc) {
   }
   // get the number of packages
   if ((n_parent_zones = count_parent_zones()) == 0) {
-    raplcap_perror(ERROR, "raplcap_init: No RAPL zones found");
+    raplcap_perror(ERROR, "No RAPL zones found");
     return -1;
   }
   if (get_topology(n_parent_zones, &n_pkg, &n_die) < 0) {
@@ -305,7 +305,7 @@ int raplcap_init(raplcap* rc) {
   rc->state = state;
   for (i = 0; i < state->n_parent_zones; i++) {
     if (powercap_intel_rapl_init(i, &state->parent_zones[i], ro)) {
-      raplcap_perror(ERROR, "raplcap_init: powercap_intel_rapl_init");
+      raplcap_perror(ERROR, "powercap_intel_rapl_init");
       err_save = errno;
       state->n_parent_zones = i; // so as not to cleanup uninitialized zones
       raplcap_destroy(rc);
@@ -318,7 +318,7 @@ int raplcap_init(raplcap* rc) {
   errno = 0;
   qsort(state->parent_zones, state->n_parent_zones, sizeof(powercap_intel_rapl_parent), sort_parent_zones);
   if (errno) {
-    raplcap_log(ERROR, "raplcap_init: Failed to sort packages by name\n");
+    raplcap_log(ERROR, "Failed to sort packages by name\n");
     err_save = errno;
     raplcap_destroy(rc);
     errno = err_save;
@@ -340,7 +340,7 @@ int raplcap_destroy(raplcap* rc) {
     for (i = 0; i < state->n_parent_zones; i++) {
       raplcap_log(DEBUG, "raplcap_destroy: zone=%"PRIu32"\n", i);
       if (powercap_intel_rapl_destroy(&state->parent_zones[i])) {
-        raplcap_perror(ERROR, "raplcap_destroy: powercap_intel_rapl_destroy");
+        raplcap_perror(WARN, "powercap_intel_rapl_destroy");
         err_save = errno;
       }
     }
@@ -383,7 +383,7 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   }
   if ((state = (raplcap_powercap*) rc->state) != NULL) {
     if (pkg >= state->n_pkg) {
-      raplcap_log(ERROR, "raplcap_get_num_die: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
+      raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, state->n_pkg);
       errno = EINVAL;
       return 0;
     }
@@ -393,7 +393,7 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
     return 0;
   }
   if (pkg >= n_pkg) {
-    raplcap_log(ERROR, "raplcap_get_num_die: Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_pkg);
+    raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_pkg);
     errno = EINVAL;
     return 0;
   }
@@ -436,7 +436,7 @@ int raplcap_pd_is_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, ra
   if (p == NULL) {
     ret = -1;
   } else if ((ret = powercap_intel_rapl_is_enabled(p, zone)) < 0) {
-    raplcap_perror(ERROR, "raplcap_pd_is_zone_enabled: powercap_intel_rapl_is_enabled");
+    raplcap_perror(ERROR, "powercap_intel_rapl_is_enabled");
   }
   raplcap_log(DEBUG, "raplcap_pd_is_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
               pkg, die, zone, ret);
@@ -452,7 +452,7 @@ int raplcap_pd_set_zone_enabled(const raplcap* rc, uint32_t pkg, uint32_t die, r
     raplcap_log(DEBUG, "raplcap_pd_set_zone_enabled: pkg=%"PRIu32", die=%"PRIu32", zone=%d, enabled=%d\n",
                 pkg, die, zone, enabled);
     if ((ret = powercap_intel_rapl_set_enabled(p, zone, enabled)) != 0) {
-      raplcap_perror(ERROR, "raplcap_pd_set_zone_enabled: powercap_intel_rapl_set_enabled");
+      raplcap_perror(ERROR, "powercap_intel_rapl_set_enabled");
     }
   }
   return ret;
@@ -465,11 +465,11 @@ static int get_constraint(const powercap_intel_rapl_parent* p, raplcap_zone z,
   static const double ONE_MILLION = 1000000.0;
   uint64_t us, uw;
   if (powercap_intel_rapl_get_time_window_us(p, z, constraint, &us)) {
-    raplcap_perror(ERROR, "get_constraint: powercap_intel_rapl_get_time_window_us");
+    raplcap_perror(ERROR, "powercap_intel_rapl_get_time_window_us");
     return -1;
   }
   if (powercap_intel_rapl_get_power_limit_uw(p, z, constraint, &uw)) {
-    raplcap_perror(ERROR, "get_constraint: powercap_intel_rapl_get_power_limit_uw");
+    raplcap_perror(ERROR, "powercap_intel_rapl_get_power_limit_uw");
     return -1;
   }
   limit->seconds = ((double) us) / ONE_MILLION;
@@ -507,11 +507,11 @@ static int set_constraint(const powercap_intel_rapl_parent* p, raplcap_zone z,
               "\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
               z, constraint, limit->seconds, us, limit->watts, uw);
   if (us != 0 && powercap_intel_rapl_set_time_window_us(p, z, constraint, us)) {
-    raplcap_perror(ERROR, "set_constraint: powercap_intel_rapl_set_time_window_us");
+    raplcap_perror(ERROR, "powercap_intel_rapl_set_time_window_us");
     return -1;
   }
   if (uw != 0 && powercap_intel_rapl_set_power_limit_uw(p, z, constraint, uw)) {
-    raplcap_perror(ERROR, "set_constraint: powercap_intel_rapl_set_power_limit_uw");
+    raplcap_perror(ERROR, "powercap_intel_rapl_set_power_limit_uw");
     return -1;
   }
   return 0;
@@ -576,7 +576,6 @@ double raplcap_pd_get_energy_counter(const raplcap* rc, uint32_t pkg, uint32_t d
     return -1;
   }
   if (powercap_intel_rapl_get_energy_uj(p, zone, &uj)) {
-    raplcap_perror(ERROR, "raplcap_pd_get_energy_counter: powercap_intel_rapl_get_energy_uj");
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_pd_get_energy_counter: pkg=%"PRIu32", die=%"PRIu32", zone=%d, uj=%"PRIu64"\n",
@@ -591,7 +590,6 @@ double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32
     return -1;
   }
   if (powercap_intel_rapl_get_max_energy_range_uj(p, zone, &uj)) {
-    raplcap_perror(ERROR, "raplcap_pd_get_energy_counter_max: powercap_intel_rapl_get_max_energy_range_uj");
     return -1;
   }
   raplcap_log(DEBUG, "raplcap_pd_get_energy_counter_max: pkg=%"PRIu32", die=%"PRIu32", zone=%d, uj=%"PRIu64"\n",
