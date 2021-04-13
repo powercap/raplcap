@@ -4,6 +4,16 @@
 
 ### Added
 
+* Interface enum 'raplcap_constraint' for use with more general functions
+* Interface function 'raplcap_pd_is_constraint_supported'
+* Interface function 'raplcap_pd_get_limit'
+* Interface function 'raplcap_pd_set_limit'
+* [msr] Interface function 'raplcap_msr_pd_is_locked'
+* [msr] Interface function 'raplcap_msr_pd_set_locked'
+* Support for package peak power (PL4) constraint using the new functions above, and:
+  * [rapl-configure] New -l/--limit option
+  * [rapl-configure] New -t/--time option
+  * [rapl-configure] New -p/--power option
 * [msr] Support for Tiger Lake, Models 0x8C, 0x8D
 
 ### Changed
