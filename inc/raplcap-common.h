@@ -19,6 +19,9 @@ extern "C" {
 // This is an undocumented capability and may be removed at any time
 #define ENV_RAPLCAP_READ_ONLY "RAPLCAP_READ_ONLY"
 
+#define RAPLCAP_NZONES (RAPLCAP_ZONE_PSYS + 1)
+#define RAPLCAP_NCONSTRAINTS (RAPLCAP_CONSTRAINT_PEAK_POWER + 1)
+
 typedef enum raplcap_loglevel {
   DEBUG = 0,
   INFO,

@@ -37,9 +37,6 @@ extern "C" {
 
 #pragma GCC visibility push(hidden)
 
-#define RAPLCAP_NZONES (RAPLCAP_ZONE_PSYS + 1)
-#define RAPLCAP_NCONSTRAINTS (RAPLCAP_CONSTRAINT_PEAK_POWER + 1)
-
 /**
  * Files for each zone.
  */
