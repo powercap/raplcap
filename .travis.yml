@@ -32,6 +32,6 @@ script:
       -Wcast-qual -Wdisabled-optimization -Wendif-labels -Wfloat-equal -Wformat=2 -Wformat-nonliteral -Winline
       -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wno-unused-parameter -Wpointer-arith -Wshadow
       -Wstrict-prototypes -Wstack-protector -Wswitch -Wundef -Wwrite-strings"
-  - PKG_CONFIG_PATH="../libpowercap/_build/_install/lib/pkgconfig" cmake .. -DCMAKE_C_FLAGS="$CFLAGS"
+  - cmake .. -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_PREFIX_PATH="$(pwd)/../libpowercap/_build/_install/"
   - cmake --build .
   - ctest --verbose
