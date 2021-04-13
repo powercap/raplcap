@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2020-06-16" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2021-04-13" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -42,6 +42,8 @@ BIOS support.
 .LP
 Package and PSys zones support two power limits, or \fIconstraints\fP - \fIlong
 term\fP and \fIshort term\fP.
+Package zones may also support a \fIpeak power\fP constraint on some
+processors.
 Other zones support a single constraint (long term).
 .LP
 Actual power limit and time window values are system-dependent.
@@ -91,6 +93,21 @@ UNCORE \- uncore power plane (client systems only)
 DRAM \- main memory (server systems only)
 .br
 PSYS \- the entire platform (Skylake and newer only)
+.TP
+\fB\-l,\fP \fB\-\-limit\fP=\fICONSTRAINT\fP
+Which limit/constraint to use. Allowable values:
+.br
+LONG \- long term (default)
+.br
+SHORT \- short term (PACKAGE & PSYS only)
+.br
+PEAK \- peak power (Tiger Lake PACKAGE only)
+.TP
+\fB\-t,\fP \fB\-\-time\fP=\fISECONDS\fP
+Constraint's time window
+.TP
+\fB\-p,\fP \fB\-\-power\fP=\fIWATTS\fP
+Constraint's power limit
 .TP
 \fB\-e,\fP \fB\-\-enabled\fP=\fI1|0\fP
 Enable/disable a zone

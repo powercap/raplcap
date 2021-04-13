@@ -22,16 +22,17 @@ typedef struct rapl_configure_ctx {
   int get_packages;
   int get_die;
   raplcap_zone zone;
+  raplcap_constraint constraint;
   unsigned int pkg;
   unsigned int die;
   int enabled;
   int set_enabled;
   int set_long;
-  double watts_long;
-  double sec_long;
+  raplcap_limit limit_long;
   int set_short;
-  double watts_short;
-  double sec_short;
+  raplcap_limit limit_short;
+  int set_constraint;
+  raplcap_limit limit_constraint;
 #ifdef RAPLCAP_msr
   int clamped;
   int set_clamped;
@@ -40,7 +41,7 @@ typedef struct rapl_configure_ctx {
 } rapl_configure_ctx;
 
 static const char* prog;
-static const char short_options[] = "nNc:d:z:e:s:w:S:W:C:Lh";
+static const char short_options[] = "nNc:d:z:l:t:p:e:s:w:S:W:C:Lh";
 static const struct option long_options[] = {
   {"npackages",no_argument,       NULL, 'n'},
   {"nsockets", no_argument,       NULL, 'n'},
@@ -49,6 +50,9 @@ static const struct option long_options[] = {
   {"die",      required_argument, NULL, 'd'},
   {"socket",   required_argument, NULL, 'c'},
   {"zone",     required_argument, NULL, 'z'},
+  {"limit",    required_argument, NULL, 'l'},
+  {"time",     required_argument, NULL, 't'},
+  {"power",    required_argument, NULL, 'p'},
   {"enabled",  required_argument, NULL, 'e'},
   {"seconds0", required_argument, NULL, 's'},
   {"watts0",   required_argument, NULL, 'w'},
@@ -78,6 +82,12 @@ static void print_usage(int exit_code) {
           "                           UNCORE - uncore power plane (client systems only)\n"
           "                           DRAM - main memory (server systems only)\n"
           "                           PSYS - the entire platform (Skylake and newer only)\n"
+          "  -l, --limit=CONSTRAINT   Which limit/constraint to use. Allowable values:\n"
+          "                           LONG - long term (default)\n"
+          "                           SHORT - short term (PACKAGE & PSYS only)\n"
+          "                           PEAK - peak power (Tiger Lake PACKAGE only)\n"
+          "  -t, --time=SECONDS       Constraint's time window\n"
+          "  -p, --power=WATTS        Constraint's power limit\n"
           "  -e, --enabled=1|0        Enable/disable a zone\n"
           "  -s, --seconds0=SECONDS   Long term time window\n"
           "  -w, --watts0=WATTS       Long term power limit\n"
@@ -148,43 +158,65 @@ static void print_error_continue(const char* msg) {
 
 static int configure_limits(const rapl_configure_ctx* c) {
   assert(c != NULL);
-  raplcap_limit limit_long;
-  raplcap_limit limit_short;
-  raplcap_limit* ll = NULL;
-  raplcap_limit* ls = NULL;
-  int ret = 0;
-  if (c->set_long) {
-    limit_long.seconds = c->sec_long;
-    limit_long.watts = c->watts_long;
-    ll = &limit_long;
-  }
-  if (c->set_short) {
-    limit_short.seconds = c->sec_short;
-    limit_short.watts = c->watts_short;
-    ls = &limit_short;
-  }
+  int ret;
   // set limits
-  if ((c->set_long || c->set_short) && (ret = raplcap_pd_set_limits(NULL, c->pkg, c->die, c->zone, ll, ls))) {
-    perror("Failed to set limits");
-    return ret;
+  if ((c->set_long || c->set_short)) {
+    if ((ret = raplcap_pd_set_limits(NULL, c->pkg, c->die, c->zone,
+                                     c->set_long ? &c->limit_long : NULL,
+                                     c->set_short ? &c->limit_short : NULL))) {
+      perror("Failed to set limits");
+      return ret;
+    }
   }
+  if (c->set_constraint) {
+    if ((ret = raplcap_pd_set_limit(NULL, c->pkg, c->die, c->zone, c->constraint, &c->limit_constraint))) {
+      perror("Failed to set limit");
+      return ret;
+    }
+  }
+
   // enable/disable if requested, otherwise automatically enable
-  if ((ret = raplcap_pd_set_zone_enabled(NULL, c->pkg, c->die, c->zone, (c->set_enabled ? c->enabled : 1)))) {
-    perror("Failed to enable/disable zone");
-    return ret;
+  // No enabled field for peak power
+  if (c->set_long || c->set_short ||
+      c->constraint == RAPLCAP_CONSTRAINT_LONG_TERM || c->constraint == RAPLCAP_CONSTRAINT_SHORT_TERM) {
+    if ((ret = raplcap_pd_set_zone_enabled(NULL, c->pkg, c->die, c->zone, (c->set_enabled ? c->enabled : 1)))) {
+      perror("Failed to enable/disable zone");
+      return ret;
+    }
   }
+
 #ifdef RAPLCAP_msr
   // Note: Enabling automatically sets clamping AND we auto-enable when configuring unless explicitly requested not to.
   //       As a result:
   //       1) We set clamping here AFTER enabling in case clamping was requested to be off
   //       2) The user must always explicitly request clamping to be off when setting RAPL limits
-  if (c->set_clamped && (ret = raplcap_msr_pd_set_zone_clamped(NULL, c->pkg, c->die, c->zone, c->clamped))) {
-    perror("Failed to clamp/unclamp zone");
-    return ret;
+  // No clamped field for peak power
+  if (c->set_clamped) {
+    if (c->set_long || c->set_short ||
+        c->constraint == RAPLCAP_CONSTRAINT_LONG_TERM || c->constraint == RAPLCAP_CONSTRAINT_SHORT_TERM) {
+      if ((ret = raplcap_msr_pd_set_zone_clamped(NULL, c->pkg, c->die, c->zone, c->clamped))) {
+        perror("Failed to clamp/unclamp zone");
+        return ret;
+      }
+    }
   }
-  if (c->set_locked && (ret = raplcap_msr_pd_set_zone_locked(NULL, c->pkg, c->die, c->zone))) {
-    perror("Failed to lock zone");
-    return ret;
+
+  if (c->set_locked) {
+    if (c->set_long || c->set_short ||
+        c->constraint == RAPLCAP_CONSTRAINT_LONG_TERM || c->constraint == RAPLCAP_CONSTRAINT_SHORT_TERM) {
+      if ((ret = raplcap_msr_pd_set_zone_locked(NULL, c->pkg, c->die, c->zone))) {
+        perror("Failed to lock zone");
+        return ret;
+      }
+    }
+    // Intentionally not an "else if" - user can set long/short term using -s/-w/-S/-W and also use -l for peak power
+    // This if statement isn't strictly necessary, but prevents setting locked twice if constraint is long or short term
+    if (c->constraint == RAPLCAP_CONSTRAINT_PEAK_POWER) {
+      if ((ret = raplcap_msr_pd_set_locked(NULL, c->pkg, c->die, c->zone, c->constraint))) {
+        perror("Failed to lock peak power");
+        return ret;
+      }
+    }
   }
 #endif // RAPLCAP_msr
   return 0;
@@ -289,21 +321,38 @@ int main(int argc, char** argv) {
           print_usage(1);
         }
         break;
+      case 'l':
+        if (!strcmp(optarg, "LONG")) {
+          ctx.constraint = RAPLCAP_CONSTRAINT_LONG_TERM;
+        } else if (!strcmp(optarg, "SHORT")) {
+          ctx.constraint = RAPLCAP_CONSTRAINT_SHORT_TERM;
+        } else if (!strcmp(optarg, "PEAK")) {
+          ctx.constraint = RAPLCAP_CONSTRAINT_PEAK_POWER;
+        } else {
+          print_usage(1);
+        }
+        break;
+      case 't':
+        SET_VAL(optarg, ctx.limit_constraint.seconds, ctx.set_constraint);
+        break;
+      case 'p':
+        SET_VAL(optarg, ctx.limit_constraint.watts, ctx.set_constraint);
+        break;
       case 'e':
         ctx.enabled = atoi(optarg);
         ctx.set_enabled = 1;
         break;
       case 's':
-        SET_VAL(optarg, ctx.sec_long, ctx.set_long);
+        SET_VAL(optarg, ctx.limit_long.seconds, ctx.set_long);
         break;
       case 'w':
-        SET_VAL(optarg, ctx.watts_long, ctx.set_long);
+        SET_VAL(optarg, ctx.limit_long.watts, ctx.set_long);
         break;
       case 'S':
-        SET_VAL(optarg, ctx.sec_short, ctx.set_short);
+        SET_VAL(optarg, ctx.limit_short.seconds, ctx.set_short);
         break;
       case 'W':
-        SET_VAL(optarg, ctx.watts_short, ctx.set_short);
+        SET_VAL(optarg, ctx.limit_short.watts, ctx.set_short);
         break;
 #ifdef RAPLCAP_msr
       case 'C':
@@ -343,7 +392,7 @@ int main(int argc, char** argv) {
   }
 
   // initialize
-  is_read_only = !ctx.set_enabled && !ctx.set_long && !ctx.set_short;
+  is_read_only = !ctx.set_enabled && !ctx.set_long && !ctx.set_short && !ctx.set_constraint;
 #ifdef RAPLCAP_msr
   is_read_only &= !ctx.set_clamped && !ctx.set_locked;
 #endif // RAPLCAP_msr
