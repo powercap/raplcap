@@ -37,6 +37,8 @@ typedef struct raplcap_msr_zone_cfg {
   fn_from_msr* from_msr_tw;
   fn_to_msr* to_msr_pl;
   fn_from_msr* from_msr_pl;
+  fn_to_msr* to_msr_pl4;
+  // don't need a "from_msr_pl4" field
   uint8_t constraints;
 } raplcap_msr_zone_cfg;
 

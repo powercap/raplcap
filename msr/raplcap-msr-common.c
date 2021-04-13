@@ -101,6 +101,21 @@ static uint64_t to_msr_pl_default(double watts, double power_units) {
   return bits;
 }
 
+// Table 2-45 (Tiger Lake)
+static uint64_t to_msr_pl4_default(double watts, double power_units) {
+  assert(watts >= 0);
+  assert(power_units > 0);
+  // Lower bound is 0, but upper bound is limited by what fits in 13 bits
+  static const uint64_t MSR_POWER_MAX = 0x1FFF;
+  uint64_t bits = (uint64_t) (watts / power_units);
+  if (bits > MSR_POWER_MAX) {
+    raplcap_log(WARN, "Power limit too large: %.12f W, using max: %.12f W\n", watts, MSR_POWER_MAX * power_units);
+    bits = MSR_POWER_MAX;
+  }
+  raplcap_log(DEBUG, "to_msr_pl4_default: watts=%.12f, power_units=%.12f, bits=0x%04lX\n", watts, power_units, bits);
+  return bits;
+}
+
 /**
  * Note: Intel's documentation (Section 14.9.3) specifies different conversions for Package and Power Planes.
  * We use the Package equation for Power Planes as well, which the Linux kernel appears to agree with.
@@ -212,44 +227,45 @@ static uint64_t to_msr_tw_atom_airmont(double seconds, double time_units) {
   return bits;
 }
 
-#define CFG_STATIC_INIT(ttw, ftw, tpl, fpl, c) { \
+#define CFG_STATIC_INIT(ttw, ftw, tpl, fpl, fpl4, c) { \
   .to_msr_tw = ttw, \
   .from_msr_tw = ftw, \
   .to_msr_pl = tpl, \
   .from_msr_pl = fpl, \
+  .to_msr_pl4 = fpl4, \
   .constraints = c }
 
 static const raplcap_msr_zone_cfg CFG_DEFAULT[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2)  // PSYS
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2)  // PSYS
 };
 
 static const raplcap_msr_zone_cfg CFG_DEFAULT_PL4[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 3), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, 2)  // PSYS
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 3), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2)  // PSYS
 };
 
 static const raplcap_msr_zone_cfg CFG_ATOM[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2), // PSYS
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2), // PSYS
 };
 
 // only the CORE time window is different from other ATOM CPUs
 static const raplcap_msr_zone_cfg CFG_ATOM_AIRMONT[RAPLCAP_NZONES] = {
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // PACKAGE
-  CFG_STATIC_INIT(to_msr_tw_atom_airmont, from_msr_tw_atom_airmont, to_msr_pl_default, from_msr_pl_default, 1), // CORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // UNCORE
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 1), // DRAM
-  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, 2), // PSYS
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_atom_airmont, from_msr_tw_atom_airmont, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2), // PSYS
 };
 
 uint32_t msr_get_supported_cpu_model(void) {
@@ -545,7 +561,7 @@ uint64_t msr_set_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64
   assert(ctx != NULL);
   raplcap_log(DEBUG, "msr_set_pl4_limit: zone=%d, power=%.12f W\n", zone, watts);
   if (watts > 0) {
-    msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(watts, ctx->power_units), 0, 12);
+    msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl4(watts, ctx->power_units), 0, 12);
   }
   return msrval;
 }
