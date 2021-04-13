@@ -530,7 +530,7 @@ int msr_is_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t ms
 
 uint64_t msr_set_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked) {
   assert(ctx != NULL);
-  raplcap_log(DEBUG, "msr_set_zone_locked: zone=%d, locked=%d\n", zone, locked);
+  raplcap_log(DEBUG, "msr_set_pl4_locked: zone=%d, locked=%d\n", zone, locked);
   return replace_bits(msrval, locked ? 1 : 0, 31, 31);
 }
 
