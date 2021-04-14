@@ -13,7 +13,8 @@ elseif(WIN32)
   add_library(raplcap-ipg STATIC raplcap-ipg.c)
 endif()
 set_target_properties(raplcap-ipg PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h")
-target_compile_definitions(raplcap-ipg PRIVATE RAPLCAP_IMPL="raplcap-ipg")
+target_compile_definitions(raplcap-ipg PRIVATE RAPLCAP_IMPL="raplcap-ipg"
+                                               RAPLCAP_ALLOW_DEPRECATED)
 target_include_directories(raplcap-ipg PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
 

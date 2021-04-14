@@ -7,7 +7,8 @@ add_library(raplcap-msr raplcap-msr.c
 target_include_directories(raplcap-msr PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
 set_target_properties(raplcap-msr PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h;raplcap-msr.h")
-target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr")
+target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr"
+                                               RAPLCAP_ALLOW_DEPRECATED)
 if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-msr PROPERTIES VERSION ${PROJECT_VERSION}
                                                SOVERSION ${PROJECT_VERSION_MAJOR})
@@ -27,6 +28,7 @@ add_test(raplcap-msr-common-unit-test raplcap-msr-common-unit-test)
 
 # must be run manually
 add_executable(raplcap-msr-integration-test ${PROJECT_SOURCE_DIR}/test/raplcap-integration-test.c)
+target_compile_definitions(raplcap-msr-integration-test PRIVATE RAPLCAP_ALLOW_DEPRECATED)
 target_link_libraries(raplcap-msr-integration-test PRIVATE raplcap-msr)
 
 # pkg-config
