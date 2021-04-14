@@ -75,6 +75,9 @@ constraint, e.g., "watts_long" and "seconds_long".
 .SH "OPTIONS"
 .LP
 .TP
+\fB\-h,\fP \fB\-\-help\fP
+Print the help screen and exit
+.TP
 \fB\-n,\fP \fB\-\-npackages\fP
 Print the number of packages found and exit
 .TP
@@ -117,6 +120,8 @@ Constraint's power limit
 .TP
 \fB\-e,\fP \fB\-\-enabled\fP=\fI1|0\fP
 Enable/disable a zone
+.LP
+The following allow setting long and short term constraints simultaneously:
 .TP
 \fB\-s,\fP \fB\-\-seconds0\fP=\fISECONDS\fP
 Long term time window
@@ -129,9 +134,6 @@ Short term time window (PACKAGE & PSYS only)
 .TP
 \fB\-W,\fP \fB\-\-watts1\fP=\fIWATTS\fP
 Short term power limit (PACKAGE & PSYS only)
-.TP
-\fB\-h,\fP \fB\-\-help\fP
-Prints out the help screen
 .SH "EXAMPLES"
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-n\fP

@@ -70,6 +70,7 @@ static void print_usage(int exit_code) {
   fprintf(exit_code ? stderr : stdout,
           "Usage: %s [OPTION]...\n"
           "Options:\n"
+          "  -h, --help               Print this message and exit\n"
           "  -n, --npackages          Print the number of packages found and exit\n"
           "  -N, --ndie               Print the number of die found for a package and exit\n"
           "  -c, --package=PACKAGE    The processor package (0 by default)\n"
@@ -87,10 +88,6 @@ static void print_usage(int exit_code) {
           "  -t, --time=SECONDS       Constraint's time window\n"
           "  -p, --power=WATTS        Constraint's power limit\n"
           "  -e, --enabled=1|0        Enable/disable a zone\n"
-          "  -s, --seconds0=SECONDS   Long term time window\n"
-          "  -w, --watts0=WATTS       Long term power limit\n"
-          "  -S, --seconds1=SECONDS   Short term time window (PACKAGE & PSYS only)\n"
-          "  -W, --watts1=WATTS       Short term power limit (PACKAGE & PSYS only)\n"
 #ifdef RAPLCAP_msr
           "  -C, --clamped=1|0        Clamp/unclamp a zone\n"
           "                           Clamping is automatically set when enabling\n"
@@ -98,8 +95,12 @@ static void print_usage(int exit_code) {
           "                           setting limits (since zones are auto-enabled)\n"
           "  -L, --locked             Lock a zone (a core RESET is required to unlock)\n"
 #endif // RAPLCAP_msr
-          "  -h, --help               Print this message and exit\n\n"
-          "Current values are printed if no flags, or only package, die, and/or zone flags are specified.\n"
+          "The following allow setting long and short term constraints simultaneously:\n"
+          "  -s, --seconds0=SECONDS   Long term time window\n"
+          "  -w, --watts0=WATTS       Long term power limit\n"
+          "  -S, --seconds1=SECONDS   Short term time window (PACKAGE & PSYS only)\n"
+          "  -W, --watts1=WATTS       Short term power limit (PACKAGE & PSYS only)\n"
+          "\nCurrent values are printed if no flags, or only package, die, and/or zone flags are specified.\n"
           "Otherwise, specified values are set while other values remain unmodified.\n"
           "\nDeprecated behaviors that will change in the future:\n"
           "- When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0. "
