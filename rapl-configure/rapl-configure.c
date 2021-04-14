@@ -101,10 +101,13 @@ static void print_usage(int exit_code) {
           "  -h, --help               Print this message and exit\n\n"
           "Current values are printed if no flags, or only package, die, and/or zone flags are specified.\n"
           "Otherwise, specified values are set while other values remain unmodified.\n"
-          "\nDeprecated behavior:\n"
-          "When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0.\n"
+          "\nDeprecated behaviors that will change in the future:\n"
+          "- When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0. "
           "Automatic enabling will be discontinued in the future - "
-          "set -e/--enabled explicitly if you are unsure of the prior enabled status.\n",
+          "set -e/--enabled explicitly if you are unsure of the prior enabled status.\n"
+          "- When getting values for zones with a single constraint, \"watts\" and \"seconds\" are used as value keys. "
+          "Fully-qualified names will be used in the future to indicate the actual constraint, "
+          "e.g., \"watts_long\" and \"seconds_long\".\n",
           prog);
   exit(exit_code);
 }

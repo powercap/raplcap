@@ -24,6 +24,7 @@
 ### Deprecated
 
 * [rapl-configure] Automatic enabling of zones (without an explicit -e/--enabled=1 argument)
+* [rapl-configure] Printing "watts" and "seconds" in output for zones with a single constraint, will use fully-qualified names in the future
 
 ### Removed
 
