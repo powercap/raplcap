@@ -59,7 +59,7 @@ static int powercap_zone_open(powercap_zone* pz, const char* ct_name, const uint
           maybe_open_zone_file(pz, ct_name, zones, depth,
                                POWERCAP_ZONE_FILE_ENERGY_UJ, ro ? O_RDONLY : O_RDWR) < 0 &&
           (ro || maybe_open_zone_file(pz, ct_name, zones, depth,
-                                      POWERCAP_ZONE_FILE_ENERGY_UJ, O_RDONLY < 0))
+                                      POWERCAP_ZONE_FILE_ENERGY_UJ, O_RDONLY) < 0)
          ) ||
          maybe_open_zone_file(pz, ct_name, zones, depth,
                               POWERCAP_ZONE_FILE_MAX_POWER_RANGE_UW, O_RDONLY) < 0 ||
