@@ -24,6 +24,18 @@ extern "C" {
 
 #include <inttypes.h>
 
+#if !defined(RAPLCAP_DEPRECATED)
+#if defined(RAPLCAP_ALLOW_DEPRECATED)
+#define RAPLCAP_DEPRECATED(x)
+#elif defined(__GNUC__) || defined(__clang__)
+#define RAPLCAP_DEPRECATED(x) __attribute__((deprecated(x)))
+#elif defined(_MSC_VER)
+#define RAPLCAP_DEPRECATED(x) __declspec(deprecated(x))
+#else
+#define RAPLCAP_DEPRECATED(x)
+#endif
+#endif
+
 /**
  * A RAPLCap context
  *
@@ -41,6 +53,7 @@ typedef struct raplcap {
    *
    * @deprecated
    */
+  RAPLCAP_DEPRECATED("Call functions raplcap_get_num_packages() and raplcap_get_num_die() instead")
   uint32_t nsockets;
   void* state;
 } raplcap;
@@ -105,6 +118,7 @@ uint32_t raplcap_get_num_packages(const raplcap* rc);
  * @return the number of packages, 0 on error
  * @deprecated
  */
+RAPLCAP_DEPRECATED("Call raplcap_get_num_packages() instead")
 uint32_t raplcap_get_num_sockets(const raplcap* rc);
 
 /**
@@ -254,6 +268,7 @@ double raplcap_pd_get_energy_counter_max(const raplcap* rc, uint32_t pkg, uint32
  * @deprecated
  * @see raplcap_pd_is_zone_supported
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_is_zone_supported() instead")
 int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -262,6 +277,7 @@ int raplcap_is_zone_supported(const raplcap* rc, uint32_t pkg, raplcap_zone zone
  * @deprecated
  * @see raplcap_pd_is_zone_enabled
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_is_zone_enabled() instead")
 int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -270,6 +286,7 @@ int raplcap_is_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
  * @deprecated
  * @see raplcap_pd_set_zone_enabled
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_set_zone_enabled() instead")
 int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int enabled);
 
 /**
@@ -278,6 +295,7 @@ int raplcap_set_zone_enabled(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
  * @deprecated
  * @see raplcap_pd_get_limits
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_get_limits() instead")
 int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
                        raplcap_limit* limit_long, raplcap_limit* limit_short);
 
@@ -287,6 +305,7 @@ int raplcap_get_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
  * @deprecated
  * @see raplcap_pd_set_limits
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_set_limits() instead")
 int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
                        const raplcap_limit* limit_long, const raplcap_limit* limit_short);
 
@@ -296,6 +315,7 @@ int raplcap_set_limits(const raplcap* rc, uint32_t pkg, raplcap_zone zone,
  * @deprecated
  * @see raplcap_pd_get_energy_counter
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_get_energy_counter() instead")
 double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -304,6 +324,7 @@ double raplcap_get_energy_counter(const raplcap* rc, uint32_t pkg, raplcap_zone 
  * @deprecated
  * @see raplcap_pd_get_energy_counter_max
  */
+RAPLCAP_DEPRECATED("Call raplcap_pd_get_energy_counter_max() instead")
 double raplcap_get_energy_counter_max(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 #ifdef __cplusplus

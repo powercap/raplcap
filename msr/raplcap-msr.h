@@ -127,6 +127,7 @@ double raplcap_msr_pd_get_energy_units(const raplcap* rc, uint32_t pkg, uint32_t
  * @deprecated
  * @see raplcap_msr_pd_is_zone_clamped
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_is_zone_clamped() instead")
 int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -135,6 +136,7 @@ int raplcap_msr_is_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zo
  * @deprecated
  * @see raplcap_msr_pd_set_zone_clamped
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_set_zone_clamped() instead")
 int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone zone, int clamped);
 
 /**
@@ -143,6 +145,7 @@ int raplcap_msr_set_zone_clamped(const raplcap* rc, uint32_t pkg, raplcap_zone z
  * @deprecated
  * @see raplcap_msr_pd_is_zone_locked
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_is_zone_locked() instead")
 int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -151,6 +154,7 @@ int raplcap_msr_is_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zon
  * @deprecated
  * @see raplcap_msr_pd_set_zone_locked
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_set_zone_locked() instead")
 int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -159,6 +163,7 @@ int raplcap_msr_set_zone_locked(const raplcap* rc, uint32_t pkg, raplcap_zone zo
  * @deprecated
  * @see raplcap_msr_pd_get_time_units
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_get_time_units() instead")
 double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -167,6 +172,7 @@ double raplcap_msr_get_time_units(const raplcap* rc, uint32_t pkg, raplcap_zone 
  * @deprecated
  * @see raplcap_msr_pd_get_power_units
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_get_power_units() instead")
 double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 /**
@@ -175,6 +181,7 @@ double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone
  * @deprecated
  * @see raplcap_msr_pd_get_energy_units
  */
+RAPLCAP_DEPRECATED("Call raplcap_msr_pd_get_energy_units() instead")
 double raplcap_msr_get_energy_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone);
 
 #ifdef __cplusplus
