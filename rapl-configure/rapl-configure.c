@@ -99,9 +99,12 @@ static void print_usage(int exit_code) {
           "  -L, --locked             Lock a zone (a core RESET is required to unlock)\n"
 #endif // RAPLCAP_msr
           "  -h, --help               Print this message and exit\n\n"
-          "Current values are printed if no flags, or only package and/or zone flags, are specified.\n"
+          "Current values are printed if no flags, or only package, die, and/or zone flags are specified.\n"
           "Otherwise, specified values are set while other values remain unmodified.\n"
-          "When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0.\n",
+          "\nDeprecated behavior:\n"
+          "When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0.\n"
+          "Automatic enabling will be discontinued in the future - "
+          "set -e/--enabled explicitly if you are unsure of the prior enabled status.\n",
           prog);
   exit(exit_code);
 }

@@ -21,6 +21,10 @@
 * Increased minimum CMake version from 2.8.12 to 3.1
 * [msr] Updated for the Intel Software Developer's Manual, November 2020 release
 
+### Deprecated
+
+* [rapl-configure] Automatic enabling of zones (without an explicit -e/--enabled=1 argument)
+
 ### Removed
 
 * [rapl-configure] Documentation on previously deprecated long options

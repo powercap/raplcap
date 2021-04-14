@@ -58,8 +58,14 @@ die 0.
 Current values are printed if no flags, or only package, die, and/or zone flags
 are specified.
 Otherwise, specified values are set while other values remain unmodified.
+.LP
+Deprecated behavior:
+.br
 When setting values, zones are automatically enabled unless \-e/\-\-enabled is
 explicitly set to 0.
+.br
+Automatic enabling will be discontinued in the future \- set \-e/\-\-enabled
+explicitly if you are unsure of the prior enabled status.
 .SH "OPTIONS"
 .LP
 .TP
