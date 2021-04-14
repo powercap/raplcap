@@ -2,7 +2,6 @@
 
 if(APPLE)
   add_library(raplcap-ipg raplcap-ipg.c)
-  set_target_properties(raplcap-ipg PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h")
   set(IPG_LINKER_FLAGS "-framework IntelPowerGadget")
   target_link_libraries(raplcap-ipg PRIVATE ${IPG_LINKER_FLAGS})
   if(BUILD_SHARED_LIBS)
@@ -13,6 +12,8 @@ elseif(WIN32)
   # Always build static lib in Windows - can't seem to link against dll with rapl-configure
   add_library(raplcap-ipg STATIC raplcap-ipg.c)
 endif()
+set_target_properties(raplcap-ipg PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h")
+target_compile_definitions(raplcap-ipg PRIVATE RAPLCAP_IMPL="raplcap-ipg")
 target_include_directories(raplcap-ipg PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
 

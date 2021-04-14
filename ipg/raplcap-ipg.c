@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include "raplcap.h"
 #include "raplcap-wrappers.h"
-#define RAPLCAP_IMPL "raplcap-ipg"
 #include "raplcap-common.h"
 #ifdef _WIN32
 #include <wchar.h>

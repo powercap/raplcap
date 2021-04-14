@@ -17,7 +17,6 @@
 #include <powercap.h>
 #include <powercap-sysfs.h>
 
-#define RAPLCAP_IMPL "raplcap-powercap"
 #include "powercap-intel-rapl.h"
 #include "raplcap-common.h"
 
