@@ -42,6 +42,7 @@ If using the `msr-safe` module, ensure that your user has read/write privileges 
 * `MSR_DRAM_ENERGY_STATUS`
 * `MSR_PLATFORM_POWER_LIMIT`
 * `MSR_PLATFORM_ENERGY_COUNTER`
+* `MSR_VR_CURRENT_CONFIG`
 
 You can add these registers to the whitelist by running from this directory:
 
