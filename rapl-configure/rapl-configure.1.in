@@ -145,7 +145,7 @@ Print the number of die found for package 1 (requires multi-package system).
 \fBrapl\-configure\-@RAPL_LIB@\fP
 Print PACKAGE zone information for package 0, die 0.
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ -d 1\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-d 1\fP
 Print PACKAGE zone information for package 0, die 1 (requires multi-die
 package).
 .TP
@@ -164,11 +164,11 @@ system).
 Set 20 Watt long term power constraint on PACKAGE zone for package 0, die 1
 without changing time window.
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-w 20 -s 30\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-w 20 \-s 30\fP
 Set 20 Watt long term power constraint with 30 second time window on PACKAGE
 zone for package 0, die 0.
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-W 30 -S 0.0025\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-W 30 \-S 0.0025\fP
 Set 30 Watt short term power constraint with 2.5 millisecond time window on
 PACKAGE zone for package 0, die 0.
 .TP
