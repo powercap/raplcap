@@ -423,6 +423,9 @@ int main(int argc, char** argv) {
     // perform requested action
     if (is_read_only) {
       ret = get_limits(ctx.pkg, ctx.die, ctx.zone);
+    } else if (ctx.set_constraint && ctx.constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && ctx.limit_constraint.seconds != 0) {
+      fprintf(stderr, "Cannot set a time window for peak power\n");
+      ret = -1;
     } else {
       ret = configure_limits(&ctx);
     }
