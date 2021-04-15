@@ -423,11 +423,22 @@ int main(int argc, char** argv) {
     // perform requested action
     if (is_read_only) {
       ret = get_limits(ctx.pkg, ctx.die, ctx.zone);
-    } else if (ctx.set_constraint && ctx.constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && ctx.limit_constraint.seconds != 0) {
-      fprintf(stderr, "Cannot set a time window for peak power\n");
-      ret = -1;
     } else {
-      ret = configure_limits(&ctx);
+      supported = raplcap_pd_is_constraint_supported(NULL, ctx.pkg, ctx.die, ctx.zone, ctx.constraint);
+      if (supported == 0) {
+        fprintf(stderr, "Constraint not supported\n");
+        ret = -1;
+      } else {
+        if (supported < 0) {
+          print_error_continue("Failed to determine if constraint is supported");
+        }
+        if (ctx.set_constraint && ctx.constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && ctx.limit_constraint.seconds != 0) {
+          fprintf(stderr, "Cannot set a time window for peak power\n");
+          ret = -1;
+        } else {
+          ret = configure_limits(&ctx);
+        }
+      }
     }
   }
 
