@@ -160,21 +160,37 @@ Print CORE zone information for package 0, die 0.
 Print DRAM zone information for package 1, die 0 (requires multi-package
 system).
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-w 20\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-p 20\fP
 Set 20 Watt long term power constraint on PACKAGE zone for package 0, die 1
 without changing time window.
+The \fB\-w\fP option would work in place of \fB\-p\fP for this constraint.
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-w 20 \-s 30\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-p 20 \-t 30\fP
 Set 20 Watt long term power constraint with 30 second time window on PACKAGE
 zone for package 0, die 0.
+The \fB\-w\fP and \fB\-s\fP options would work in place of \fB\-p\fP and
+\fB\-t\fP, respectively, for this constraint.
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-W 30 \-S 0.0025\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-l SHORT \-p 30 \-t 0.0025\fP
 Set 30 Watt short term power constraint with 2.5 millisecond time window on
 PACKAGE zone for package 0, die 0.
+The \fB\-W\fP and \fB\-S\fP options would work in place of \fB\-p\fP and
+\fB\-t\fP, respectively, for this constraint, in which case \fB\-l SHORT\fP
+would not be needed.
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 10\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-w 20 \-s 30 \-W 30 \-S 0.0025\fP
+Set 20 Watt long term power constraint with 30 second time window and
+set 30 Watt short term power constraint with 2.5 millisecond time window on
+PACKAGE zone for package 0, die 0.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-l PEAK \-p 45\fP
+Set 45 Watt peak power constraint on PACKAGE zone for package 0, die 0.
+Peak power does not accept a time window value.
+.TP
+\fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-p 10 \-e 1\fP
 Set 10 Watt long term power constraint on UNCORE zone for package 0, die 0
-without changing time window (automatically enables zone if it is disabled).
+without changing time window, and enable the zone.
+The \fB\-w\fP option would work in place of \fB\-p\fP for this constraint.
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-e 0\fP
 Disable UNCORE zone for package 0, die 0.
