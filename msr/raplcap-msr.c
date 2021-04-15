@@ -311,7 +311,7 @@ int raplcap_pd_get_limit(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_
       }
       break;
     default:
-      // reachable
+      // unreachable
       errno = EINVAL;
       ret = -1;
       break;
