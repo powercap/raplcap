@@ -34,6 +34,7 @@
 ### Fixed
 
 * [msr] Writing to wrong die MSR in 'raplcap_pd_set_limits', 'raplcap_msr_pd_set_zone_clamped', and 'raplcap_msr_pd_set_zone_locked'
+* [rapl-configure] Incorrect man page example for disabling a zone
 
 
 ## [v0.5.0] - 2020-09-02

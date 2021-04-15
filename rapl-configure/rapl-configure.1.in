@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2021-04-13" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2021-04-15" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -176,7 +176,7 @@ PACKAGE zone for package 0, die 0.
 Set 10 Watt long term power constraint on UNCORE zone for package 0, die 0
 without changing time window (automatically enables zone if it is disabled).
 .TP
-\fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-w 0\fP
+\fBrapl\-configure\-@RAPL_LIB@ \-z UNCORE \-e 0\fP
 Disable UNCORE zone for package 0, die 0.
 .SH "REMARKS"
 .LP
