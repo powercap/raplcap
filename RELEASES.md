@@ -26,6 +26,7 @@
 * Add compiler deprecation attributes to deprecated functions and fields
 * [rapl-configure] Automatic enabling of zones (without an explicit -e/--enabled=1 argument)
 * [rapl-configure] Printing "watts" and "seconds" in output for zones with a single constraint, will use fully-qualified names in the future
+* [rapl-configure] Ignoring -S/--seconds1 and -W/--watts1 options for zones without short term constraints, will be an error in the future
 
 ### Removed
 
