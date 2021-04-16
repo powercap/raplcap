@@ -277,6 +277,49 @@ static int get_limits(unsigned int pkg, unsigned int die, raplcap_zone zone) {
   return ret;
 }
 
+static int check_zone_supported(const rapl_configure_ctx* c) {
+  assert(c != NULL);
+  int supported = raplcap_pd_is_zone_supported(NULL, c->pkg, c->die, c->zone);
+  if (supported < 0) {
+    print_error_continue("Failed to determine if zone is supported");
+  } else if (supported == 0) {
+    fprintf(stderr, "Zone not supported\n");
+    return -1;
+  }
+  return 0;
+}
+
+static int check_constraint_supported(const rapl_configure_ctx* c) {
+  assert(c != NULL);
+  // Check the -l constraint
+  int supported = raplcap_pd_is_constraint_supported(NULL, c->pkg, c->die, c->zone, c->constraint);
+  if (supported < 0) {
+    print_error_continue("Failed to determine if constraint is supported");
+  } else if (supported == 0) {
+    fprintf(stderr, "Constraint not supported\n");
+    return -1;
+  }
+  // Check that time window is not specified for peak power constraint
+  if (c->constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && c->limit_constraint.seconds != 0) {
+    fprintf(stderr, "Cannot set a time window for peak power\n");
+    return -1;
+  }
+  // Check short term constraint if -W and/or -S are used
+  // All zones (at least currently) support long term constraints, so no need to check c->set_long
+  if (c->set_short) {
+    supported = raplcap_pd_is_constraint_supported(NULL, c->pkg, c->die, c->zone, RAPLCAP_CONSTRAINT_SHORT_TERM);
+    if (supported < 0) {
+      print_error_continue("Failed to determine if short term constraint is supported");
+    } else if (supported == 0) {
+      // TODO: Fail with an error, which is consistent with -l constraint checking behavior
+      fprintf(stderr, "Short term constraint not supported for requested zone. Values will be ignored.\n");
+      fprintf(stderr, "Warning: This behavior is deprecated. In the future, setting -S/--seconds1 or "
+                      "-W/--watts1 for zones without short term constraints will fail with an error.\n");
+    }
+  }
+  return 0;
+}
+
 #define SET_VAL(optarg, val, set_val) \
   if ((val = atof(optarg)) <= 0) { \
     fprintf(stderr, "Time window and power limit values must be > 0\n"); \
@@ -288,7 +331,6 @@ int main(int argc, char** argv) {
   rapl_configure_ctx ctx = { 0 };
   int ret = 0;
   int c;
-  int supported;
   uint32_t count;
   prog = argv[0];
   int is_read_only;
@@ -412,46 +454,13 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  supported = raplcap_pd_is_zone_supported(NULL, ctx.pkg, ctx.die, ctx.zone);
-  if (supported == 0) {
-    fprintf(stderr, "Zone not supported\n");
-    ret = -1;
-  } else {
-    if (supported < 0) {
-      print_error_continue("Failed to determine if zone is supported");
-    }
+  if (!(ret = check_zone_supported(&ctx))) {
     // perform requested action
     if (is_read_only) {
+      // TODO: Should we limit output by constraint, too?
       ret = get_limits(ctx.pkg, ctx.die, ctx.zone);
-    } else {
-      // only checks the -l constraint, not short term constraints set with -W and/or -S, which may not be supported
-      supported = raplcap_pd_is_constraint_supported(NULL, ctx.pkg, ctx.die, ctx.zone, ctx.constraint);
-      if (supported == 0) {
-        fprintf(stderr, "Constraint not supported\n");
-        ret = -1;
-      } else {
-        if (supported < 0) {
-          print_error_continue("Failed to determine if constraint is supported");
-        }
-        if (ctx.set_constraint && ctx.constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && ctx.limit_constraint.seconds != 0) {
-          fprintf(stderr, "Cannot set a time window for peak power\n");
-          ret = -1;
-        } else {
-          if (ctx.set_short) {
-            supported = raplcap_pd_is_constraint_supported(NULL, ctx.pkg, ctx.die, ctx.zone, RAPLCAP_CONSTRAINT_SHORT_TERM);
-            if (supported < 0) {
-              print_error_continue("Failed to determine if short term constraint is supported");
-            } else if (supported == 0) {
-              fprintf(stderr, "Short term constraint not supported for requested zone. Values will be ignored.\n");
-              fprintf(stderr, "Warning: This behavior is deprecated. In the future, setting -S/--seconds1 or "
-                              "-W/--watts1 for zones without short term constraints will be considered an error.\n");
-              // TODO: Fail with an error, which is consistent with -l constraint checking behavior
-              //       This check should then be moved above to where we check the -l constraint
-            }
-          }
-          ret = configure_limits(&ctx);
-        }
-      }
+    } else if (!(ret = check_constraint_supported(&ctx))) {
+      ret = configure_limits(&ctx);
     }
   }
 
