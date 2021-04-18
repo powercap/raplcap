@@ -4,7 +4,7 @@ add_library(raplcap-msr raplcap-msr.c
                         raplcap-msr-common.c
                         raplcap-msr-sys-linux.c
                         raplcap-cpuid.c)
-target_include_directories(raplcap-msr PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+target_include_directories(raplcap-msr PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc$<SEMICOLON>${CMAKE_CURRENT_SOURCE_DIR}>
                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
 set_target_properties(raplcap-msr PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h;raplcap-msr.h")
 target_compile_definitions(raplcap-msr PRIVATE RAPLCAP_IMPL="raplcap-msr"
