@@ -31,7 +31,7 @@ This project depends on:
 
 * [powercap](https://github.com/powercap/powercap) - backend required to compile and run the `powercap` implementation (or install the [libpowercap-dev](apt:libpowercap-dev) package on recent Debian-based Linux distributions).
 
-If dependencies are not found, backends that require them will not be compiled.
+If dependencies with sufficient versions are not found, backends that require them will not be compiled.
 
 Users are expected to be familiar with basic RAPL capabilities and terminology, like zones (domains) and long/short term power constraints.
 Refer to Intel RAPL documentation for more technical information, especially the *Intel&reg; 64 and IA-32 Architectures Software Developer Manual, Volume 3: System Programming Guide.*
