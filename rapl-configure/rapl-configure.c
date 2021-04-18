@@ -300,7 +300,7 @@ static int check_constraint_supported(const rapl_configure_ctx* c) {
     return -1;
   }
   // Check that time window is not specified for peak power constraint
-  if (c->constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && c->limit_constraint.seconds != 0) {
+  if (c->constraint == RAPLCAP_CONSTRAINT_PEAK_POWER && c->limit_constraint.seconds > 0) {
     fprintf(stderr, "Cannot set a time window for peak power\n");
     return -1;
   }
