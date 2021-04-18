@@ -119,7 +119,7 @@ static void print_usage(int exit_code) {
 static void print_limits(int enabled, int locked, int clamped,
                          double watts_long, double seconds_long,
                          double watts_short, double seconds_short,
-                         double locked_peak, double watts_peak,
+                         int locked_peak, double watts_peak,
                          double joules, double joules_max) {
   // Note: simply using %f (6 decimal places) doesn't provide sufficient precision
   const char* en = enabled < 0 ? "unknown" : (enabled ? "true" : "false");
