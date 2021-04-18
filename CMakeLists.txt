@@ -16,6 +16,8 @@ enable_testing()
 
 # Subdirectories
 
+add_subdirectory(rapl-configure)
+
 # Could compile on any UNIX system, but will only work on Linux
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   add_subdirectory(msr)
@@ -37,8 +39,6 @@ elseif(WIN32)
   # No compile-time dependency, so always build
   add_subdirectory(ipg)
 endif()
-
-add_subdirectory(rapl-configure)
 
 # Uninstall
 

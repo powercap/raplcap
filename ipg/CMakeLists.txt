@@ -34,6 +34,10 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_CURRENT_BINARY_DIR}/raplcap-ipg.pc)
 
+# rapl-configure
+
+add_rapl_configure("ipg")
+
 # Install
 
 install(TARGETS raplcap-ipg

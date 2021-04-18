@@ -47,6 +47,12 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc)
 
+# rapl-configure
+
+add_rapl_configure("msr")
+option(RAPLCAP_CONFIGURE_MSR_EXTRA "Enable extra features in rapl-configure-msr" OFF)
+target_compile_definitions(rapl-configure-msr PRIVATE $<$<BOOL:${RAPLCAP_CONFIGURE_MSR_EXTRA}>:RAPLCAP_msr>)
+
 # Install
 
 install(TARGETS raplcap-msr

@@ -39,6 +39,10 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/pkgconfig.in
   ${CMAKE_CURRENT_BINARY_DIR}/raplcap-powercap.pc)
 
+# rapl-configure
+
+add_rapl_configure("powercap")
+
 # Install
 
 install(TARGETS raplcap-powercap
