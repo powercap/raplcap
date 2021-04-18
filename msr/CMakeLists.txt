@@ -33,19 +33,7 @@ target_link_libraries(raplcap-msr-integration-test PRIVATE raplcap-msr)
 
 # pkg-config
 
-set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
-set(PKG_CONFIG_LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
-set(PKG_CONFIG_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
-set(PKG_CONFIG_CFLAGS "-I\${includedir}")
-
-set(PKG_CONFIG_NAME "raplcap-msr")
-set(PKG_CONFIG_DESCRIPTION "Implementation of RAPLCap that uses the MSR directly")
-set(PKG_CONFIG_REQUIRES_PRIVATE "")
-set(PKG_CONFIG_LIBS "-L\${libdir} -lraplcap-msr")
-set(PKG_CONFIG_LIBS_PRIVATE "")
-configure_file(
-  ${PROJECT_SOURCE_DIR}/pkgconfig.in
-  ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc)
+add_raplcap_pkg_config(raplcap-msr "Implementation of RAPLCap that uses the MSR directly" "" "")
 
 # rapl-configure
 
@@ -60,4 +48,3 @@ install(TARGETS raplcap-msr
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/raplcap-msr.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

@@ -14,6 +14,27 @@ include(GNUInstallDirs)
 
 enable_testing()
 
+# Functions
+
+function(add_raplcap_pkg_config TARGET DESCRIPTION REQUIRES_PRIVATE LIBS_PRIVATE)
+  set(PKG_CONFIG_PREFIX "${CMAKE_INSTALL_PREFIX}")
+  set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
+  set(PKG_CONFIG_LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+  set(PKG_CONFIG_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
+  set(PKG_CONFIG_NAME "${TARGET}")
+  set(PKG_CONFIG_DESCRIPTION "${DESCRIPTION}")
+  string(REPLACE ";" " " PKG_CONFIG_REQUIRES_PRIVATE "${REQUIRES_PRIVATE}")
+  set(PKG_CONFIG_CFLAGS "-I\${includedir}")
+  set(PKG_CONFIG_LIBS "-L\${libdir} -l${TARGET}")
+  string(REPLACE ";" " " PKG_CONFIG_LIBS_PRIVATE "${LIBS_PRIVATE}")
+  configure_file(
+    ${PROJECT_SOURCE_DIR}/pkgconfig.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.pc
+    @ONLY
+  )
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+endfunction()
+
 # Subdirectories
 
 add_subdirectory(rapl-configure)
