@@ -17,19 +17,13 @@ target_compile_definitions(raplcap-ipg PRIVATE RAPLCAP_IMPL="raplcap-ipg"
                                                RAPLCAP_ALLOW_DEPRECATED)
 target_include_directories(raplcap-ipg PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
-
-# pkg-config
-
-add_raplcap_pkg_config(raplcap-ipg "Implementation of RAPLCap that uses Intel Power Gadget" "" "${IPG_LINKER_FLAGS}")
-
-# rapl-configure
-
-add_rapl_configure("ipg")
-
-# Install
-
 install(TARGETS raplcap-ipg
         EXPORT RAPLCapTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+add_raplcap_pkg_config(raplcap-ipg "Implementation of RAPLCap that uses Intel Power Gadget" "" "${IPG_LINKER_FLAGS}")
+
+# rapl-configure
+
+add_rapl_configure("ipg")

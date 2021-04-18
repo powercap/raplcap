@@ -13,6 +13,12 @@ if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-msr PROPERTIES VERSION ${PROJECT_VERSION}
                                                SOVERSION ${PROJECT_VERSION_MAJOR})
 endif()
+install(TARGETS raplcap-msr
+        EXPORT RAPLCapTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+add_raplcap_pkg_config(raplcap-msr "Implementation of RAPLCap that uses the MSR directly" "" "")
 
 # Tests
 
@@ -31,20 +37,8 @@ add_executable(raplcap-msr-integration-test ${PROJECT_SOURCE_DIR}/test/raplcap-i
 target_compile_definitions(raplcap-msr-integration-test PRIVATE RAPLCAP_ALLOW_DEPRECATED)
 target_link_libraries(raplcap-msr-integration-test PRIVATE raplcap-msr)
 
-# pkg-config
-
-add_raplcap_pkg_config(raplcap-msr "Implementation of RAPLCap that uses the MSR directly" "" "")
-
 # rapl-configure
 
 add_rapl_configure("msr")
 option(RAPLCAP_CONFIGURE_MSR_EXTRA "Enable extra features in rapl-configure-msr" OFF)
 target_compile_definitions(rapl-configure-msr PRIVATE $<$<BOOL:${RAPLCAP_CONFIGURE_MSR_EXTRA}>:RAPLCAP_msr>)
-
-# Install
-
-install(TARGETS raplcap-msr
-        EXPORT RAPLCapTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})

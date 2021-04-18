@@ -11,6 +11,12 @@ if(BUILD_SHARED_LIBS)
   set_target_properties(raplcap-powercap PROPERTIES VERSION ${PROJECT_VERSION}
                                                     SOVERSION ${PROJECT_VERSION_MAJOR})
 endif()
+install(TARGETS raplcap-powercap
+        EXPORT RAPLCapTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+add_raplcap_pkg_config(raplcap-powercap "Implementation of RAPLCap that uses libpowercap (powercap)" "powercap" "")
 
 # Tests
 
@@ -23,18 +29,6 @@ add_executable(raplcap-powercap-integration-test ${PROJECT_SOURCE_DIR}/test/rapl
 target_compile_definitions(raplcap-powercap-integration-test PRIVATE RAPLCAP_ALLOW_DEPRECATED)
 target_link_libraries(raplcap-powercap-integration-test PRIVATE raplcap-powercap)
 
-# pkg-config
-
-add_raplcap_pkg_config(raplcap-powercap "Implementation of RAPLCap that uses libpowercap (powercap)" "powercap" "")
-
 # rapl-configure
 
 add_rapl_configure("powercap")
-
-# Install
-
-install(TARGETS raplcap-powercap
-        EXPORT RAPLCapTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
