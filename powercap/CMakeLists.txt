@@ -3,7 +3,8 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   return()
 endif()
 
-find_package(Powercap 0.4.0)
+set(POWERCAP_MIN_VERSION 0.4.0)
+find_package(Powercap ${POWERCAP_MIN_VERSION})
 if(NOT Powercap_FOUND)
   return()
 endif()
@@ -26,7 +27,7 @@ install(TARGETS raplcap-powercap
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-add_raplcap_pkg_config(raplcap-powercap "Implementation of RAPLCap that uses libpowercap (powercap)" "powercap" "")
+add_raplcap_pkg_config(raplcap-powercap "Implementation of RAPLCap that uses libpowercap (powercap)" "powercap >= ${POWERCAP_MIN_VERSION}" "")
 
 # Tests
 
