@@ -16,8 +16,6 @@
 #ifdef _WIN32
 #include <wchar.h>
 #include <Windows.h>
-#define MSR_FUNC_POWER_ENERGY 1
-#define MSR_FUNC_LIMIT 3
 #if _M_X64
   #define WIN_ENERGY_LIB_NAME "EnergyLib64"
 #else
@@ -26,6 +24,15 @@
 #else // OSX
 #include <EnergyLib.h>
 #endif
+
+// These were previously assumed to be in EnergyLib.h, but upstream devs appear to have changed their names.
+// We'll just set them ourselves since the enumeration should be fixed even if the names change again.
+#ifndef MSR_FUNC_POWER_ENERGY
+#define MSR_FUNC_POWER_ENERGY 1
+#endif // MSR_FUNC_POWER_ENERGY
+#ifndef MSR_FUNC_LIMIT
+#define MSR_FUNC_LIMIT 3
+#endif // MSR_FUNC_LIMIT
 
 #define MSR_FUNC_N_RESULTS_MAX 3
 #define MSR_FUNC_N_RESULTS_POWER_ENERGY 3
