@@ -1,3 +1,13 @@
+# Could compile on any UNIX system, but will only work on Linux
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  return()
+endif()
+
+find_package(Powercap 0.4.0)
+if(NOT Powercap_FOUND)
+  return()
+endif()
+
 # Libraries
 
 add_library(raplcap-powercap raplcap-powercap.c powercap-intel-rapl.c)

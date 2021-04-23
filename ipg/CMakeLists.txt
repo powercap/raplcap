@@ -1,3 +1,13 @@
+# Should just be on OSX and Windows
+if(APPLE)
+  find_library(IntelPowerGadgetLib NAMES "IntelPowerGadget")
+  if(NOT IntelPowerGadgetLib)
+    return()
+  endif()
+elseif(NOT WIN32)
+  return()
+endif()
+
 # Libraries
 
 if(APPLE)

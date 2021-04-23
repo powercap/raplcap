@@ -1,3 +1,8 @@
+# Could compile on any UNIX system, but will only work on Linux
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  return()
+endif()
+
 # Libraries
 
 add_library(raplcap-msr raplcap-msr.c

@@ -38,28 +38,9 @@ endfunction()
 # Subdirectories
 
 add_subdirectory(rapl-configure)
-
-# Could compile on any UNIX system, but will only work on Linux
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  add_subdirectory(msr)
-
-  find_package(Powercap 0.4.0)
-  if(Powercap_FOUND)
-    add_subdirectory(powercap)
-  endif()
-endif()
-
-
-# Should just be on OSX and Windows
-if(APPLE)
-  find_library(IntelPowerGadgetLib NAMES "IntelPowerGadget")
-  if(IntelPowerGadgetLib)
-    add_subdirectory(ipg)
-  endif()
-elseif(WIN32)
-  # No compile-time dependency, so always build
-  add_subdirectory(ipg)
-endif()
+add_subdirectory(msr)
+add_subdirectory(powercap)
+add_subdirectory(ipg)
 
 # Uninstall
 
