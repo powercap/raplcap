@@ -24,7 +24,7 @@
   #define WIN_ENERGY_LIB_NAME "EnergyLib32"
 #endif
 #else // OSX
-#include <IntelPowerGadget/EnergyLib.h>
+#include <EnergyLib.h>
 #endif
 
 #define MSR_FUNC_N_RESULTS_MAX 3

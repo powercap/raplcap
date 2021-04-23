@@ -1,7 +1,7 @@
 # Should just be on OSX and Windows
 if(APPLE)
-  find_library(IntelPowerGadgetLib NAMES "IntelPowerGadget")
-  if(NOT IntelPowerGadgetLib)
+  find_package(IntelPowerGadget)
+  if(NOT IntelPowerGadget_FOUND)
     return()
   endif()
 elseif(NOT WIN32)
@@ -13,7 +13,7 @@ endif()
 if(APPLE)
   add_library(raplcap-ipg raplcap-ipg.c)
   set(IPG_LINKER_FLAGS "-framework IntelPowerGadget")
-  target_link_libraries(raplcap-ipg PRIVATE ${IPG_LINKER_FLAGS})
+  target_link_libraries(raplcap-ipg PRIVATE IntelPowerGadget::IntelPowerGadget)
   if(BUILD_SHARED_LIBS)
     set_target_properties(raplcap-ipg PROPERTIES VERSION ${PROJECT_VERSION}
                                                  SOVERSION ${PROJECT_VERSION_MAJOR})
