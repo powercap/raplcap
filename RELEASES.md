@@ -1,19 +1,20 @@
 # Release Notes
 
-## [Unreleased]
+## [v0.6.0] - 2021-05-12
 
 ### Added
 
-* Interface enum 'raplcap_constraint' for use with more general functions
-* Interface function 'raplcap_pd_is_constraint_supported'
-* Interface function 'raplcap_pd_get_limit'
-* Interface function 'raplcap_pd_set_limit'
-* [msr] Interface function 'raplcap_msr_pd_is_locked'
-* [msr] Interface function 'raplcap_msr_pd_set_locked'
-* Support for package peak power (PL4) constraint using the new functions above, and:
+* Support for constraint-specific operations
+  * Interface enum 'raplcap_constraint'
+  * Interface function 'raplcap_pd_is_constraint_supported'
+  * Interface function 'raplcap_pd_get_limit'
+  * Interface function 'raplcap_pd_set_limit'
+  * [msr] Interface function 'raplcap_msr_pd_is_locked'
+  * [msr] Interface function 'raplcap_msr_pd_set_locked'
   * [rapl-configure] New -l/--limit option
   * [rapl-configure] New -t/--time option
   * [rapl-configure] New -p/--power option
+* Support for peak power (PL4) constraint
 * [msr] Support for Tiger Lake, Models 0x8C, 0x8D
 
 ### Changed
@@ -196,7 +197,7 @@
 * Initial public release
 
 
-[Unreleased]: https://github.com/powercap/raplcap/compare/v0.5.0...HEAD
+[v0.6.0]: https://github.com/powercap/raplcap/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/powercap/raplcap/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/powercap/raplcap/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/powercap/raplcap/compare/v0.2.0...v0.3.0
