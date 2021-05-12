@@ -18,7 +18,7 @@
 
 ### Changed
 
-* Increased minimum CMake version from 2.8.12 to 3.1
+* Increased minimum CMake version from 2.8.12 to 3.6
 * [msr] Updated for the Intel Software Developer's Manual, November 2020 release
 
 ### Deprecated
