@@ -57,9 +57,8 @@ extern "C" {
 
 #define CPUID_MODEL_ATOM_SILVERMONT     0x37 // Bay Trail, Valleyview
 #define CPUID_MODEL_ATOM_SILVERMONT_MID 0x4A // Merriefield
-// "ATOM_SILVERMONT_X" is specified in, but not used by, the Linux kernel
-// Disabled ATOM_SILVERMONT_X b/c it's documentation is strange; no use supporting an apparently non-existent CPU
-// #define CPUID_MODEL_ATOM_SILVERMONT_X  0x4D // Avaton, Rangeley
+// "ATOM_SILVERMONT_D" not supported by Linux kernel powercap interface...
+#define CPUID_MODEL_ATOM_SILVERMONT_D   0x4D // Avoton, Rangeley
 #define CPUID_MODEL_ATOM_AIRMONT        0x4C // Cherry Trail, Braswell
 #define CPUID_MODEL_ATOM_AIRMONT_MID    0x5A // Moorefield
 // "SoFIA" does not appear to have Linux kernel support

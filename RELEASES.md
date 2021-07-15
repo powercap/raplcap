@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+* [msr] Support for Atom Silvermont micro server ("Avoton" / "Rangeley"), Model 0x4D
+
 ### Changed
 
 * Changes based on previously deprecated behavior:
