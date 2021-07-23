@@ -44,8 +44,8 @@ If using the `msr-safe` module, ensure that your user has read/write privileges 
 * `MSR_PLATFORM_ENERGY_COUNTER`
 * `MSR_VR_CURRENT_CONFIG`
 
-You can add these registers to the whitelist by running from this directory:
+You can add these registers to the allowlist by running from this directory:
 
 ```sh
-sudo sh -c 'cat etc/msr_safe_whitelist >> /dev/cpu/msr_whitelist'
+sudo sh -c 'cat etc/msr_safe_allowlist >> /dev/cpu/msr_allowlist'
 ```
