@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2021-04-15" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2021-07-23" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -66,12 +66,6 @@ When setting values, zones are automatically enabled unless \-e/\-\-enabled is
 explicitly set to 0.
 Automatic enabling will be discontinued in the future \- set \-e/\-\-enabled
 explicitly if you are unsure of the prior enabled status.
-.br
-\[bu]
-When getting values for zones with a single constraint, "watts" and "seconds"
-are used as value keys.
-Fully-qualified names will be used in the future to indicate the actual
-constraint, e.g., "watts_long" and "seconds_long".
 .SH "OPTIONS"
 .LP
 .TP

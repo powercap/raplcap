@@ -1,5 +1,14 @@
 # Release Notes
 
+## [Unreleased]
+
+### Changed
+
+* Changes based on previously deprecated behavior:
+  * [rapl-configure] Print fully-qualified "watts_long" and "seconds_long" in output for zones with a single constraint
+
+
+
 ## [v0.6.0] - 2021-05-12
 
 ### Added
@@ -197,6 +206,7 @@
 * Initial public release
 
 
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.6.0...HEAD
 [v0.6.0]: https://github.com/powercap/raplcap/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/powercap/raplcap/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/powercap/raplcap/compare/v0.3.0...v0.4.0

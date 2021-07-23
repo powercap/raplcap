@@ -105,10 +105,7 @@ static void print_usage(int exit_code) {
           "\nDeprecated behaviors that will change in the future:\n"
           "- When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0. "
           "Automatic enabling will be discontinued in the future - "
-          "set -e/--enabled explicitly if you are unsure of the prior enabled status.\n"
-          "- When getting values for zones with a single constraint, \"watts\" and \"seconds\" are used as value keys. "
-          "Fully-qualified names will be used in the future to indicate the actual constraint, "
-          "e.g., \"watts_long\" and \"seconds_long\".\n",
+          "set -e/--enabled explicitly if you are unsure of the prior enabled status.\n",
           prog);
   exit(exit_code);
 }
@@ -133,20 +130,17 @@ static void print_limits(int enabled, int locked, int clamped,
   if (locked != PRINT_LIMIT_IGNORE) {
     printf("%13s: %s\n", "locked", lck);
   }
+  printf("%13s: %.12f\n", "watts_long", watts_long);
+  printf("%13s: %.12f\n", "seconds_long", seconds_long);
   if (seconds_short > 0) {
-    printf("%13s: %.12f\n", "watts_long", watts_long);
-    printf("%13s: %.12f\n", "seconds_long", seconds_long);
     printf("%13s: %.12f\n", "watts_short", watts_short);
     printf("%13s: %.12f\n", "seconds_short", seconds_short);
-    if (locked_peak != PRINT_LIMIT_IGNORE) {
-      printf("%13s: %s\n", "locked_peak", (locked_peak ? "true" : "false"));
-    }
-    if (watts_peak > 0) {
-      printf("%13s: %.12f\n", "watts_peak", watts_peak);
-    }
-  } else {
-    printf("%13s: %.12f\n", "watts", watts_long);
-    printf("%13s: %.12f\n", "seconds", seconds_long);
+  }
+  if (locked_peak != PRINT_LIMIT_IGNORE) {
+    printf("%13s: %s\n", "locked_peak", (locked_peak ? "true" : "false"));
+  }
+  if (watts_peak > 0) {
+    printf("%13s: %.12f\n", "watts_peak", watts_peak);
   }
   if (joules >= 0) {
     printf("%13s: %.12f\n", "joules", joules);
