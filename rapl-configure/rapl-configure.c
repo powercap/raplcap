@@ -101,11 +101,7 @@ static void print_usage(int exit_code) {
           "  -S, --seconds1=SECONDS   Short term time window (PACKAGE & PSYS only)\n"
           "  -W, --watts1=WATTS       Short term power limit (PACKAGE & PSYS only)\n"
           "\nCurrent values are printed if no flags, or only package, die, and/or zone flags are specified.\n"
-          "Otherwise, specified values are set while other values remain unmodified.\n"
-          "\nDeprecated behaviors that will change in the future:\n"
-          "- When setting values, zones are automatically enabled unless -e/--enabled is explicitly set to 0. "
-          "Automatic enabling will be discontinued in the future - "
-          "set -e/--enabled explicitly if you are unsure of the prior enabled status.\n",
+          "Otherwise, specified values are set while other values remain unmodified.\n",
           prog);
   exit(exit_code);
 }
@@ -174,11 +170,8 @@ static int configure_limits(const rapl_configure_ctx* c) {
     }
   }
 
-  // enable/disable if requested, otherwise automatically enable
-  // No enabled field for peak power
-  if (c->set_long || c->set_short ||
-      c->constraint == RAPLCAP_CONSTRAINT_LONG_TERM || c->constraint == RAPLCAP_CONSTRAINT_SHORT_TERM) {
-    if ((ret = raplcap_pd_set_zone_enabled(NULL, c->pkg, c->die, c->zone, (c->set_enabled ? c->enabled : 1)))) {
+  if (c->set_enabled) {
+    if ((ret = raplcap_pd_set_zone_enabled(NULL, c->pkg, c->die, c->zone, c->enabled))) {
       perror("Failed to enable/disable zone");
       return ret;
     }

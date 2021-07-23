@@ -6,7 +6,7 @@
 
 * Changes based on previously deprecated behavior:
   * [rapl-configure] Print fully-qualified "watts_long" and "seconds_long" in output for zones with a single constraint
-
+  * [rapl-configure] Don't automatically enable zones - user must explicitly set -e/--enabled=1
 
 
 ## [v0.6.0] - 2021-05-12
