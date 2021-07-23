@@ -298,10 +298,8 @@ static int check_constraint_supported(const rapl_configure_ctx* c) {
     if (supported < 0) {
       print_error_continue("Failed to determine if short term constraint is supported");
     } else if (supported == 0) {
-      // TODO: Fail with an error, which is consistent with -l constraint checking behavior
-      fprintf(stderr, "Short term constraint not supported for requested zone. Values will be ignored.\n");
-      fprintf(stderr, "Warning: This behavior is deprecated. In the future, setting -S/--seconds1 or "
-                      "-W/--watts1 for zones without short term constraints will fail with an error.\n");
+      fprintf(stderr, "Short term constraint not supported\n");
+      return -1;
     }
   }
   return 0;
