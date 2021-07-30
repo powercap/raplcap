@@ -87,12 +87,6 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
   return &state->parent_zones[idx].p;
 }
 
-static uint32_t count_parent_zones(void) {
-  uint32_t n = powercap_intel_rapl_get_num_instances();
-  raplcap_log(DEBUG, "count_parent_zones: n=%"PRIu32"\n", n);
-  return n;
-}
-
 static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32_t* max_pkg_id) {
   char name[ZONE_NAME_MAX_SIZE];
   char* endptr;
@@ -191,23 +185,23 @@ static int parse_pkg_die(const uint32_t* pkg_die_mask, uint32_t n_parent_zones, 
   return 0;
 }
 
-static int get_topology(uint32_t n_parent_zones, uint32_t* n_pkgs, uint32_t* n_die) {
+static int get_topology(uint32_t* n_parent_zones, uint32_t* n_pkgs, uint32_t* n_die) {
   uint32_t* pkg_die_mask;
   uint32_t max_pkg_id = 0;
   int ret = 0;
-  if (!n_parent_zones) {
-    errno = EINVAL;
+  *n_parent_zones = powercap_intel_rapl_get_num_instances();
+  raplcap_log(DEBUG, "get_topology: parent_zones=%"PRIu32"\n", *n_parent_zones);
+  if (*n_parent_zones == 0) {
+    errno = ENODEV;
     return -1;
   }
-  if (!(pkg_die_mask = calloc(n_parent_zones, sizeof(uint32_t)))) {
+  if (!(pkg_die_mask = calloc(*n_parent_zones, sizeof(uint32_t)))) {
     return -1;
   }
   *n_pkgs = 0;
   *n_die = 0;
-  // TODO: Enforce that pkg IDs fill the range [0, n_pkgs), and die IDs fill the range [0, n_die) for each package
-  //       This is required to correctly access zones for "pkg" and "die" params used to compute array indexes
-  if (!(ret = count_pkg_die(pkg_die_mask, n_parent_zones, &max_pkg_id))) {
-    ret = parse_pkg_die(pkg_die_mask, n_parent_zones, max_pkg_id, n_pkgs, n_die);
+  if (!(ret = count_pkg_die(pkg_die_mask, *n_parent_zones, &max_pkg_id))) {
+    ret = parse_pkg_die(pkg_die_mask, *n_parent_zones, max_pkg_id, n_pkgs, n_die);
   }
   raplcap_log(DEBUG, "get_topology: packages=%"PRIu32", die=%"PRIu32"\n", *n_pkgs, *n_die);
   free(pkg_die_mask);
@@ -317,7 +311,7 @@ static int raplcap_powercap_parent_init(raplcap_powercap_parent* rp, uint32_t id
 
 int raplcap_init(raplcap* rc) {
   raplcap_powercap* state;
-  uint32_t n_parent_zones;
+  uint32_t n_parent_zones = 0;
   uint32_t n_pkg;
   uint32_t n_die;
   uint32_t i;
@@ -327,12 +321,10 @@ int raplcap_init(raplcap* rc) {
   if (rc == NULL) {
     rc = &rc_default;
   }
-  // get the number of packages
-  if ((n_parent_zones = count_parent_zones()) == 0) {
-    raplcap_perror(ERROR, "No RAPL zones found");
-    return -1;
-  }
-  if (get_topology(n_parent_zones, &n_pkg, &n_die) < 0) {
+  if (get_topology(&n_parent_zones, &n_pkg, &n_die) < 0) {
+    if (n_parent_zones == 0) {
+      raplcap_perror(ERROR, "No RAPL zones found");
+    }
     return -1;
   }
   assert(n_parent_zones >= n_pkg * n_die);
@@ -388,16 +380,9 @@ int raplcap_destroy(raplcap* rc) {
   return err_save ? -1 : 0;
 }
 
-static int get_topology_uninit(uint32_t* n_pkg, uint32_t* n_die) {
-  uint32_t n_parent_zones;
-  if ((n_parent_zones = count_parent_zones()) == 0) {
-    return -1;
-  }
-  return get_topology(n_parent_zones, n_pkg, n_die);
-}
-
 uint32_t raplcap_get_num_packages(const raplcap* rc) {
   const raplcap_powercap* state;
+  uint32_t n_parent_zones;
   uint32_t n_pkg = 0;
   uint32_t n_die;
   if (rc == NULL) {
@@ -406,13 +391,14 @@ uint32_t raplcap_get_num_packages(const raplcap* rc) {
   if ((state = (raplcap_powercap*) rc->state) != NULL) {
     return state->n_pkg;
   }
-  return get_topology_uninit(&n_pkg, &n_die) ? 0 : n_pkg;
+  return get_topology(&n_parent_zones, &n_pkg, &n_die) ? 0 : n_pkg;
 }
 
 uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
   const raplcap_powercap* state;
+  uint32_t n_parent_zones;
   uint32_t n_pkg;
-  uint32_t n_die;
+  uint32_t n_die = 0;
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -424,7 +410,7 @@ uint32_t raplcap_get_num_die(const raplcap* rc, uint32_t pkg) {
     }
     return state->n_die;
   }
-  if (get_topology_uninit(&n_pkg, &n_die)) {
+  if (get_topology(&n_parent_zones, &n_pkg, &n_die)) {
     return 0;
   }
   if (pkg >= n_pkg) {
