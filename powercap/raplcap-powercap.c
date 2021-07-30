@@ -343,6 +343,7 @@ int raplcap_destroy(raplcap* rc) {
         err_save = errno;
       }
     }
+    free(state->parent_zones);
     free(state);
     rc->state = NULL;
   }

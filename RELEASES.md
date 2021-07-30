@@ -13,6 +13,10 @@
   * [rapl-configure] Don't automatically enable zones - user must explicitly set -e/--enabled=1
   * [rapl-configure] Fail if -W/--watts1 and/or -S/--seconds1 are used but short term constraint is not supported
 
+### Fixed
+
+* [powercap] Memory leak in 'raplcap_destroy'
+
 
 ## [v0.6.0] - 2021-05-12
 
