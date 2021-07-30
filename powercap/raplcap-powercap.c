@@ -71,8 +71,9 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
     return NULL;
   }
   if (zone == RAPLCAP_ZONE_PSYS) {
-    // TODO: this is for backward compatibility, but we should deprecate falling back on package 0, die 0's PSYS zone
-    if ((p = &state->psys_zones[pkg]->p) == NULL) {
+    if ((p = &state->psys_zones[pkg]->p) == NULL && (pkg > 0 || die > 0)) {
+      raplcap_log(WARN, "Trying to fall back on PSYS zone at pkg=0, die=0.\nThis behavior is deprecated - "
+                  "in the future, an error will be returned if the zone is not found for the specified pkg/die.\n");
       p = &state->psys_zones[0]->p;
     }
     // if p is still NULL, then there is no PSYS zone present

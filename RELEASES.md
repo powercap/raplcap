@@ -14,6 +14,10 @@
   * [rapl-configure] Don't automatically enable zones - user must explicitly set -e/--enabled=1
   * [rapl-configure] Fail if -W/--watts1 and/or -S/--seconds1 are used but short term constraint is not supported
 
+### Deprecated
+
+  * [powercap] Falling back on PSYS zone at pkg=0, die=0 when not found for other pkg/die - will return an error in the future
+
 ### Fixed
 
 * [powercap] Memory leak in 'raplcap_destroy'
