@@ -33,8 +33,9 @@ typedef struct raplcap_powercap_parent {
 } raplcap_powercap_parent;
 
 typedef struct raplcap_powercap {
-  // the first (n_pkg * n_die) zones are PACKAGE type, any remaining zones are PSYS type
   raplcap_powercap_parent* parent_zones;
+  raplcap_powercap_parent** pkg_zones;
+  raplcap_powercap_parent** psys_zones;
   uint32_t n_parent_zones;
   uint32_t n_pkg;
   // currently only support homogeneous die count per package
@@ -45,7 +46,7 @@ static raplcap rc_default;
 
 static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   raplcap_powercap* state;
-  size_t idx;
+  powercap_intel_rapl_parent* p = NULL;
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -70,21 +71,18 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
     return NULL;
   }
   if (zone == RAPLCAP_ZONE_PSYS) {
-    // default to case where (all but maybe one) psys zones are enumerated by package
-    idx = (state->n_pkg * state->n_die) + pkg;
-    if (idx >= state->n_parent_zones) {
-      // fall back on case where there is at most one psys zone
-      idx = state->n_parent_zones - 1;
+    // TODO: this is for backward compatibility, but we should deprecate falling back on package 0, die 0's PSYS zone
+    if ((p = &state->psys_zones[pkg]->p) == NULL) {
+      p = &state->psys_zones[0]->p;
     }
-    if (state->parent_zones[idx].type == RAPLCAP_ZONE_PSYS) {
-      return &state->parent_zones[idx].p;
-    }
-    // else there is no PSYS zone present
+    // if p is still NULL, then there is no PSYS zone present
     // fall through and later code will (correctly) fail to find PSYS within the regular parent zone
   }
-  idx = (pkg * state->n_die) + die;
-  assert(idx < state->n_parent_zones);
-  return &state->parent_zones[idx].p;
+  if (p == NULL && (p = &state->pkg_zones[(pkg * state->n_die) + die]->p) == NULL) {
+    // the requested package/die was in range, but not detected in sysfs
+    errno = ENODEV;
+  }
+  return p;
 }
 
 static int get_topology(uint32_t *n_parent_zones, uint32_t* n_pkg, uint32_t* n_die) {
@@ -144,35 +142,6 @@ static int get_topology(uint32_t *n_parent_zones, uint32_t* n_pkg, uint32_t* n_d
   *n_die = max_die_id + 1;
   raplcap_log(DEBUG, "get_topology: n_parent_zones=%"PRIu32", n_pkg=%"PRIu32", n_die=%"PRIu32"\n",
               *n_parent_zones, *n_pkg, *n_die);
-  return 0;
-}
-
-// Assumes that all package/die/psys zones are present (not powered off), otherwise we'd have to insert empty bubbles
-// On kernels before 5.10, there was at most one "psys" zone, but now might expose a PSYS zone for each package to
-// support newer CPUs (e.g., Sapphire Rapids) where package 0 isn't necessarily the master package.
-static int cmp_raplcap_powercap_parent(const void* va, const void* vb) {
-  const raplcap_powercap_parent* a = (const raplcap_powercap_parent*) va;
-  const raplcap_powercap_parent* b = (const raplcap_powercap_parent*) vb;
-  if (a->type < b->type) {
-    return -1;
-  }
-  if (a->type > b->type) {
-    return 1;
-  }
-  // if not has_pkg, assumes pkg=0
-  if (a->pkg < b->pkg) {
-    return -1;
-  }
-  if (a->pkg > b->pkg) {
-    return 1;
-  }
-  // if not has_die, assumes die=0
-  if (a->die < b->die) {
-    return -1;
-  }
-  if (a->die > b->die) {
-    return 1;
-  }
   return 0;
 }
 
@@ -254,6 +223,8 @@ int raplcap_init(raplcap* rc) {
   uint32_t n_pkg;
   uint32_t n_die;
   uint32_t i;
+  uint32_t pkg;
+  uint32_t die;
   int err_save;
   const char* env_ro = getenv(ENV_RAPLCAP_READ_ONLY);
   int ro = env_ro == NULL ? 0 : atoi(env_ro);
@@ -266,11 +237,21 @@ int raplcap_init(raplcap* rc) {
     }
     return -1;
   }
-  assert(n_parent_zones >= n_pkg * n_die);
   if ((state = malloc(sizeof(raplcap_powercap))) == NULL) {
     return -1;
   }
   if ((state->parent_zones = calloc(n_parent_zones, sizeof(*state->parent_zones))) == NULL) {
+    free(state);
+    return -1;
+  }
+  if ((state->pkg_zones = calloc(n_pkg * n_die, sizeof(*state->pkg_zones))) == NULL) {
+    free(state->parent_zones);
+    free(state);
+    return -1;
+  }
+  if ((state->psys_zones = calloc(n_pkg, sizeof(*state->pkg_zones))) == NULL) {
+    free(state->pkg_zones);
+    free(state->parent_zones);
     free(state);
     return -1;
   }
@@ -287,8 +268,38 @@ int raplcap_init(raplcap* rc) {
       return -1;
     }
   }
-  // Parent zones in sysfs may be out of order - sort by type, package, and die
-  qsort(state->parent_zones, state->n_parent_zones, sizeof(powercap_intel_rapl_parent), cmp_raplcap_powercap_parent);
+  // Parent zones in sysfs may be out of order - index by type, package, and die
+  for (i = 0; i < state->n_parent_zones; i++) {
+    pkg = state->parent_zones[i].pkg;
+    die = state->parent_zones[i].die;
+    if (pkg >= n_pkg || die >= n_die) {
+      // this should only arise if sysfs has changed since we initially parsed topology - unlikely, but possible...
+      raplcap_log(ERROR, "Package or die out of range for parent zone id=%"PRIu32"\n", i);
+      err_save = errno;
+      raplcap_destroy(rc);
+      errno = err_save;
+      return -1;
+    }
+    switch (state->parent_zones[i].type) {
+      case RAPLCAP_ZONE_PACKAGE:
+        if (state->pkg_zones[(pkg * n_die) + die] == NULL) {
+          state->pkg_zones[(pkg * n_die) + die] = &state->parent_zones[i];
+        } else {
+          raplcap_log(WARN, "Ignoring duplicate package entry at parent zone id=%"PRIu32"\n", i);
+        }
+        break;
+      case RAPLCAP_ZONE_PSYS:
+        if (state->psys_zones[pkg] == NULL) {
+          state->psys_zones[pkg] = &state->parent_zones[i];
+        } else {
+          raplcap_log(WARN, "Ignoring duplicate psys entry at parent zone id=%"PRIu32"\n", i);
+        }
+        break;
+      default:
+        raplcap_log(WARN, "Ignoring unknown type at parent zone id=%"PRIu32"\n", i);
+        break;
+    }
+  }
   rc->nsockets = n_pkg;
   raplcap_log(DEBUG, "raplcap_init: Initialized\n");
   return 0;
@@ -309,6 +320,8 @@ int raplcap_destroy(raplcap* rc) {
         err_save = errno;
       }
     }
+    free(state->psys_zones);
+    free(state->pkg_zones);
     free(state->parent_zones);
     free(state);
     rc->state = NULL;
