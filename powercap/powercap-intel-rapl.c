@@ -34,6 +34,7 @@
 #define ZONE_NAME_CORE "core"
 #define ZONE_NAME_UNCORE "uncore"
 #define ZONE_NAME_DRAM "dram"
+// psys can be both a complete name or a prefix
 #define ZONE_NAME_PSYS "psys"
 
 
@@ -252,7 +253,7 @@ static powercap_intel_rapl_zone_files* get_files_by_name(powercap_intel_rapl_par
     return &parent->zones[RAPLCAP_ZONE_UNCORE];
   } else if (!strncmp(name, ZONE_NAME_DRAM, sizeof(ZONE_NAME_DRAM))) {
     return &parent->zones[RAPLCAP_ZONE_DRAM];
-  } else if (!strncmp(name, ZONE_NAME_PSYS, sizeof(ZONE_NAME_PSYS))) {
+  } else if (!strncmp(name, ZONE_NAME_PSYS, sizeof(ZONE_NAME_PSYS) - 1)) {
     return &parent->zones[RAPLCAP_ZONE_PSYS];
   } else {
     if (depth == 1) {

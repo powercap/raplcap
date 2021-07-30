@@ -5,6 +5,7 @@
 ### Added
 
 * [msr] Support for Atom Silvermont micro server ("Avoton" / "Rangeley"), Model 0x4D
+* [powercap] Support for multiple PSYS zones (Linux kernel 5.14 and newer, e.g., for Sapphire Rapids CPUs)
 
 ### Changed
 

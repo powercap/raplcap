@@ -23,8 +23,18 @@
 #define ZONE_NAME_MAX_SIZE 64
 #define ZONE_NAME_PREFIX_PACKAGE "package-"
 
+typedef struct raplcap_powercap_parent {
+  powercap_intel_rapl_parent p;
+  raplcap_zone type;
+  int has_pkg;
+  uint32_t pkg;
+  int has_die;
+  uint32_t die;
+} raplcap_powercap_parent;
+
 typedef struct raplcap_powercap {
-  powercap_intel_rapl_parent* parent_zones;
+  // the first (n_pkg * n_die) zones are PACKAGE type, any remaining zones are PSYS type
+  raplcap_powercap_parent* parent_zones;
   uint32_t n_parent_zones;
   uint32_t n_pkg;
   // currently only support homogeneous die count per package
@@ -35,6 +45,7 @@ static raplcap rc_default;
 
 static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   raplcap_powercap* state;
+  size_t idx;
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -58,14 +69,22 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
     errno = EINVAL;
     return NULL;
   }
-  // PSYS is a special case - always stored at the end of the parent_zones array, with index > n_pkg
-  // If PSYS is requested and supported, it doesn't matter what pkg or die the caller actually specified
-  if (zone == RAPLCAP_ZONE_PSYS &&
-      powercap_intel_rapl_is_zone_supported(&state->parent_zones[state->n_parent_zones - 1], zone)) {
-    return &state->parent_zones[state->n_parent_zones - 1];
+  if (zone == RAPLCAP_ZONE_PSYS) {
+    // default to case where (all but maybe one) psys zones are enumerated by package
+    idx = (state->n_pkg * state->n_die) + pkg;
+    if (idx >= state->n_parent_zones) {
+      // fall back on case where there is at most one psys zone
+      idx = state->n_parent_zones - 1;
+    }
+    if (state->parent_zones[idx].type == RAPLCAP_ZONE_PSYS) {
+      return &state->parent_zones[idx].p;
+    }
+    // else there is no PSYS zone present
+    // fall through and later code will (correctly) fail to find PSYS within the regular parent zone
   }
-  assert(((pkg * state->n_die) + die) < state->n_parent_zones);
-  return &state->parent_zones[(pkg * state->n_die) + die];
+  idx = (pkg * state->n_die) + die;
+  assert(idx < state->n_parent_zones);
+  return &state->parent_zones[idx].p;
 }
 
 static uint32_t count_parent_zones(void) {
@@ -195,80 +214,105 @@ static int get_topology(uint32_t n_parent_zones, uint32_t* n_pkgs, uint32_t* n_d
   return ret;
 }
 
-// compare strings that may contain substrings of natural numbers (values >= 0)
-// format is expected to be: "package-%d" or "package-%d-die-%d"
-static int strcmp_nat_lu(const char* l, const char* r) {
-  unsigned long l_val;
-  unsigned long r_val;
-  long diff;
-  char* endptr;
-  int is_num_block = 0;
-  while (*l && *r) {
-    if (is_num_block) {
-      // parse numeric values
-      l_val = strtoul(l, &endptr, 0);
-      l = endptr;
-      r_val = strtoul(r, &endptr, 0);
-      r = endptr;
-      diff = l_val - r_val;
-      if (diff > 0) {
-        return 1;
-      }
-      if (diff < 0) {
-        return -1;
-      }
-      is_num_block = 0;
-    } else {
-      // compare non-numerically until both strings are digits at same index
-      for (; *l && *r; l++, r++) {
-        if (isdigit(*l) && isdigit(*r)) {
-          is_num_block = 1;
-          break;
-        }
-        if (isdigit(*l)) {
-          return -1;
-        }
-        if (isdigit(*r)) {
-          return 1;
-        }
-        diff = *l - *r;
-        if (diff > 0) {
-          return 1;
-        }
-        if (diff < 0) {
-          return -1;
-        }
-      }
-    }
+// Assumes that all package/die/psys zones are present (not powered off), otherwise we'd have to insert empty bubbles
+// On kernels before 5.10, there was at most one "psys" zone, but now might expose a PSYS zone for each package to
+// support newer CPUs (e.g., Sapphire Rapids) where package 0 isn't necessarily the master package.
+static int cmp_raplcap_powercap_parent(const void* va, const void* vb) {
+  const raplcap_powercap_parent* a = (const raplcap_powercap_parent*) va;
+  const raplcap_powercap_parent* b = (const raplcap_powercap_parent*) vb;
+  if (a->type < b->type) {
+    return -1;
   }
-  return *r ? -1 : (*l ? 1 : 0);
+  if (a->type > b->type) {
+    return 1;
+  }
+  // if not has_pkg, assumes pkg=0
+  if (a->pkg < b->pkg) {
+    return -1;
+  }
+  if (a->pkg > b->pkg) {
+    return 1;
+  }
+  // if not has_die, assumes die=0
+  if (a->die < b->die) {
+    return -1;
+  }
+  if (a->die > b->die) {
+    return 1;
+  }
+  return 0;
 }
 
-static int sort_parent_zones(const void* a, const void* b) {
-  char name_a[ZONE_NAME_MAX_SIZE] = { 0 };
-  char name_b[ZONE_NAME_MAX_SIZE] = { 0 };
-  const powercap_intel_rapl_parent* zone_a = (const powercap_intel_rapl_parent*) a;
-  const powercap_intel_rapl_parent* zone_b = (const powercap_intel_rapl_parent*) b;
-  int ret = 0;
-  // first check if either zone is PSYS, which must be placed at the end of the sorted array (after PACKAGE zones)
-  // in the current powercap design, PSYS zones exist as their own parent zones, without child zones
-  if (powercap_intel_rapl_is_zone_supported(zone_a, RAPLCAP_ZONE_PSYS)) {
-    return 1; // a >= b
-  }
-  if (powercap_intel_rapl_is_zone_supported(zone_b, RAPLCAP_ZONE_PSYS)) {
-    return -1; // a < b
-  }
-  // now assume PACKAGE zones and sort by name
-  if (powercap_intel_rapl_get_name(zone_a, RAPLCAP_ZONE_PACKAGE, name_a, sizeof(name_a)) >= 0 &&
-      powercap_intel_rapl_get_name(zone_b, RAPLCAP_ZONE_PACKAGE, name_b, sizeof(name_b)) >= 0) {
-    // assumes names are in the form "package-X" or "package-X-die-Y"
-    if ((ret = strcmp_nat_lu(name_a, name_b)) > 0) {
-      raplcap_log(DEBUG, "sort_parent_zones: Zones are out of order\n");
-    }
+static int parse_parent_zone_topology(raplcap_powercap_parent* rp, uint32_t id) {
+  char name[ZONE_NAME_MAX_SIZE] = { 0 };
+  const char* ptr = name;
+  char* endptr;
+  // first determine zone type
+  if (powercap_intel_rapl_is_zone_supported(&rp->p, RAPLCAP_ZONE_PACKAGE)) {
+    rp->type = RAPLCAP_ZONE_PACKAGE;
+  } else if (powercap_intel_rapl_is_zone_supported(&rp->p, RAPLCAP_ZONE_PSYS)) {
+    rp->type = RAPLCAP_ZONE_PSYS;
   } else {
-    raplcap_perror(ERROR, "powercap_intel_rapl_get_name");
+    raplcap_log(ERROR, "Unexpected type for parent zone id=%"PRIu32"\n", id);
+    errno = ENOTSUP;
+    return -1;
   }
-  return ret;
+  raplcap_log(DEBUG, "parse_parent_zone_topology: id=%"PRIu32", type=%u\n", id, rp->type);
+  // now parse name for pkg and die, if available
+  // name format is expected to be: "package-%d", "package-%d-die-%d", "psys", or "psys-%d"
+  if (powercap_intel_rapl_get_name(&rp->p, rp->type, name, sizeof(name)) < 0) {
+    raplcap_perror(ERROR, "powercap_intel_rapl_get_name");
+    return -1;
+  }
+  while (*ptr) {
+    if (isdigit(*ptr)) {
+      if (!rp->has_pkg) {
+        endptr = NULL;
+        rp->pkg = strtoul(ptr, &endptr, 0);
+        if (!rp->pkg && endptr == ptr) {
+          raplcap_log(ERROR, "Failed to parse package from zone name: %s\n", name);
+          errno = ENOTSUP;
+          return -1;
+        }
+        rp->has_pkg = 1;
+        raplcap_log(DEBUG, "parse_parent_zone_topology: id=%"PRIu32", pkg=%"PRIu32"\n", id, rp->pkg);
+      } else if (!rp->has_die) {
+        endptr = NULL;
+        rp->die = strtoul(ptr, &endptr, 0);
+        if (!rp->die && endptr == ptr) {
+          raplcap_log(ERROR, "Failed to parse die from zone name: %s\n", name);
+          errno = ENOTSUP;
+          return -1;
+        }
+        rp->has_die = 1;
+        raplcap_log(DEBUG, "parse_parent_zone_topology: id=%"PRIu32", die=%"PRIu32"\n", id, rp->die);
+      } else {
+        raplcap_log(ERROR, "Unsupported name format for parent zone id=%"PRIu32": %s\n", id, name);
+        errno = ENOTSUP;
+        return -1;
+      }
+      ptr = endptr;
+    } else {
+      ptr++;
+    }
+  }
+  return 0;
+}
+
+// rp is expected to be zero-initialized
+static int raplcap_powercap_parent_init(raplcap_powercap_parent* rp, uint32_t id, int ro) {
+  int err_save;
+  if (powercap_intel_rapl_init(id, &rp->p, ro)) {
+    raplcap_perror(ERROR, "powercap_intel_rapl_init");
+    return -1;
+  }
+  if (parse_parent_zone_topology(rp, id)) {
+    err_save = errno;
+    powercap_intel_rapl_destroy(&rp->p);
+    errno = err_save;
+    return -1;
+  }
+  return 0;
 }
 
 int raplcap_init(raplcap* rc) {
@@ -291,10 +335,11 @@ int raplcap_init(raplcap* rc) {
   if (get_topology(n_parent_zones, &n_pkg, &n_die) < 0) {
     return -1;
   }
+  assert(n_parent_zones >= n_pkg * n_die);
   if ((state = malloc(sizeof(raplcap_powercap))) == NULL) {
     return -1;
   }
-  if ((state->parent_zones = malloc(n_parent_zones * sizeof(powercap_intel_rapl_parent))) == NULL) {
+  if ((state->parent_zones = calloc(n_parent_zones, sizeof(*state->parent_zones))) == NULL) {
     free(state);
     return -1;
   }
@@ -303,8 +348,7 @@ int raplcap_init(raplcap* rc) {
   state->n_die = n_die;
   rc->state = state;
   for (i = 0; i < state->n_parent_zones; i++) {
-    if (powercap_intel_rapl_init(i, &state->parent_zones[i], ro)) {
-      raplcap_perror(ERROR, "powercap_intel_rapl_init");
+    if (raplcap_powercap_parent_init(&state->parent_zones[i], i, ro)) {
       err_save = errno;
       state->n_parent_zones = i; // so as not to cleanup uninitialized zones
       raplcap_destroy(rc);
@@ -312,17 +356,8 @@ int raplcap_init(raplcap* rc) {
       return -1;
     }
   }
-  // it's been observed that packages in sysfs may be numbered out of order; we must sort by name
-  // if there are PSYS zones, we sort them to the end of the array
-  errno = 0;
-  qsort(state->parent_zones, state->n_parent_zones, sizeof(powercap_intel_rapl_parent), sort_parent_zones);
-  if (errno) {
-    raplcap_log(ERROR, "Failed to sort packages by name\n");
-    err_save = errno;
-    raplcap_destroy(rc);
-    errno = err_save;
-    return -1;
-  }
+  // Parent zones in sysfs may be out of order - sort by type, package, and die
+  qsort(state->parent_zones, state->n_parent_zones, sizeof(powercap_intel_rapl_parent), cmp_raplcap_powercap_parent);
   rc->nsockets = n_pkg;
   raplcap_log(DEBUG, "raplcap_init: Initialized\n");
   return 0;
@@ -338,7 +373,7 @@ int raplcap_destroy(raplcap* rc) {
   if ((state = (raplcap_powercap*) rc->state) != NULL) {
     for (i = 0; i < state->n_parent_zones; i++) {
       raplcap_log(DEBUG, "raplcap_destroy: zone=%"PRIu32"\n", i);
-      if (powercap_intel_rapl_destroy(&state->parent_zones[i])) {
+      if (powercap_intel_rapl_destroy(&state->parent_zones[i].p)) {
         raplcap_perror(WARN, "powercap_intel_rapl_destroy");
         err_save = errno;
       }
