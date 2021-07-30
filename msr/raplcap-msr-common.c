@@ -356,6 +356,13 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_ATOM;
       break;
+    case CPUID_MODEL_ATOM_SILVERMONT_D:
+      ctx->power_units = from_msr_pu_atom(units_msrval);
+      ctx->energy_units = from_msr_eu_atom(units_msrval);
+      ctx->energy_units_dram = ctx->energy_units;
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_DEFAULT;
+      break;
     //----
     case CPUID_MODEL_ATOM_AIRMONT:
       ctx->power_units = from_msr_pu_atom(units_msrval);

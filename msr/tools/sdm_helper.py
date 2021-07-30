@@ -95,7 +95,7 @@ if __name__ == "__main__":
              MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
              MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
     TBL_9 = {}
-    TBL_10 = {MSR_RAPL_POWER_UNIT: "Table 2-10 (Same as 2-8)",
+    TBL_10 = {MSR_RAPL_POWER_UNIT: "Table 2-10",
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT}
     TBL_11 = {MSR_PP0_POWER_LIMIT: "Table 2-11"}
@@ -103,8 +103,8 @@ if __name__ == "__main__":
     ATOM_SILVERMONT.print_line()
     ATOM_SILVERMONT_MID = CPU("0x4A", "ATOM_SILVERMONT_MID", [TBL_6, TBL_7, TBL_8])
     ATOM_SILVERMONT_MID.print_line()
-    ATOM_SILVERMONT_X = CPU("0x4D", "ATOM_SILVERMONT_X", [TBL_6, TBL_7, TBL_10])
-    ATOM_SILVERMONT_X.print_line()
+    ATOM_SILVERMONT_D = CPU("0x4D", "ATOM_SILVERMONT_D", [TBL_6, TBL_7, TBL_10])
+    ATOM_SILVERMONT_D.print_line()
     ATOM_AIRMONT_MID = CPU("0x5A", "ATOM_AIRMONT_MID", [TBL_6, TBL_7, TBL_8])
     ATOM_AIRMONT_MID.print_line()
     ATOM_SOFIA = CPU("0x5D", "ATOM_SOFIA", [TBL_6, TBL_7, TBL_8])
