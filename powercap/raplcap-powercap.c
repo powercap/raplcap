@@ -87,16 +87,17 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
   return &state->parent_zones[idx].p;
 }
 
-static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32_t* max_pkg_id) {
+static int get_topology(uint32_t *n_parent_zones, uint32_t* n_pkg, uint32_t* n_die) {
   char name[ZONE_NAME_MAX_SIZE];
   char* endptr;
   char* endptr2;
-  uint32_t i;
   uint32_t pkg;
   uint32_t die;
+  uint32_t max_pkg_id = 0;
+  uint32_t max_die_id = 0;
   // package and die IDs can appear in any order
-  for (i = 0; i < n_parent_zones; i++) {
-    if (powercap_sysfs_zone_get_name(CONTROL_TYPE, &i, 1, name, sizeof(name)) < 0) {
+  for (*n_parent_zones = 0; !powercap_sysfs_zone_exists(CONTROL_TYPE, n_parent_zones, 1); (*n_parent_zones)++) {
+    if (powercap_sysfs_zone_get_name(CONTROL_TYPE, n_parent_zones, 1, name, sizeof(name)) < 0) {
       raplcap_perror(ERROR, "powercap_sysfs_zone_get_name");
       return -1;
     }
@@ -111,16 +112,8 @@ static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32
       errno = EINVAL;
       return -1;
     }
-    if (pkg >= n_parent_zones) {
-      // something is weird with the kernel zone naming if this happens - packages w/ smaller IDs are missing
-      // NOTE: The presence of a PSYS zone should reduce the upper bound, even though the array index is still legal
-      //       Package IDs are verified later
-      raplcap_log(ERROR, "Package %"PRIu32" not in range [0, %"PRIu32")\n", pkg, n_parent_zones);
-      errno = EINVAL;
-      return -1;
-    }
-    if (*max_pkg_id < pkg) {
-      *max_pkg_id = pkg;
+    if (max_pkg_id < pkg) {
+      max_pkg_id = pkg;
     }
     if (*endptr == '\0') {
       // the string format is package-X
@@ -129,83 +122,29 @@ static int count_pkg_die(uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32
       // the string format is (presumably) package-X-die-Y
       die = strtoul(endptr + 1, &endptr2, 0);
       if (!die && (endptr + 1) == endptr2) {
-        //. failed to get die - something unexpected in name format
+        // failed to get die - something unexpected in name format
         raplcap_log(ERROR, "Failed to parse die from zone name: %s\n", name);
         errno = EINVAL;
         return -1;
+      }
+      if (max_die_id < die) {
+        max_die_id = die;
       }
     } else {
       raplcap_log(ERROR, "Unsupported zone name format: %s\n", name);
       errno = EINVAL;
       return -1;
     }
-    // supports detecting duplicate die entries up to die ID 32
-    if (pkg_die_mask[pkg] & (1 << die)) {
-      raplcap_log(ERROR, "Duplicate package/die detected, pkg=%"PRIu32", die=%"PRIu32"\n", pkg, die);
-      errno = EINVAL;
-      return -1;
-    }
-    pkg_die_mask[pkg] |= (1 << die);
   }
-  return 0;
-}
-
-static int parse_pkg_die(const uint32_t* pkg_die_mask, uint32_t n_parent_zones, uint32_t max_pkg_id, uint32_t* n_pkgs, uint32_t* n_die) {
-  uint32_t i;
-  uint32_t n_pkg_die;
-  for (i = 0; i < n_parent_zones; i++) {
-    if (!pkg_die_mask[i]) {
-      // not a PACKAGE zone (e.g., could be PSYS)
-      continue;
-    }
-    (*n_pkgs)++;
-    // count die
-    n_pkg_die = __builtin_popcount(pkg_die_mask[i]);
-    // only the lowest bits should be set, otherwise some die are missing
-    if ((pkg_die_mask[i] >> n_pkg_die) != 0) {
-      raplcap_log(ERROR, "Unexpected package/die mapping - possibly missing package die\n");
-      errno = EINVAL;
-      return -1;
-    }
-    if (*n_die == 0) {
-      *n_die = n_pkg_die;
-    } else if (n_pkg_die != *n_die) {
-      // currently only support uniform package die counts, so verify that every package has matching die count
-      raplcap_log(ERROR, "Unsupported heterogeneity in package/die configuration\n");
-      errno = EINVAL;
-      return -1;
-    }
-  }
-  // verify that packages aren't missing from range [0, n_pkgs)
-  if (max_pkg_id != *n_pkgs - 1) {
-    raplcap_log(ERROR, "Unexpected package/die mapping - possibly missing package\n");
-    errno = EINVAL;
-    return -1;
-  }
-  return 0;
-}
-
-static int get_topology(uint32_t* n_parent_zones, uint32_t* n_pkgs, uint32_t* n_die) {
-  uint32_t* pkg_die_mask;
-  uint32_t max_pkg_id = 0;
-  int ret = 0;
-  *n_parent_zones = powercap_intel_rapl_get_num_instances();
-  raplcap_log(DEBUG, "get_topology: parent_zones=%"PRIu32"\n", *n_parent_zones);
   if (*n_parent_zones == 0) {
     errno = ENODEV;
     return -1;
   }
-  if (!(pkg_die_mask = calloc(*n_parent_zones, sizeof(uint32_t)))) {
-    return -1;
-  }
-  *n_pkgs = 0;
-  *n_die = 0;
-  if (!(ret = count_pkg_die(pkg_die_mask, *n_parent_zones, &max_pkg_id))) {
-    ret = parse_pkg_die(pkg_die_mask, *n_parent_zones, max_pkg_id, n_pkgs, n_die);
-  }
-  raplcap_log(DEBUG, "get_topology: packages=%"PRIu32", die=%"PRIu32"\n", *n_pkgs, *n_die);
-  free(pkg_die_mask);
-  return ret;
+  *n_pkg = max_pkg_id + 1;
+  *n_die = max_die_id + 1;
+  raplcap_log(DEBUG, "get_topology: n_parent_zones=%"PRIu32", n_pkg=%"PRIu32", n_die=%"PRIu32"\n",
+              *n_parent_zones, *n_pkg, *n_die);
+  return 0;
 }
 
 // Assumes that all package/die/psys zones are present (not powered off), otherwise we'd have to insert empty bubbles
