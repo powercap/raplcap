@@ -250,7 +250,7 @@ int raplcap_init(raplcap* rc) {
     free(state);
     return -1;
   }
-  if ((state->psys_zones = calloc(n_pkg, sizeof(*state->pkg_zones))) == NULL) {
+  if ((state->psys_zones = calloc(n_pkg, sizeof(*state->psys_zones))) == NULL) {
     free(state->pkg_zones);
     free(state->parent_zones);
     free(state);
