@@ -16,7 +16,7 @@
 
 ### Deprecated
 
-  * [powercap] Falling back on PSYS zone at pkg=0, die=0 when not found for other pkg/die - will return an error in the future
+  * [powercap] Falling back on PSYS zone at die=0 and then at pkg=0 when not found for specified pkg/die - will return an error in the future
 
 ### Fixed
 

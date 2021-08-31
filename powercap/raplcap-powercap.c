@@ -46,7 +46,7 @@ static raplcap rc_default;
 
 static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone) {
   raplcap_powercap* state;
-  powercap_intel_rapl_parent* p = NULL;
+  raplcap_powercap_parent* p = NULL;
   if (rc == NULL) {
     rc = &rc_default;
   }
@@ -71,19 +71,34 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
     return NULL;
   }
   if (zone == RAPLCAP_ZONE_PSYS) {
-    if ((p = &state->psys_zones[pkg]->p) == NULL && (pkg > 0 || die > 0)) {
-      raplcap_log(WARN, "Trying to fall back on PSYS zone at pkg=0, die=0.\nThis behavior is deprecated - "
-                  "in the future, an error will be returned if the zone is not found for the specified pkg/die.\n");
-      p = &state->psys_zones[0]->p;
+    // powercap control type doesn't specify die values for PSYS zones, so we assume die must be 0
+    if (die == 0) {
+      p = state->psys_zones[pkg];
     }
-    // if p is still NULL, then there is no PSYS zone present
-    // fall through and later code will (correctly) fail to find PSYS within the regular parent zone
+    // --- begin deprecation block
+    if (p == NULL) {
+      if ((p = state->psys_zones[pkg]) != NULL) {
+        raplcap_log(WARN, "Ignoring die value > 0 for PSYS zone at pkg=%"PRIu32".\nThis behavior is deprecated - "
+                    "in the future, an error will be returned if the zone is not found for the specified pkg/die.\n",
+                    pkg);
+      }
+      if (p == NULL && pkg > 0 && (p = state->psys_zones[0]) != NULL) {
+        raplcap_log(WARN, "Falling back on PSYS zone at pkg=0, die=0.\nThis behavior is deprecated - "
+                    "in the future, an error will be returned if the zone is not found for the specified pkg/die.\n");
+      }
+    }
+    // --- end deprecation block
+    // if p is still NULL, fall through and later code will (correctly) fail to find PSYS within the regular parent zone
   }
-  if (p == NULL && (p = &state->pkg_zones[(pkg * state->n_die) + die]->p) == NULL) {
-    // the requested package/die was in range, but not detected in sysfs
+  if (p == NULL) {
+    p = state->pkg_zones[(pkg * state->n_die) + die];
+  }
+  if (p == NULL) {
+    // the requested package/die was in range, but the zone was not detected in sysfs
     errno = ENODEV;
+    return NULL;
   }
-  return p;
+  return &p->p;
 }
 
 static int get_topology(uint32_t *n_parent_zones, uint32_t* n_pkg, uint32_t* n_die) {
