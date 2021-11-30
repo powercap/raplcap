@@ -8,11 +8,11 @@ In fact, it can only read Package-level power limits.
 
 ## Prerequisites
 
-* [Intel&reg; Power Gadget >= 2.7](https://software.intel.com/en-us/articles/intel-power-gadget/)
+* [Intel&reg; Power Gadget >= 3.0](https://software.intel.com/en-us/articles/intel-power-gadget/)
 
 On Windows, download and install IPG from the above link.
 
 On OSX, install IPG using:
 ```sh
-brew cask install intel-power-gadget
+brew install intel-power-gadget
 ```
