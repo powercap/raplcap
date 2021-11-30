@@ -1,6 +1,6 @@
 # Should just be on OSX and Windows
 if(APPLE)
-  find_package(IntelPowerGadget)
+  find_package(IntelPowerGadget 3.0)
   if(NOT IntelPowerGadget_FOUND)
     return()
   endif()
