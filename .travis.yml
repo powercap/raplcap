@@ -2,6 +2,8 @@ os:
   - linux
   # - osx
 
+# osx_image: xcode13.1
+
 matrix:
   include:
     - dist: xenial
@@ -21,19 +23,23 @@ language: c
 
 # Intel Power Gadget won't install in Travis - no point in running on OSX then...
 # Error - Intel Power Gadget does not currently support systems with more than one CPU package.
-# before_install:
-#   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-#   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask install intel-power-gadget; fi
+# addons:
+#   homebrew:
+#     casks:
+#     - intel-power-gadget
+#     # update: true
 
 install:
   # powercap dependency
-  - git clone https://github.com/powercap/powercap.git libpowercap
-  - cd libpowercap
-  - mkdir _build
-  - cd _build
-  - cmake -DCMAKE_INSTALL_PREFIX=_install ..
-  - cmake --build . --target install
-  - cd ../..
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      git clone https://github.com/powercap/powercap.git libpowercap
+      mkdir libpowercap/_build
+      cd libpowercap/_build
+      cmake -DCMAKE_INSTALL_PREFIX=_install ..
+      cmake --build . --target install
+      cd -
+    fi
 
 script:
   - mkdir _build
