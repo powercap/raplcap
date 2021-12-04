@@ -220,6 +220,7 @@ static int get_limits(unsigned int pkg, unsigned int die, raplcap_zone zone) {
   raplcap_limit lp = { 0 };
   double joules;
   double joules_max;
+  int supp;
   int locked = PRINT_LIMIT_IGNORE;
   int clamped = PRINT_LIMIT_IGNORE;
   int locked_peak = PRINT_LIMIT_IGNORE;
@@ -242,7 +243,10 @@ static int get_limits(unsigned int pkg, unsigned int die, raplcap_zone zone) {
     perror("Failed to get limits");
     return ret;
   }
-  if (raplcap_pd_is_constraint_supported(NULL, pkg, die, zone, RAPLCAP_CONSTRAINT_PEAK_POWER)) {
+  supp = raplcap_pd_is_constraint_supported(NULL, pkg, die, zone, RAPLCAP_CONSTRAINT_PEAK_POWER);
+  if (supp < 0) {
+    print_error_continue("Failed to determine if peak power constraint is supported");
+  } else if (supp) {
 #ifdef RAPLCAP_msr
     locked_peak = raplcap_msr_pd_is_locked(NULL, pkg, die, zone, RAPLCAP_CONSTRAINT_PEAK_POWER);
     if (locked < 0) {

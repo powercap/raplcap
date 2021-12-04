@@ -21,6 +21,7 @@
 ### Fixed
 
 * [powercap] Memory leak in 'raplcap_destroy'
+* [rapl-configure] Missing error check when querying for peak power (PL4) constraint support
 
 
 ## [v0.6.0] - 2021-05-12
