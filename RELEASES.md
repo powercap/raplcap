@@ -5,6 +5,7 @@
 ### Added
 
 * [msr] Support for Atom Silvermont micro server ("Avoton" / "Rangeley"), Model 0x4D
+* [powercap] Support for multiple PSYS zones (Linux kernel 5.14 and newer, e.g., for Sapphire Rapids CPUs)
 
 ### Changed
 
@@ -12,6 +13,10 @@
   * [rapl-configure] Print fully-qualified "watts_long" and "seconds_long" in output for zones with a single constraint
   * [rapl-configure] Don't automatically enable zones - user must explicitly set -e/--enabled=1
   * [rapl-configure] Fail if -W/--watts1 and/or -S/--seconds1 are used but short term constraint is not supported
+
+### Deprecated
+
+  * [powercap] Falling back on PSYS zone at die=0 and then at pkg=0 when not found for specified pkg/die - will return an error in the future
 
 ### Fixed
 
