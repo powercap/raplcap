@@ -4,7 +4,7 @@ function(add_rapl_configure RAPL_LIB COMP_PART)
   add_executable(rapl-configure-${RAPL_LIB} ${PROJECT_SOURCE_DIR}/rapl-configure/rapl-configure.c)
   target_link_libraries(rapl-configure-${RAPL_LIB} PRIVATE raplcap-${RAPL_LIB})
   install(TARGETS rapl-configure-${RAPL_LIB}
-          EXPORT RAPLCap${COMP_PART}Targets
+          EXPORT RAPLCap${COMP_PART}UtilsTargets
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                   COMPONENT RAPLCap_${COMP_PART}_Utils_Runtime)
   configure_file(
