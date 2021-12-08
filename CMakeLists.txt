@@ -40,6 +40,8 @@ endfunction()
 # Subdirectories
 
 add_subdirectory(rapl-configure)
+add_subdirectory(test)
+
 add_subdirectory(msr)
 add_subdirectory(powercap)
 add_subdirectory(ipg)

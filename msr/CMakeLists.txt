@@ -27,20 +27,13 @@ add_raplcap_pkg_config(raplcap-msr "Implementation of RAPLCap that uses the MSR 
 
 # Tests
 
-add_executable(raplcap-msr-unit-test ${PROJECT_SOURCE_DIR}/test/raplcap-unit-test.c)
-target_link_libraries(raplcap-msr-unit-test PRIVATE raplcap-msr)
-add_test(raplcap-msr-unit-test raplcap-msr-unit-test)
+add_raplcap_tests(raplcap-msr)
 
 add_executable(raplcap-msr-common-unit-test test/raplcap-msr-common-test.c
                                             raplcap-msr-common.c
                                             raplcap-cpuid.c)
 target_include_directories(raplcap-msr-common-unit-test PRIVATE ${PROJECT_SOURCE_DIR}/inc)
 add_test(raplcap-msr-common-unit-test raplcap-msr-common-unit-test)
-
-# must be run manually
-add_executable(raplcap-msr-integration-test ${PROJECT_SOURCE_DIR}/test/raplcap-integration-test.c)
-target_compile_definitions(raplcap-msr-integration-test PRIVATE RAPLCAP_ALLOW_DEPRECATED)
-target_link_libraries(raplcap-msr-integration-test PRIVATE raplcap-msr)
 
 # rapl-configure
 
