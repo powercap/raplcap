@@ -18,6 +18,37 @@ enable_testing()
 
 # Functions
 
+function(add_raplcap_library TARGET SHORT_NAME)
+  # Parse arguments
+  set(options)
+  set(oneValueArgs TYPE)
+  set(multiValueArgs SOURCES
+                     PUBLIC_HEADER
+                     PUBLIC_BUILD_INCLUDE_DIRS)
+  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  if(NOT "${ARG_UNPARSED_ARGUMENTS}" STREQUAL "")
+    message(FATAL_ERROR "add_raplcap_library: unrecognized args: ${ARG_UNPARSED_ARGUMENTS}")
+  endif()
+
+  # Create library
+  add_library(${TARGET} ${ARG_TYPE} ${ARG_SOURCES})
+  target_include_directories(${TARGET} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc$<SEMICOLON>${ARG_PUBLIC_BUILD_INCLUDE_DIRS}>
+                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
+  set_target_properties(${TARGET} PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h;${ARG_PUBLIC_HEADER}")
+  target_compile_definitions(${TARGET} PRIVATE RAPLCAP_IMPL="${TARGET}"
+                                               RAPLCAP_ALLOW_DEPRECATED)
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(${TARGET} PROPERTIES VERSION ${PROJECT_VERSION}
+                                               SOVERSION ${PROJECT_VERSION_MAJOR})
+  endif()
+  install(TARGETS ${TARGET}
+          EXPORT RAPLCapTargets
+          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+endfunction()
+
 function(add_raplcap_pkg_config TARGET DESCRIPTION REQUIRES_PRIVATE LIBS_PRIVATE)
   set(PKG_CONFIG_PREFIX "${CMAKE_INSTALL_PREFIX}")
   set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
