@@ -9,10 +9,10 @@ set(SOURCES raplcap-msr.c
             raplcap-msr-common.c
             raplcap-msr-sys-linux.c
             raplcap-cpuid.c)
-add_raplcap_library(raplcap-msr msr SOURCES ${SOURCES}
-                                    PUBLIC_HEADER raplcap-msr.h
-                                    PUBLIC_BUILD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
-add_raplcap_pkg_config(raplcap-msr "Implementation of RAPLCap that uses the MSR directly" "" "")
+add_raplcap_library(raplcap-msr msr MSR SOURCES ${SOURCES}
+                                        PUBLIC_HEADER raplcap-msr.h
+                                        PUBLIC_BUILD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+add_raplcap_pkg_config(raplcap-msr "Implementation of RAPLCap that uses the MSR directly" "" "" MSR)
 
 # Tests
 
@@ -26,6 +26,6 @@ add_test(raplcap-msr-common-unit-test raplcap-msr-common-unit-test)
 
 # rapl-configure
 
-add_rapl_configure("msr")
+add_rapl_configure(msr MSR)
 option(RAPLCAP_CONFIGURE_MSR_EXTRA "Enable extra features in rapl-configure-msr" OFF)
 target_compile_definitions(rapl-configure-msr PRIVATE $<$<BOOL:${RAPLCAP_CONFIGURE_MSR_EXTRA}>:RAPLCAP_msr>)

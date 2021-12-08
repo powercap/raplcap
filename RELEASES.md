@@ -4,11 +4,13 @@
 
 ### Added
 
+* CMake installation components
 * [msr] Support for Atom Silvermont micro server ("Avoton" / "Rangeley"), Model 0x4D
 * [powercap] Support for multiple PSYS zones (Linux kernel 5.14 and newer, e.g., for Sapphire Rapids CPUs)
 
 ### Changed
 
+* Increased minimum CMake version from 3.6 to 3.12
 * Changes based on previously deprecated behavior:
   * [rapl-configure] Print fully-qualified "watts_long" and "seconds_long" in output for zones with a single constraint
   * [rapl-configure] Don't automatically enable zones - user must explicitly set -e/--enabled=1

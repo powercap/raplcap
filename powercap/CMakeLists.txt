@@ -12,9 +12,9 @@ endif()
 # Libraries
 
 set(SOURCES raplcap-powercap.c powercap-intel-rapl.c)
-add_raplcap_library(raplcap-powercap powercap SOURCES ${SOURCES})
+add_raplcap_library(raplcap-powercap powercap Powercap SOURCES ${SOURCES})
 target_link_libraries(raplcap-powercap PRIVATE Powercap::powercap)
-add_raplcap_pkg_config(raplcap-powercap "Implementation of RAPLCap that uses libpowercap (powercap)" "powercap >= ${POWERCAP_MIN_VERSION}" "")
+add_raplcap_pkg_config(raplcap-powercap "Implementation of RAPLCap that uses libpowercap (powercap)" "powercap >= ${POWERCAP_MIN_VERSION}" "" Powercap)
 
 # Tests
 
@@ -22,4 +22,4 @@ add_raplcap_tests(raplcap-powercap)
 
 # rapl-configure
 
-add_rapl_configure("powercap")
+add_rapl_configure(powercap Powercap)

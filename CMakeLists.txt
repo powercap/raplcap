@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.12)
 
 project(raplcap VERSION 0.7.0
                 LANGUAGES C)
@@ -21,11 +21,13 @@ enable_testing()
 add_library(raplcap INTERFACE)
 target_include_directories(raplcap INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
-install(FILES ${PROJECT_SOURCE_DIR}/inc/raplcap.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+install(FILES ${PROJECT_SOURCE_DIR}/inc/raplcap.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+        COMPONENT RAPLCap_Development)
 
 # Functions
 
-function(add_raplcap_library TARGET SHORT_NAME)
+function(add_raplcap_library TARGET SHORT_NAME COMP_PART)
   # Parse arguments
   set(options)
   set(oneValueArgs TYPE)
@@ -53,12 +55,17 @@ function(add_raplcap_library TARGET SHORT_NAME)
   install(TARGETS ${TARGET}
           EXPORT RAPLCapTargets
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                  COMPONENT RAPLCap_${COMP_PART}_Runtime
+                  NAMELINK_COMPONENT RAPLCap_${COMP_PART}_Development
           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                  COMPONENT RAPLCap_${COMP_PART}_Development
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+                  COMPONENT RAPLCap_${COMP_PART}_Runtime
+          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+                        COMPONENT RAPLCap_${COMP_PART}_Development)
 endfunction()
 
-function(add_raplcap_pkg_config TARGET DESCRIPTION REQUIRES_PRIVATE LIBS_PRIVATE)
+function(add_raplcap_pkg_config TARGET DESCRIPTION REQUIRES_PRIVATE LIBS_PRIVATE COMP_PART)
   set(PKG_CONFIG_PREFIX "${CMAKE_INSTALL_PREFIX}")
   set(PKG_CONFIG_EXEC_PREFIX "\${prefix}")
   set(PKG_CONFIG_LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
@@ -74,7 +81,9 @@ function(add_raplcap_pkg_config TARGET DESCRIPTION REQUIRES_PRIVATE LIBS_PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.pc
     @ONLY
   )
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.pc
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+          COMPONENT RAPLCap_${COMP_PART}_Development)
 endfunction()
 
 # Subdirectories
