@@ -16,6 +16,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 enable_testing()
 
+# Shared Header
+
+add_library(raplcap INTERFACE)
+target_include_directories(raplcap INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+                                             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
+install(FILES ${PROJECT_SOURCE_DIR}/inc/raplcap.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+
 # Functions
 
 function(add_raplcap_library TARGET SHORT_NAME)
@@ -32,9 +39,11 @@ function(add_raplcap_library TARGET SHORT_NAME)
 
   # Create library
   add_library(${TARGET} ${ARG_TYPE} ${ARG_SOURCES})
-  target_include_directories(${TARGET} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc$<SEMICOLON>${ARG_PUBLIC_BUILD_INCLUDE_DIRS}>
-                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
-  set_target_properties(${TARGET} PROPERTIES PUBLIC_HEADER "${PROJECT_SOURCE_DIR}/inc/raplcap.h;${ARG_PUBLIC_HEADER}")
+  target_link_libraries(${TARGET} PUBLIC raplcap)
+  target_include_directories(${TARGET} PUBLIC $<BUILD_INTERFACE:${ARG_PUBLIC_BUILD_INCLUDE_DIRS}>
+                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
+                                       PRIVATE ${PROJECT_SOURCE_DIR}/inc)
+  set_target_properties(${TARGET} PROPERTIES PUBLIC_HEADER "${ARG_PUBLIC_HEADER}")
   target_compile_definitions(${TARGET} PRIVATE RAPLCAP_IMPL="${TARGET}"
                                                RAPLCAP_ALLOW_DEPRECATED)
   if(BUILD_SHARED_LIBS)
