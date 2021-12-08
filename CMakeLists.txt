@@ -53,7 +53,7 @@ function(add_raplcap_library TARGET SHORT_NAME COMP_PART)
                                                SOVERSION ${PROJECT_VERSION_MAJOR})
   endif()
   install(TARGETS ${TARGET}
-          EXPORT RAPLCapTargets
+          EXPORT RAPLCap${COMP_PART}Targets
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                   COMPONENT RAPLCap_${COMP_PART}_Runtime
                   NAMELINK_COMPONENT RAPLCap_${COMP_PART}_Development
