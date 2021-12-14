@@ -16,10 +16,12 @@ find_package(PkgConfig QUIET)
 if(PKG_CONFIG_FOUND)
   pkg_check_modules(PC_Powercap QUIET powercap)
 endif()
-find_package_handle_standard_args(Powercap
-                                  REQUIRED_VARS PC_Powercap_LINK_LIBRARIES
-                                                PC_Powercap_INCLUDE_DIRS
-                                  VERSION_VAR PC_Powercap_VERSION)
+if(PC_Powercap_FOUND)
+  find_package_handle_standard_args(Powercap
+                                    REQUIRED_VARS PC_Powercap_LINK_LIBRARIES
+                                                  PC_Powercap_INCLUDE_DIRS
+                                    VERSION_VAR PC_Powercap_VERSION)
+endif()
 if(Powercap_FOUND)
   if(NOT TARGET Powercap::powercap)
     add_library(Powercap::powercap UNKNOWN IMPORTED)
