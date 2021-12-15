@@ -130,9 +130,10 @@ static int get_topology(uint32_t *n_parent_zones, uint32_t* n_pkg, uint32_t* n_d
       max_pkg_id = pkg;
     }
     if (*endptr == '\0') {
-      // the string format is package-X
-      die = 0;
-    } else if (endptr[1] == '-') {
+      // the string format is package-X, which implies die = 0
+      continue;
+    }
+    if (endptr[1] == '-') {
       // the string format is (presumably) package-X-die-Y
       die = strtoul(endptr + 1, &endptr2, 0);
       if (!die && (endptr + 1) == endptr2) {
