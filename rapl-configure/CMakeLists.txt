@@ -16,3 +16,10 @@ function(add_rapl_configure RAPL_LIB COMP_PART)
           DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
           COMPONENT RAPLCap_${COMP_PART}_Utils_Runtime)
 endfunction()
+
+function(install_rapl_configure_export COMP_PART)
+  install(EXPORT RAPLCap${COMP_PART}UtilsTargets
+          DESTINATION ${RAPLCAP_CMAKE_CONFIG_INSTALL_DIR}
+          NAMESPACE RAPLCap::
+          COMPONENT RAPLCap_${COMP_PART}_Development)
+endfunction()

@@ -9,6 +9,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 add_compile_options(-Wall)
 
 include(GNUInstallDirs)
+set(RAPLCAP_CMAKE_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/raplcap)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -23,6 +24,13 @@ target_include_directories(raplcap INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>)
 install(FILES ${PROJECT_SOURCE_DIR}/inc/raplcap.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+        COMPONENT RAPLCap_Development)
+install(TARGETS raplcap
+        EXPORT RAPLCapTargets
+        COMPONENT RAPLCap_Development)
+install(EXPORT RAPLCapTargets
+        DESTINATION ${RAPLCAP_CMAKE_CONFIG_INSTALL_DIR}
+        NAMESPACE RAPLCap::
         COMPONENT RAPLCap_Development)
 
 # Functions
@@ -86,6 +94,30 @@ function(add_raplcap_pkg_config TARGET DESCRIPTION REQUIRES_PRIVATE LIBS_PRIVATE
           COMPONENT RAPLCap_${COMP_PART}_Development)
 endfunction()
 
+function(raplcap_export_private_dependency COMP PACKAGE PACKAGE_VERSION)
+  if(BUILD_SHARED_LIBS)
+    return()
+  endif()
+  # This approach avoids creating variables/macros in the Config.cmake file which might conflict with other packages.
+  # Refer to Config.cmake.in to see how this fits into the component discovery loop for graceful failures.
+  set_property(GLOBAL APPEND PROPERTY RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_PROP "
+    if(_comp STREQUAL ${COMP})
+      find_package(${PACKAGE} ${PACKAGE_VERSION})
+      if(NOT ${PACKAGE}_FOUND)
+        set(\${CMAKE_FIND_PACKAGE_NAME}_\${_comp}_FOUND False)
+        set(\${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE \"Component \${_comp} missing dependency: ${PACKAGE}\")
+      endif()
+    endif()"
+  )
+endfunction()
+
+function(install_raplcap_export COMP_PART)
+  install(EXPORT RAPLCap${COMP_PART}Targets
+          DESTINATION ${RAPLCAP_CMAKE_CONFIG_INSTALL_DIR}
+          NAMESPACE RAPLCap::
+          COMPONENT RAPLCap_${COMP_PART}_Development)
+endfunction()
+
 # Subdirectories
 
 add_subdirectory(rapl-configure)
@@ -94,6 +126,36 @@ add_subdirectory(test)
 add_subdirectory(msr)
 add_subdirectory(powercap)
 add_subdirectory(ipg)
+
+# CMake package helper
+
+include(CMakePackageConfigHelpers)
+
+set(CONFIG_TARGETS_FILE RAPLCapTargets.cmake)
+set(CONFIG_SUPPORTED_COMPONENTS IPG IPGUtils MSR MSRUtils Powercap PowercapUtils)
+get_property(RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_VAR GLOBAL PROPERTY RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_PROP)
+string(REPLACE ";" "\n" CONFIG_FIND_COMPONENT_DEPENDENCIES "${RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_VAR}")
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/RAPLCapConfig.cmake
+  INSTALL_DESTINATION ${RAPLCAP_CMAKE_CONFIG_INSTALL_DIR}
+  NO_SET_AND_CHECK_MACRO
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/RAPLCapConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/RAPLCapConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/RAPLCapConfigVersion.cmake
+        DESTINATION ${RAPLCAP_CMAKE_CONFIG_INSTALL_DIR}
+        COMPONENT RAPLCap_Development)
+if(NOT BUILD_SHARED_LIBS)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/cmake/
+          DESTINATION ${RAPLCAP_CMAKE_CONFIG_INSTALL_DIR}/Modules
+          FILES_MATCHING PATTERN "Find*.cmake")
+endif()
 
 # Uninstall
 
