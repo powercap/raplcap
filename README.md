@@ -104,7 +104,20 @@ make uninstall
 
 ## Linking
 
-To link with an implementation of RAPLCap, get linker information (including transitive dependencies) with `pkg-config`, e.g. one of:
+### CMake
+
+If your project uses CMake, import targets from the `RAPLCap` package by specifying the `MSR` and/or `Powercap` components as needed.
+For example:
+
+``` cmake
+find_package(RAPLCap REQUIRED COMPONENTS MSR Powercap)
+target_link_libraries(foo PRIVATE RAPLCap::raplcap-msr)
+target_link_libraries(bar PRIVATE RAPLCap::raplcap-powercap)
+```
+
+### Pkg-config
+
+If not using CMake, get linker information (including transitive dependencies) with `pkg-config`, e.g., one of:
 
 ``` sh
 pkg-config --libs --static raplcap-msr
