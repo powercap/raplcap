@@ -214,17 +214,17 @@ if __name__ == "__main__":
     TBL_43 = {}
     TBL_44 = {}
     TBL_45 = {MSR_VR_CURRENT_CONFIG: PL4_DEFAULT}
-    TBL_46 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
+    TBL_50 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_15_3,
               MSR_PP0_ENERGY_STATUS: RESERVED}
-    TBL_47 = {MSR_PACKAGE_ENERGY_TIME_STATUS: PACKAGE_ENERGY_TIME_DEFAULT,
+    TBL_51 = {MSR_PACKAGE_ENERGY_TIME_STATUS: PACKAGE_ENERGY_TIME_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_ICELAKE_XD,
               MSR_DRAM_ENERGY_STATUS: DRAM_15_3}
     SKYLAKE_L = CPU("0x4E", "SKYLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
     SKYLAKE_L.print_line()
     # Top of Section 2.17 says TBL_40 (Uncore) is used for 0x55, but TBL_40 doesn't mention it
-    SKYLAKE_X = CPU("0x55", "SKYLAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_46])
+    SKYLAKE_X = CPU("0x55", "SKYLAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_50])
     SKYLAKE_X.print_line()
     SKYLAKE = CPU("0x5E", "SKYLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
     SKYLAKE.print_line()
@@ -239,9 +239,9 @@ if __name__ == "__main__":
     ICELAKE.print_line()
     ICELAKE_L = CPU("0x7E", "ICELAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44])
     ICELAKE_L.print_line()
-    ICELAKE_X = CPU("0x6A", "ICELAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_47])
+    ICELAKE_X = CPU("0x6A", "ICELAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_51])
     ICELAKE_X.print_line()
-    ICELAKE_D = CPU("0x6C", "ICELAKE_D", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_47])
+    ICELAKE_D = CPU("0x6C", "ICELAKE_D", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_51])
     ICELAKE_D.print_line()
 
     COMETLAKE = CPU("0xA5", "COMETLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
@@ -254,19 +254,19 @@ if __name__ == "__main__":
     TIGERLAKE = CPU("0x8D", "TIGERLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_45])
     TIGERLAKE.print_line()
 
-    TBL_48 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
+    TBL_53 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT, # community consensus is that Xeon Phi should be DRAM_15_3
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
-    TBL_49 = {}
+    TBL_54 = {}
     # The SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
     # However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
-    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_48, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_53, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNL.print_line()
-    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_48, TBL_49, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_53, TBL_54, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
     # Last updated for Software Developer's Manual, Volume 4 - April 2021
