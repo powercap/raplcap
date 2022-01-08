@@ -1,5 +1,19 @@
 # Release Notes
 
+## [Unreleased]
+
+### Added
+
+* [msr] Support for Atom Tremont client ("Elkhart Lake"), Model 0x96
+* [msr] Support for Atom Tremont mobile ("Jasper Lake"), Model 0x9C
+* [msr] Support for Alder Lake client ("Golden Cove" / "Gracemont"), Model 0x97
+* [msr] Support for Alder Lake mobile ("Golden Cove" / "Gracemont"), Model 0x9A
+
+### Changed
+
+* [msr] Updated for the Intel Software Developer's Manual, December 2021 release
+
+
 ## [v0.7.0] - 2021-12-15
 
 ### Added
@@ -113,7 +127,7 @@
 
 ### Added
 
-* [msr] Support for Atom Tremont ("Jacobsville"), Model 0x86
+* [msr] Support for Atom Tremont micro server ("Jacobsville"), Model 0x86
 * [msr] Functions for clamping: 'raplcap_msr_is_zone_clamped' and 'raplcap_msr_set_zone_clamped'
 * [msr] Functions for locking: 'raplcap_msr_is_zone_locked' and 'raplcap_msr_set_zone_locked'
 * [powercap] Support for new "package-X-die-Y" Package zone naming convention in sysfs
@@ -224,6 +238,7 @@
 * Initial public release
 
 
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.7.0...HEAD
 [v0.7.0]: https://github.com/powercap/raplcap/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/powercap/raplcap/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/powercap/raplcap/compare/v0.4.0...v0.5.0

@@ -95,6 +95,9 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       case CPUID_MODEL_TIGERLAKE_L:
       case CPUID_MODEL_TIGERLAKE:
       //
+      case CPUID_MODEL_ALDERLAKE:
+      case CPUID_MODEL_ALDERLAKE_L:
+      //
       case CPUID_MODEL_XEON_PHI_KNL:
       case CPUID_MODEL_XEON_PHI_KNM:
       //
@@ -107,6 +110,8 @@ int cpuid_is_cpu_supported(uint32_t family, uint32_t model) {
       case CPUID_MODEL_ATOM_GOLDMONT_D:
       case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
       case CPUID_MODEL_ATOM_TREMONT_D:
+      case CPUID_MODEL_ATOM_TREMONT:
+      case CPUID_MODEL_ATOM_TREMONT_L:
         return 1;
     }
   }

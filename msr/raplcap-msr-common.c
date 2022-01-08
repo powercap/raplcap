@@ -315,6 +315,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_ATOM_GOLDMONT_D:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
     case CPUID_MODEL_ATOM_TREMONT_D:
+    case CPUID_MODEL_ATOM_TREMONT:
+    case CPUID_MODEL_ATOM_TREMONT_L:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
@@ -324,6 +326,9 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     //----
     case CPUID_MODEL_TIGERLAKE_L:
     case CPUID_MODEL_TIGERLAKE:
+    //
+    case CPUID_MODEL_ALDERLAKE:
+    case CPUID_MODEL_ALDERLAKE_L:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
