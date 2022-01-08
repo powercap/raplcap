@@ -129,8 +129,12 @@ if __name__ == "__main__":
     ATOM_GOLDMONT_PLUS.print_line()
 
     TBL_14 = {}
-    ATOM_TREMONT_X = CPU("0x86", "ATOM_TREMONT_X", [TBL_6, TBL_12, TBL_13, TBL_14])
-    ATOM_TREMONT_X.print_line()
+    ATOM_TREMONT_D = CPU("0x86", "ATOM_TREMONT_D", [TBL_6, TBL_12, TBL_13, TBL_14])
+    ATOM_TREMONT_D.print_line()
+    ATOM_TREMONT = CPU("0x96", "ATOM_TREMONT", [TBL_6, TBL_12, TBL_13, TBL_14])
+    ATOM_TREMONT.print_line()
+    ATOM_TREMONT_L = CPU("0x9C", "ATOM_TREMONT_L", [TBL_6, TBL_12, TBL_13, TBL_14])
+    ATOM_TREMONT_L.print_line()
 
     TBL_20 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
@@ -200,7 +204,7 @@ if __name__ == "__main__":
     # TODO: Comment at end of TBL_38 is for 0x45? Won't use (no effect on results anyway)...
     BROADWELL_X = CPU("0x4F", "BROADWELL_X", [TBL_20, TBL_21, TBL_29, TBL_34, TBL_36, TBL_38])
     BROADWELL_X.print_line()
-    # BROADWELL_D: See 2.16.1 for mention of Tables 19 and 28
+    # BROADWELL_D: See 2.16.1 for mention of TBL_20 and TBL_29
     # TODO: Discrepancy with kernel: it doesn't claim DRAM_15_3 for BROADWELL_D
     BROADWELL_D = CPU("0x56", "BROADWELL_D", [TBL_20, TBL_29, TBL_34, TBL_36, TBL_37])
     BROADWELL_D.print_line()
@@ -208,19 +212,12 @@ if __name__ == "__main__":
     TBL_39 = {MSR_PP0_ENERGY_STATUS: PP0_DEFAULT,
               MSR_PLATFORM_ENERGY_COUNTER: PLATFORM_DEFAULT,
               MSR_PLATFORM_POWER_LIMIT: PLATFORM_DEFAULT}
+
     TBL_40 = {}
-    TBL_41 = {}
-    TBL_42 = {}
-    TBL_43 = {}
-    TBL_44 = {}
-    TBL_45 = {MSR_VR_CURRENT_CONFIG: PL4_DEFAULT}
     TBL_50 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_15_3,
               MSR_PP0_ENERGY_STATUS: RESERVED}
-    TBL_51 = {MSR_PACKAGE_ENERGY_TIME_STATUS: PACKAGE_ENERGY_TIME_DEFAULT,
-              MSR_DRAM_POWER_LIMIT: DRAM_ICELAKE_XD,
-              MSR_DRAM_ENERGY_STATUS: DRAM_15_3}
     SKYLAKE_L = CPU("0x4E", "SKYLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
     SKYLAKE_L.print_line()
     # Top of Section 2.17 says TBL_40 (Uncore) is used for 0x55, but TBL_40 doesn't mention it
@@ -228,20 +225,29 @@ if __name__ == "__main__":
     SKYLAKE_X.print_line()
     SKYLAKE = CPU("0x5E", "SKYLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40])
     SKYLAKE.print_line()
+
+    TBL_41 = {}
     KABYLAKE_L = CPU("0x8E", "KABYLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_41])
     KABYLAKE_L.print_line()
     KABYLAKE = CPU("0x9E", "KABYLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_41])
     KABYLAKE.print_line()
+
+    TBL_42 = {}
+    TBL_43 = {}
     CANNONLAKE_L = CPU("0x66", "CANNONLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_42, TBL_43])
     CANNONLAKE_L.print_line()
 
-    ICELAKE = CPU("0x7D", "ICELAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44])
+    TBL_44 = {}
+    TBL_51 = {MSR_PACKAGE_ENERGY_TIME_STATUS: PACKAGE_ENERGY_TIME_DEFAULT,
+              MSR_DRAM_POWER_LIMIT: DRAM_ICELAKE_XD,
+              MSR_DRAM_ENERGY_STATUS: DRAM_15_3}
+    ICELAKE = CPU("0x7D", "ICELAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44])
     ICELAKE.print_line()
-    ICELAKE_L = CPU("0x7E", "ICELAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44])
+    ICELAKE_L = CPU("0x7E", "ICELAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44])
     ICELAKE_L.print_line()
-    ICELAKE_X = CPU("0x6A", "ICELAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_51])
+    ICELAKE_X = CPU("0x6A", "ICELAKE_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_51])
     ICELAKE_X.print_line()
-    ICELAKE_D = CPU("0x6C", "ICELAKE_D", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_51])
+    ICELAKE_D = CPU("0x6C", "ICELAKE_D", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_51])
     ICELAKE_D.print_line()
 
     COMETLAKE = CPU("0xA5", "COMETLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
@@ -249,10 +255,37 @@ if __name__ == "__main__":
     COMETLAKE_L = CPU("0xA6", "COMETLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
     COMETLAKE_L.print_line()
 
-    TIGERLAKE_L = CPU("0x8C", "TIGERLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_45])
+    # 2021-12: ROCKETLAKE CPUs not currently mentioned outside of Table 2-1
+    # ROCKETLAKE = CPU("0xA7", "ROCKETLAKE", [])
+    # ROCKETLAKE.print_line()
+    # Don't currently know what this is exactly
+    # ROCKETLAKE_FOO = CPU("0xA8", "ROCKETLAKE_FOO", [])
+    # ROCKETLAKE_FOO.print_line()
+
+    TBL_45 = {MSR_VR_CURRENT_CONFIG: PL4_DEFAULT}
+    TIGERLAKE_L = CPU("0x8C", "TIGERLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_45])
     TIGERLAKE_L.print_line()
-    TIGERLAKE = CPU("0x8D", "TIGERLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_45])
+    TIGERLAKE = CPU("0x8D", "TIGERLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_45])
     TIGERLAKE.print_line()
+
+    TBL_46 = {}
+    # No RAPL-specific MSRs for P and E cores, so just ignore this heterogeneity
+    # TBL_47 = {} # P-core only
+    # TBL_48 = {} # E-core only
+    TBL_49 = {}
+    # TBL_44 and TBL_45 specified above TBL_46
+    ALDERLAKE = CPU("0x97", "ALDERLAKE", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44, TBL_45, TBL_46, TBL_49])
+    ALDERLAKE.print_line()
+    ALDERLAKE_L = CPU("0x9A", "ALDERLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44, TBL_45, TBL_46, TBL_49])
+    ALDERLAKE_L.print_line()
+    # Don't currently know what this is exactly
+    # ALDERLAKE_FOO = CPU("0xBF", "ALDERLAKE_FOO", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_45, TBL_46, TBL_49])
+    # ALDERLAKE_FOO.print_line()
+
+    TBL_52 = {}
+    # 2021:12: SAPPHIRERAPIDS_X doesn't yet specify common tables like most CPUs
+    # SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
+    # SAPPHIRERAPIDS_X.print_line()
 
     TBL_53 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
@@ -262,6 +295,7 @@ if __name__ == "__main__":
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
     TBL_54 = {}
+
     # The SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
     # However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
     XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_53, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
