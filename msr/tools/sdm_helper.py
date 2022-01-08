@@ -24,15 +24,15 @@ MSR_VR_CURRENT_CONFIG = "MSR_VR_CURRENT_CONFIG" # 0x601
 NONE = "None"
 POWER_DEFAULT = "14.10.1"
 PKG_DEFAULT = "14.10.3"
-PACKAGE_ENERGY_TIME_DEFAULT = "Table 2-47"
+PACKAGE_ENERGY_TIME_DEFAULT = "TBL_51"
 PP0_DEFAULT = "14.10.4"
 PP1_DEFAULT = "14.10.4"
 DRAM_DEFAULT = "14.10.5"
-PLATFORM_DEFAULT = "Table 2-39"
+PLATFORM_DEFAULT = "TBL_39"
 DRAM_15_3 = "ESU: 15.3 uJ" # assumed for now that this ESU is found in MSR_RAPL_POWER_UNIT
-DRAM_ICELAKE_XD = "Table 2-47"
+DRAM_ICELAKE_XD = "TBL_51"
 RESERVED = "Reserved (0)" # this should also be OK (just gets a 0 energy reading)
-PL4_DEFAULT = "Table 2-45"
+PL4_DEFAULT = "TBL_45"
 
 
 class CPU(object):
@@ -90,15 +90,15 @@ if __name__ == "__main__":
 
     TBL_6 = {}
     TBL_7 = {}
-    TBL_8 = {MSR_RAPL_POWER_UNIT: "Table 2-8",
-             MSR_PKG_POWER_LIMIT: "Table 2-8",
+    TBL_8 = {MSR_RAPL_POWER_UNIT: "TBL_8",
+             MSR_PKG_POWER_LIMIT: "TBL_8",
              MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
              MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
     TBL_9 = {}
-    TBL_10 = {MSR_RAPL_POWER_UNIT: "Table 2-10",
+    TBL_10 = {MSR_RAPL_POWER_UNIT: "TBL_10",
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT}
-    TBL_11 = {MSR_PP0_POWER_LIMIT: "Table 2-11"}
+    TBL_11 = {MSR_PP0_POWER_LIMIT: "TBL_11"}
     ATOM_SILVERMONT = CPU("0x37", "ATOM_SILVERMONT", [TBL_6, TBL_7, TBL_8, TBL_9])
     ATOM_SILVERMONT.print_line()
     ATOM_SILVERMONT_MID = CPU("0x4A", "ATOM_SILVERMONT_MID", [TBL_6, TBL_7, TBL_8])
