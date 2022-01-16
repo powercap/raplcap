@@ -4,8 +4,8 @@ This implementation of the `raplcap` interface uses the [Linux Power Capping Fra
 
 ## Prerequisites
 
-The [powercap](https://github.com/powercap/powercap) library provides C bindings to RAPL in sysfs, including automatic discovery of available RAPL zones.
-If using a Debian-based Linux distribution (e.g., Debian Sid or Ubuntu 18.04 LTS "Bionic Beaver" or newer), you may install the [libpowercap-dev](apt:libpowercap-dev) package instead of building the library from source.
+The [powercap](https://github.com/powercap/powercap) library provides C bindings to powercap in sysfs.
+If using a Debian-based Linux distribution, you may install the [libpowercap-dev](apt:libpowercap-dev) package instead of building the library from source (if the repository-based version is new enough).
 
 To enable the required `intel-rapl` powercap control type, ensure that the appropriate kernel module is loaded:
 
