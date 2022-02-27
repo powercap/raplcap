@@ -331,10 +331,10 @@ int main(int argc, char** argv) {
         print_usage(0);
         break;
       case 'c':
-        ctx.pkg = atoi(optarg);
+        ctx.pkg = (unsigned int) atoi(optarg);
         break;
       case 'd':
-        ctx.die = atoi(optarg);
+        ctx.die = (unsigned int) atoi(optarg);
         break;
       case 'n':
         ctx.get_packages = 1;
