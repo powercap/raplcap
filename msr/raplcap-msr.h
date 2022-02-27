@@ -33,7 +33,7 @@ int raplcap_msr_pd_is_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t die
  * @param pkg
  * @param die
  * @param zone
- * @param clamp
+ * @param clamped
  * @return 0 on success, a negative value on error
  */
 int raplcap_msr_pd_set_zone_clamped(const raplcap* rc, uint32_t pkg, uint32_t die, raplcap_zone zone, int clamped);
