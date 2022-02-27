@@ -61,7 +61,7 @@ static void test_set(const raplcap_limit* ll, const raplcap_limit* ls, raplcap* 
 
 static void test(raplcap* rc, int ro) {
   raplcap_limit ll, ls;
-  uint32_t i, p, d;
+  uint32_t i, p, d = 0;
   int supported, enabled;
   double joules;
   printf("  Testing raplcap_get_num_packages(NULL)\n");
