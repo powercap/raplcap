@@ -33,7 +33,7 @@ int cpuid_is_vendor_intel(void) {
   asm_cpuid_data cpudata;
   union {
     char c[16];
-    int i[16 / sizeof(int)];
+    uint32_t i[16 / sizeof(uint32_t)];
   } vendor_id;
   memset(&vendor_id.c, 0, sizeof(vendor_id));
   asm_cpuid(0, &cpudata);
