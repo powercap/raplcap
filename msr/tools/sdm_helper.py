@@ -76,6 +76,8 @@ if __name__ == "__main__":
     # Exceptions to the SDM
     # These are not exhaustive, just the important ones that require coding changes in the library.
     # E.g., not specifying PP0 power limit exceptions which obviously exist---but are no documented---for all RAPL CPUs
+    # SILVERMONT_D: ESU documentation in the SDM appears incorrect - use standard rather than Atom-style multiplier
+    EXCEPTION_SILVERMONT_D_ESU = {MSR_RAPL_POWER_UNIT: "ESU: def [E]"}
     EXCEPTION_DRAM_ENERGY_STATUS_15_3 = {MSR_DRAM_ENERGY_STATUS: DRAM_15_3 + " [E]"}
     EXCEPTION_GOLDMONT_D = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT + " [E]",
                             MSR_PKG_POWER_LIMIT: PKG_DEFAULT + " [E]",
@@ -103,7 +105,7 @@ if __name__ == "__main__":
     ATOM_SILVERMONT.print_line()
     ATOM_SILVERMONT_MID = CPU("0x4A", "ATOM_SILVERMONT_MID", [TBL_6, TBL_7, TBL_8])
     ATOM_SILVERMONT_MID.print_line()
-    ATOM_SILVERMONT_D = CPU("0x4D", "ATOM_SILVERMONT_D", [TBL_6, TBL_7, TBL_10])
+    ATOM_SILVERMONT_D = CPU("0x4D", "ATOM_SILVERMONT_D", [TBL_6, TBL_7, TBL_10, EXCEPTION_SILVERMONT_D_ESU])
     ATOM_SILVERMONT_D.print_line()
     ATOM_AIRMONT_MID = CPU("0x5A", "ATOM_AIRMONT_MID", [TBL_6, TBL_7, TBL_8])
     ATOM_AIRMONT_MID.print_line()

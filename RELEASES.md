@@ -13,6 +13,10 @@
 
 * [msr] Updated for the Intel Software Developer's Manual, December 2021 release
 
+### Fixed
+
+* [msr] Intel SDM incorrectly documents energy status units for Atom Silvermont micro server, Model 0x4D ([#13])
+
 
 ## [v0.7.0] - 2021-12-15
 
@@ -251,3 +255,4 @@
 [#7]: https://github.com/powercap/raplcap/issues/7
 [#8]: https://github.com/powercap/raplcap/issues/8
 [#9]: https://github.com/powercap/raplcap/issues/9
+[#13]: https://github.com/powercap/raplcap/issues/13

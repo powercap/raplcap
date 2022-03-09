@@ -363,7 +363,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       break;
     case CPUID_MODEL_ATOM_SILVERMONT_D:
       ctx->power_units = from_msr_pu_atom(units_msrval);
-      ctx->energy_units = from_msr_eu_atom(units_msrval);
+      // The Intel SDM claims we should use from_msr_eu_atom, but that appears to be incorrect
+      ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT;
