@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # These are not exhaustive, just the important ones that require coding changes in the library.
     # E.g., not specifying PP0 power limit exceptions which obviously exist---but are no documented---for all RAPL CPUs
     EXCEPTION_DRAM_ENERGY_STATUS_15_3 = {MSR_DRAM_ENERGY_STATUS: DRAM_15_3 + " [E]"}
-    EXCEPTION_GOLDMONT_X = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT + " [E]",
+    EXCEPTION_GOLDMONT_D = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT + " [E]",
                             MSR_PKG_POWER_LIMIT: PKG_DEFAULT + " [E]",
                             MSR_PKG_ENERGY_STATUS: PKG_DEFAULT + " [E]",
                             MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT + " [E]",
@@ -122,9 +122,9 @@ if __name__ == "__main__":
     TBL_13 = {}
     ATOM_GOLDMONT = CPU("0x5C", "ATOM_GOLDMONT", [TBL_6, TBL_12])
     ATOM_GOLDMONT.print_line()
-    # GOLDMONT_X (Denverton) not documented in SDM, but kernel uses standard RAPL conversions
-    ATOM_GOLDMONT_X = CPU("0x5F", "ATOM_GOLDMONT_X", [EXCEPTION_GOLDMONT_X])
-    ATOM_GOLDMONT_X.print_line()
+    # GOLDMONT_D (Denverton) not documented in SDM, but kernel uses standard RAPL conversions
+    ATOM_GOLDMONT_D = CPU("0x5F", "ATOM_GOLDMONT_D", [EXCEPTION_GOLDMONT_D])
+    ATOM_GOLDMONT_D.print_line()
     ATOM_GOLDMONT_PLUS = CPU("0x7A", "ATOM_GOLDMONT_PLUS", [TBL_6, TBL_12, TBL_13])
     ATOM_GOLDMONT_PLUS.print_line()
 
