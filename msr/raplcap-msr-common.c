@@ -603,7 +603,7 @@ double msr_get_time_units(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
   return sec;
 }
 
-double msr_get_power_units(const raplcap_msr_ctx* ctx, raplcap_zone zone) {
+double msr_get_power_units(const raplcap_msr_ctx* ctx) {
   assert(ctx != NULL);
   const double watts = ctx->power_units;
   raplcap_log(DEBUG, "msr_get_power_units: watts=%.12f\n", watts);

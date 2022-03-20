@@ -150,7 +150,7 @@ double msr_get_time_units(const raplcap_msr_ctx* ctx, raplcap_zone zone);
 /**
  * Get the power units in Watts.
  */
-double msr_get_power_units(const raplcap_msr_ctx* ctx, raplcap_zone zone);
+double msr_get_power_units(const raplcap_msr_ctx* ctx);
 
 /**
  * Get the energy units in Joules.

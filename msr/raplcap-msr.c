@@ -551,7 +551,7 @@ double raplcap_msr_pd_get_power_units(const raplcap* rc, uint32_t pkg, uint32_t 
   if (state == NULL || msr < 0) {
     return -1;
   }
-  return msr_get_power_units(&state->ctx, zone);
+  return msr_get_power_units(&state->ctx);
 }
 
 double raplcap_msr_get_power_units(const raplcap* rc, uint32_t pkg, raplcap_zone zone) {
