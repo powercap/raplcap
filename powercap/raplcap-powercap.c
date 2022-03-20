@@ -490,9 +490,9 @@ static int set_constraint(const powercap_intel_rapl_parent* p, raplcap_zone z,
                           raplcap_constraint constraint, const raplcap_limit* limit) {
   assert(p != NULL);
   assert(limit != NULL);
-  static const uint64_t ONE_MILLION = 1000000;
-  uint64_t us = ONE_MILLION * limit->seconds;
-  uint64_t uw = ONE_MILLION * limit->watts;
+  static const double ONE_MILLION = 1000000.0;
+  uint64_t us = (uint64_t) (ONE_MILLION * limit->seconds);
+  uint64_t uw = (uint64_t) (ONE_MILLION * limit->watts);
   raplcap_log(DEBUG, "set_constraint: zone=%d, constraint=%d:\n"
               "\ttime=%.12f s (%"PRIu64" us)\n\tpower=%.12f W (%"PRIu64" uW)\n",
               z, constraint, limit->seconds, us, limit->watts, uw);
