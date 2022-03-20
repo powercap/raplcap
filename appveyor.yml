@@ -24,10 +24,10 @@ before_build:
 
 build_script:
   # Test with stricter flags
-  - set CFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector -g3 -pedantic -W -Wall -Wbad-function-cast -Wcast-align \
-      -Wcast-qual -Wdisabled-optimization -Wendif-labels -Wfloat-equal -Wformat=2 -Wformat-nonliteral -Winline \
-      -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wno-unused-parameter -Wpointer-arith -Wshadow \
-      -Wstrict-prototypes -Wstack-protector -Wswitch -Wundef -Wwrite-strings"
+  - set CFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector -g3 -pedantic -Wall -Wextra -Wbad-function-cast -Wcast-align \
+      -Wcast-qual -Wdisabled-optimization -Wendif-labels -Wfloat-conversion -Wfloat-equal -Wformat=2 -Wformat-nonliteral \
+      -Winline -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Wshadow \
+      -Wsign-conversion -Wstrict-prototypes -Wstack-protector -Wundef -Wwrite-strings"
   - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DBUILD_SHARED_LIBS=%BUILD_SHARED_LIBS% -DCMAKE_C_FLAGS="%CFLAGS% -DRAPLCAP_LOG_LEVEL=0" ..
   - cmake --build . --config %CONFIGURATION% -- VERBOSE=1
   # - cmake --build . --config %CONFIGURATION%
