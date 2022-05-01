@@ -257,7 +257,7 @@ if __name__ == "__main__":
     COMETLAKE_L = CPU("0xA6", "COMETLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
     COMETLAKE_L.print_line()
 
-    # 2021-12: ROCKETLAKE CPUs not currently mentioned outside of Table 2-1
+    # 2022-04: ROCKETLAKE CPUs not currently mentioned outside of Table 2-1
     # ROCKETLAKE = CPU("0xA7", "ROCKETLAKE", [])
     # ROCKETLAKE.print_line()
     # Don't currently know what this is exactly
@@ -280,12 +280,9 @@ if __name__ == "__main__":
     ALDERLAKE.print_line()
     ALDERLAKE_L = CPU("0x9A", "ALDERLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44, TBL_45, TBL_46, TBL_49])
     ALDERLAKE_L.print_line()
-    # Don't currently know what this is exactly
-    # ALDERLAKE_FOO = CPU("0xBF", "ALDERLAKE_FOO", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_40, TBL_44, TBL_45, TBL_46, TBL_49])
-    # ALDERLAKE_FOO.print_line()
 
     TBL_52 = {}
-    # 2021:12: SAPPHIRERAPIDS_X doesn't yet specify common tables like most CPUs
+    # 2022-04: SAPPHIRERAPIDS_X doesn't yet specify common tables like most CPUs
     # SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
     # SAPPHIRERAPIDS_X.print_line()
 
@@ -305,4 +302,4 @@ if __name__ == "__main__":
     XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_53, TBL_54, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - April 2021
+    # Last updated for Software Developer's Manual, Volume 4 - April 2022

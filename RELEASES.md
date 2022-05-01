@@ -11,7 +11,7 @@
 
 ### Changed
 
-* [msr] Updated for the Intel Software Developer's Manual, December 2021 release
+* [msr] Updated for the Intel Software Developer's Manual, April 2022 release
 
 ### Fixed
 
