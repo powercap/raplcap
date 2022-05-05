@@ -12,6 +12,8 @@
 ### Changed
 
 * [msr] Updated for the Intel Software Developer's Manual, April 2022 release
+* Changes based on previously deprecated behavior:
+  * [powercap] Don't fall back on PSYS zone at die=0 and then at pkg=0 when not found for specified pkg/die
 
 ### Fixed
 

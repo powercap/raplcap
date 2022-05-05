@@ -75,19 +75,6 @@ static powercap_intel_rapl_parent* get_parent_zone(const raplcap* rc, uint32_t p
     if (die == 0) {
       p = state->psys_zones[pkg];
     }
-    // --- begin deprecation block
-    if (p == NULL) {
-      if ((p = state->psys_zones[pkg]) != NULL) {
-        raplcap_log(WARN, "Ignoring die value > 0 for PSYS zone at pkg=%"PRIu32".\nThis behavior is deprecated - "
-                    "in the future, an error will be returned if the zone is not found for the specified pkg/die.\n",
-                    pkg);
-      }
-      if (p == NULL && pkg > 0 && (p = state->psys_zones[0]) != NULL) {
-        raplcap_log(WARN, "Falling back on PSYS zone at pkg=0, die=0.\nThis behavior is deprecated - "
-                    "in the future, an error will be returned if the zone is not found for the specified pkg/die.\n");
-      }
-    }
-    // --- end deprecation block
     // if p is still NULL, fall through and later code will (correctly) fail to find PSYS within the regular parent zone
   }
   if (p == NULL) {
