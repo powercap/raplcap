@@ -1,5 +1,12 @@
 # Release Notes
 
+## [Unreleased]
+
+### Fixed
+
+* pkg-config file is broken when CMAKE_INSTALL_{INCLUDE,LIB}DIR is absolute
+
+
 ## [v0.8.0] - 2022-05-13
 
 ### Added
@@ -245,6 +252,7 @@
 * Initial public release
 
 
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.8.0...HEAD
 [v0.8.0]: https://github.com/powercap/raplcap/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/powercap/raplcap/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/powercap/raplcap/compare/v0.5.0...v0.6.0
