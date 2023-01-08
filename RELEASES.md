@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+* [msr] Support for Raptor Lake ("Raptor Cove" / "Gracemont"), Model 0xB7
+* [msr] Support for Raptor Lake mobile ("Raptor Cove" / "Gracemont"), Model 0xBA
+* [msr] Support for Raptor Lake client ("Raptor Cove" / "Gracemont"), Model 0xBF
+* [msr] Support for Sapphire Rapids server ("Golden Cove"), Model 0x8F
+
+### Changed
+
+* [msr] Updated for the Intel Software Developer's Manual, December 2022 release
+
 ### Fixed
 
 * pkg-config file is broken when CMAKE_INSTALL_{INCLUDE,LIB}DIR is absolute

@@ -311,6 +311,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_COMETLAKE:
     case CPUID_MODEL_COMETLAKE_L:
     //
+    case CPUID_MODEL_SAPPHIRERAPIDS_X:
+    //
     case CPUID_MODEL_ATOM_GOLDMONT:
     case CPUID_MODEL_ATOM_GOLDMONT_D:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
@@ -329,6 +331,10 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     //
     case CPUID_MODEL_ALDERLAKE:
     case CPUID_MODEL_ALDERLAKE_L:
+    //
+    case CPUID_MODEL_RAPTORLAKE:
+    case CPUID_MODEL_RAPTORLAKE_P:
+    case CPUID_MODEL_RAPTORLAKE_S:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
