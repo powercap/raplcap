@@ -47,6 +47,7 @@ typedef struct raplcap_msr_ctx {
   double power_units;
   double energy_units;
   double energy_units_dram;
+  double energy_units_psys;
   double time_units;
   uint32_t cpu_model;
 } raplcap_msr_ctx;
