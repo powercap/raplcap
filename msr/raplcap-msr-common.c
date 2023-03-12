@@ -329,6 +329,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
+      // SPR PSYS quirks aren't documented in the SDM (as of 2022-12), only in the Linux kernel
       ctx->energy_units_psys = 1.0;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT;
@@ -442,17 +443,30 @@ int msr_is_constraint_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone, r
   return ret;
 }
 
+static void zone_enabled_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* bit1, uint8_t* bit2) {
+  assert(bit1 != NULL);
+  assert(bit2 != NULL);
+  // SPR PSYS quirks aren't documented in the SDM (as of 2022-12), only in the Linux kernel
+  if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
+    *bit1 = 17;
+    *bit2 = 49;
+  }
+}
+
 int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         int* en_long, int* en_short) {
   assert(ctx != NULL);
   int ret = 0;
+  uint8_t en1_shift = EN1_SHIFT;
+  uint8_t en2_shift = EN2_SHIFT;
+  zone_enabled_quirks(ctx, zone, &en1_shift, &en2_shift);
   if (en_long != NULL) {
-    *en_long = ((msrval >> EN1_SHIFT) & EN_MASK) == 0x1;
+    *en_long = ((msrval >> en1_shift) & EN_MASK) == 0x1;
     raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, long_term: enabled=%d\n", zone, *en_long);
     ret++;
   }
   if (en_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
-    *en_short = ((msrval >> EN2_SHIFT) & EN_MASK) == 0x1;
+    *en_short = ((msrval >> en2_shift) & EN_MASK) == 0x1;
     raplcap_log(DEBUG, "msr_is_zone_enabled: zone=%d, short_term: enabled=%d\n", zone, *en_short);
     ret++;
   }
@@ -462,28 +476,44 @@ int msr_is_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                               const int* en_long, const int* en_short) {
   assert(ctx != NULL);
+  uint8_t en1_bit = 15;
+  uint8_t en2_bit = 47;
+  zone_enabled_quirks(ctx, zone, &en1_bit, &en2_bit);
   if (en_long != NULL) {
     raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, long_term: enabled=%d\n", zone, *en_long);
-    msrval = replace_bits(msrval, *en_long ? 0x1 : 0x0, 15, 15);
+    msrval = replace_bits(msrval, *en_long ? 0x1 : 0x0, en1_bit, en1_bit);
   }
   if (en_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
     raplcap_log(DEBUG, "msr_set_zone_enabled: zone=%d, short_term: enabled=%d\n", zone, *en_short);
-    msrval = replace_bits(msrval, *en_short ? 0x1 : 0x0, 47, 47);
+    msrval = replace_bits(msrval, *en_short ? 0x1 : 0x0, en2_bit, en2_bit);
   }
   return msrval;
+}
+
+static void zone_clamped_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* bit1, uint8_t* bit2) {
+  assert(bit1 != NULL);
+  assert(bit2 != NULL);
+  // SPR PSYS quirks aren't documented in the SDM (as of 2022-12), only in the Linux kernel
+  if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
+    *bit1 = 18;
+    *bit2 = 50;
+  }
 }
 
 int msr_is_zone_clamped(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         int* cl_long, int* cl_short) {
   assert(ctx != NULL);
   int ret = 0;
+  uint8_t cl1_shift = CL1_SHIFT;
+  uint8_t cl2_shift = CL2_SHIFT;
+  zone_clamped_quirks(ctx, zone, &cl1_shift, &cl2_shift);
   if (cl_long != NULL) {
-    *cl_long = ((msrval >> CL1_SHIFT) & CL_MASK) == 0x1;
+    *cl_long = ((msrval >> cl1_shift) & CL_MASK) == 0x1;
     raplcap_log(DEBUG, "msr_is_zone_clamped: zone=%d, long_term: clamp=%d\n", zone, *cl_long);
     ret++;
   }
   if (cl_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
-    *cl_short = ((msrval >> CL2_SHIFT) & CL_MASK) == 0x1;
+    *cl_short = ((msrval >> cl2_shift) & CL_MASK) == 0x1;
     raplcap_log(DEBUG, "msr_is_zone_clamped: zone=%d, short_term: clamp=%d\n", zone, *cl_short);
     ret++;
   }
@@ -493,13 +523,16 @@ int msr_is_zone_clamped(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 uint64_t msr_set_zone_clamped(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                               const int* cl_long, const int* cl_short) {
   assert(ctx != NULL);
+  uint8_t cl1_bit = 16;
+  uint8_t cl2_bit = 48;
+  zone_clamped_quirks(ctx, zone, &cl1_bit, &cl2_bit);
   if (cl_long != NULL) {
     raplcap_log(DEBUG, "msr_set_zone_clamped: zone=%d, long_term: clamp=%d\n", zone, *cl_long);
-    msrval = replace_bits(msrval, *cl_long ? 0x1 : 0x0, 16, 16);
+    msrval = replace_bits(msrval, *cl_long ? 0x1 : 0x0, cl1_bit, cl1_bit);
   }
   if (cl_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
     raplcap_log(DEBUG, "msr_set_zone_clamped: zone=%d, short_term: clamp=%d\n", zone, *cl_short);
-    msrval = replace_bits(msrval, *cl_short ? 0x1 : 0x0, 48, 48);
+    msrval = replace_bits(msrval, *cl_short ? 0x1 : 0x0, cl2_bit, cl2_bit);
   }
   return msrval;
 }
@@ -519,21 +552,52 @@ uint64_t msr_set_zone_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint
   return msrval;
 }
 
+static void zone_limits_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* pl1_last, uint8_t* tw1_first,
+                               uint8_t* tw1_last, uint8_t* pl2_last, uint8_t* tw2_first, uint8_t* tw2_last,
+                               uint64_t* pl_mask) {
+  assert(tw1_first != NULL);
+  assert(tw2_first != NULL);
+  // SPR PSYS quirks aren't documented in the SDM (as of 2022-12), only in the Linux kernel
+  if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
+    if (pl1_last != NULL) {
+      *pl1_last = 16;
+    }
+    *tw1_first = 19;
+    if (tw1_last != NULL) {
+      *tw1_last = 25;
+    }
+    if (pl2_last != NULL) {
+      *pl2_last = 48;
+    }
+    *tw2_first = 51;
+    if (tw2_last != NULL) {
+      *tw2_last = 57;
+    }
+    if (pl_mask != NULL) {
+      *pl_mask = 0x1FFFF;
+    }
+  }
+}
+
 void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                     raplcap_limit* limit_long, raplcap_limit* limit_short) {
   assert(ctx != NULL);
+  uint8_t tw1_shift = TL1_SHIFT;
+  uint8_t tw2_shift = TL2_SHIFT;
+  uint64_t pl_mask = PL_MASK;
+  zone_limits_quirks(ctx, zone, NULL, &tw1_shift, NULL, NULL, &tw2_shift, NULL, &pl_mask);
   if (limit_long != NULL) {
-    limit_long->watts = ctx->cfg[zone].from_msr_pl((msrval >> PL1_SHIFT) & PL_MASK, ctx->power_units);
-    limit_long->seconds = ctx->cfg[zone].from_msr_tw((msrval >> TL1_SHIFT) & TL_MASK, ctx->time_units);
+    limit_long->watts = ctx->cfg[zone].from_msr_pl((msrval >> PL1_SHIFT) & pl_mask, ctx->power_units);
+    limit_long->seconds = ctx->cfg[zone].from_msr_tw((msrval >> tw1_shift) & TL_MASK, ctx->time_units);
     raplcap_log(DEBUG, "msr_get_limits: zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_long->seconds, limit_long->watts);
   }
   if (limit_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
-    limit_short->watts = ctx->cfg[zone].from_msr_pl((msrval >> PL2_SHIFT) & PL_MASK, ctx->power_units);
+    limit_short->watts = ctx->cfg[zone].from_msr_pl((msrval >> PL2_SHIFT) & pl_mask, ctx->power_units);
     if (zone == RAPLCAP_ZONE_PSYS) {
       raplcap_log(DEBUG, "msr_get_limits: Documentation does not specify PSys/Platform short term time window\n");
     }
-    limit_short->seconds = ctx->cfg[zone].from_msr_tw((msrval >> TL2_SHIFT) & TL_MASK, ctx->time_units);
+    limit_short->seconds = ctx->cfg[zone].from_msr_tw((msrval >> tw2_shift) & TL_MASK, ctx->time_units);
     raplcap_log(DEBUG, "msr_get_limits: zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_short->seconds, limit_short->watts);
   }
@@ -542,21 +606,29 @@ void msr_get_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrv
 uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval,
                         const raplcap_limit* limit_long, const raplcap_limit* limit_short) {
   assert(ctx != NULL);
+  uint8_t pl1_last = 14;
+  uint8_t tw1_first = 17;
+  uint8_t tw1_last = 23;
+  uint8_t pl2_last = 46;
+  uint8_t tw2_first = 49;
+  uint8_t tw2_last = 55;
+  zone_limits_quirks(ctx, zone, &pl1_last, &tw1_first, &tw1_last, &pl2_last, &tw2_first, &tw2_last, NULL);
   if (limit_long != NULL) {
     raplcap_log(DEBUG, "msr_set_limits: zone=%d, long_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_long->seconds, limit_long->watts);
     if (limit_long->watts > 0) {
-      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_long->watts, ctx->power_units), 0, 14);
+      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_long->watts, ctx->power_units), 0, pl1_last);
     }
     if (limit_long->seconds > 0) {
-      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_long->seconds, ctx->time_units), 17, 23);
+      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_long->seconds, ctx->time_units), tw1_first,
+                            tw1_last);
     }
   }
   if (limit_short != NULL && HAS_SHORT_TERM(ctx, zone)) {
     raplcap_log(DEBUG, "msr_set_limits: zone=%d, short_term:\n\ttime=%.12f s\n\tpower=%.12f W\n",
                 zone, limit_short->seconds, limit_short->watts);
     if (limit_short->watts > 0) {
-      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_short->watts, ctx->power_units), 32, 46);
+      msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_short->watts, ctx->power_units), 32, pl2_last);
     }
     if (limit_short->seconds > 0) {
       // 15.10.3: This field may have a hard-coded value in hardware and ignores values written by software.
@@ -564,7 +636,8 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
         // Table 2-39: PSYS has power limit #2, but time window #2 is chosen by the processor
         raplcap_log(WARN, "Not allowed to set PSys/Platform short term time window\n");
       } else {
-        msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_short->seconds, ctx->time_units), 49, 55);
+        msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_tw(limit_short->seconds, ctx->time_units), tw2_first,
+                              tw2_last);
       }
     }
   }
