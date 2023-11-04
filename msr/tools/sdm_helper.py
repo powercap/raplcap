@@ -288,10 +288,9 @@ if __name__ == "__main__":
     RAPTORLAKE_S = CPU("0xBF", "RAPTORLAKE_S", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44, TBL_45, TBL_46])
     RAPTORLAKE_S.print_line()
 
-    TBL_52 = {MSR_PLATFORM_POWER_LIMIT: PLATFORM_DEFAULT}
-    # TODO: discrepancy with kernel: kernel claims 1 J energy unit for SPR PSYS, but SDM doesn't say this
-    EXCEPTION_SAPPHIRERAPIDS_X_PSYS_ESU = {MSR_PLATFORM_ENERGY_COUNTER: "ESU: 1 J [E]"}
-    SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52, EXCEPTION_SAPPHIRERAPIDS_X_PSYS_ESU])
+    TBL_52 = {MSR_PLATFORM_ENERGY_COUNTER: "ESU: 1 J [E]",
+              MSR_PLATFORM_POWER_LIMIT: "TBL_52 [E]"}
+    SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
     SAPPHIRERAPIDS_X.print_line()
 
     TBL_53 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
@@ -310,4 +309,4 @@ if __name__ == "__main__":
     XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_53, TBL_54, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - March 2023
+    # Last updated for Software Developer's Manual, Volume 4 - September 2023

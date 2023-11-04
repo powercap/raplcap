@@ -329,7 +329,6 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
-      // SPR PSYS quirks aren't documented in the SDM (as of 2023-03), only in the Linux kernel
       ctx->energy_units_psys = 1.0;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT;
@@ -446,7 +445,6 @@ int msr_is_constraint_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone, r
 static void zone_enabled_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* bit1, uint8_t* bit2) {
   assert(bit1 != NULL);
   assert(bit2 != NULL);
-  // SPR PSYS quirks aren't documented in the SDM (as of 2023-03), only in the Linux kernel
   if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
     *bit1 = 17;
     *bit2 = 49;
@@ -493,7 +491,6 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
 static void zone_clamped_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* bit1, uint8_t* bit2) {
   assert(bit1 != NULL);
   assert(bit2 != NULL);
-  // SPR PSYS quirks aren't documented in the SDM (as of 2023-03), only in the Linux kernel
   if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
     *bit1 = 18;
     *bit2 = 50;
@@ -557,7 +554,6 @@ static void zone_limits_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, ui
                                uint64_t* pl_mask) {
   assert(tw1_first != NULL);
   assert(tw2_first != NULL);
-  // SPR PSYS quirks aren't documented in the SDM (as of 2023-03), only in the Linux kernel
   if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
     if (pl1_last != NULL) {
       *pl1_last = 16;
