@@ -441,7 +441,10 @@ static int get_constraint(const powercap_intel_rapl_parent* p, raplcap_zone z,
   assert(limit != NULL);
   static const double ONE_MILLION = 1000000.0;
   uint64_t us, uw;
-  if (powercap_intel_rapl_get_time_window_us(p, z, constraint, &us)) {
+  if (constraint == RAPLCAP_CONSTRAINT_PEAK_POWER) {
+    // Peak power limit has no time window
+    us = 0;
+  } else if (powercap_intel_rapl_get_time_window_us(p, z, constraint, &us)) {
     raplcap_perror(ERROR, "powercap_intel_rapl_get_time_window_us");
     return -1;
   }

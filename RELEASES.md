@@ -6,6 +6,10 @@
 
 * [msr] Updated for the Intel Software Developer's Manual, September 2023 release
 
+### Fixed
+
+* [powercap] Peak power constraint shouldn't look for a time window ([#14])
+
 
 ## [v0.9.0] - 2023-04-30
 
@@ -286,3 +290,4 @@
 [#8]: https://github.com/powercap/raplcap/issues/8
 [#9]: https://github.com/powercap/raplcap/issues/9
 [#13]: https://github.com/powercap/raplcap/issues/13
+[#14]: https://github.com/powercap/raplcap/issues/14
