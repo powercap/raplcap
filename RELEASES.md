@@ -8,6 +8,7 @@
 
 ### Fixed
 
+* [msr] Support check misses some CPUs: Raptor Lake, Sapphire Rapids, and SoFIA ([#14])
 * [powercap] Peak power constraint shouldn't look for a time window ([#14])
 
 
