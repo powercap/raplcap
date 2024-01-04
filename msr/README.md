@@ -2,7 +2,7 @@
 
 This implementation of the `raplcap` interface reads directly from Model-Specific Registers on Linux platforms.
 
-It supports processors described beginning with the Sandy Bridge microarchitecture through the latest documented in the [Intel Software Developer's Manual](https://software.intel.com/en-us/articles/intel-sdm), Volume 4 as of September 2023.
+It supports processors described beginning with the Sandy Bridge microarchitecture through the latest documented in the [Intel Software Developer's Manual](https://software.intel.com/en-us/articles/intel-sdm), Volume 4 as of December 2023.
 
 To see if your processor is compatible, first check that the CPU is a `GenuineIntel`:
 

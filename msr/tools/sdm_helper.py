@@ -292,21 +292,29 @@ if __name__ == "__main__":
               MSR_PLATFORM_POWER_LIMIT: "TBL_52 [E]"}
     SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
     SAPPHIRERAPIDS_X.print_line()
+    EMERALDRAPIDS_X = CPU("0xCF", "EMERALDRAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
+    EMERALDRAPIDS_X.print_line()
 
-    TBL_53 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
+    TBL_53 = {MSR_VR_CURRENT_CONFIG: "TBL_53 [E]",
+              MSR_PP0_POWER_LIMIT: PP0_DEFAULT, # docs are a little different, but effect seems the same
+              MSR_PLATFORM_POWER_LIMIT: PLATFORM_DEFAULT} # appears the same as TBL_39
+    METEORLAKE_L = CPU("0xAA", "METEORLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_53])
+    METEORLAKE_L.print_line()
+
+    TBL_56 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT, # community consensus is that Xeon Phi should be DRAM_15_3
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
-    TBL_54 = {}
+    TBL_57 = {}
 
     # The SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
     # However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
-    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_53, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_56, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNL.print_line()
-    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_53, TBL_54, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_56, TBL_57, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - September 2023
+    # Last updated for Software Developer's Manual, Volume 4 - December 2023

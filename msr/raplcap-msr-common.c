@@ -116,6 +116,21 @@ static uint64_t to_msr_pl4_default(double watts, double power_units) {
   return bits;
 }
 
+// Table 2-53
+static uint64_t to_msr_pl4_meteorlake(double watts, double power_units) {
+  assert(watts >= 0);
+  assert(power_units > 0);
+  // Lower bound is 0, but upper bound is limited by what fits in 16 bits
+  static const uint64_t MSR_POWER_MAX = 0xFFFF;
+  uint64_t bits = (uint64_t) (watts / power_units);
+  if (bits > MSR_POWER_MAX) {
+    raplcap_log(WARN, "Power limit too large: %.12f W, using max: %.12f W\n", watts, MSR_POWER_MAX * power_units);
+    bits = MSR_POWER_MAX;
+  }
+  raplcap_log(DEBUG, "to_msr_pl4_meteorlake: watts=%.12f, power_units=%.12f, bits=0x%04lX\n", watts, power_units, bits);
+  return bits;
+}
+
 /**
  * Note: Intel's documentation (Section 15.10.3) specifies different conversions for Package and Power Planes.
  * We use the Package equation for Power Planes as well, which the Linux kernel appears to agree with.
@@ -251,6 +266,14 @@ static const raplcap_msr_zone_cfg CFG_DEFAULT_PL4[RAPLCAP_NZONES] = {
   CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2)  // PSYS
 };
 
+static const raplcap_msr_zone_cfg CFG_METEORLAKE[RAPLCAP_NZONES] = {
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_meteorlake, 3), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_meteorlake, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_meteorlake, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_meteorlake, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_meteorlake, 2)  // PSYS
+};
+
 static const raplcap_msr_zone_cfg CFG_ATOM[RAPLCAP_NZONES] = {
   CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // PACKAGE
   CFG_STATIC_INIT(to_msr_tw_atom, from_msr_tw_atom, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
@@ -326,6 +349,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       break;
     //----
     case CPUID_MODEL_SAPPHIRERAPIDS_X:
+    //
+    case CPUID_MODEL_EMERALDRAPIDS_X:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
@@ -349,6 +374,15 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->energy_units_psys = ctx->energy_units;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_DEFAULT_PL4;
+      break;
+    //----
+    case CPUID_MODEL_METEORLAKE_L:
+      ctx->power_units = from_msr_pu_default(units_msrval);
+      ctx->energy_units = from_msr_eu_default(units_msrval);
+      ctx->energy_units_dram = ctx->energy_units;
+      ctx->energy_units_psys = ctx->energy_units;
+      ctx->time_units = from_msr_tu_default(units_msrval);
+      ctx->cfg = CFG_METEORLAKE;
       break;
     //----
     case CPUID_MODEL_HASWELL_X:
@@ -445,7 +479,8 @@ int msr_is_constraint_supported(const raplcap_msr_ctx* ctx, raplcap_zone zone, r
 static void zone_enabled_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* bit1, uint8_t* bit2) {
   assert(bit1 != NULL);
   assert(bit2 != NULL);
-  if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
+  if (zone == RAPLCAP_ZONE_PSYS &&
+      (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X || ctx->cpu_model == CPUID_MODEL_EMERALDRAPIDS_X)) {
     *bit1 = 17;
     *bit2 = 49;
   }
@@ -491,7 +526,8 @@ uint64_t msr_set_zone_enabled(const raplcap_msr_ctx* ctx, raplcap_zone zone, uin
 static void zone_clamped_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint8_t* bit1, uint8_t* bit2) {
   assert(bit1 != NULL);
   assert(bit2 != NULL);
-  if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
+  if (zone == RAPLCAP_ZONE_PSYS &&
+      (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X || ctx->cpu_model == CPUID_MODEL_EMERALDRAPIDS_X)) {
     *bit1 = 18;
     *bit2 = 50;
   }
@@ -554,7 +590,8 @@ static void zone_limits_quirks(const raplcap_msr_ctx* ctx, raplcap_zone zone, ui
                                uint64_t* pl_mask) {
   assert(tw1_first != NULL);
   assert(tw2_first != NULL);
-  if (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X && zone == RAPLCAP_ZONE_PSYS) {
+  if (zone == RAPLCAP_ZONE_PSYS &&
+      (ctx->cpu_model == CPUID_MODEL_SAPPHIRERAPIDS_X || ctx->cpu_model == CPUID_MODEL_EMERALDRAPIDS_X)) {
     if (pl1_last != NULL) {
       *pl1_last = 16;
     }
@@ -653,9 +690,22 @@ uint64_t msr_set_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint6
   return replace_bits(msrval, locked ? 1 : 0, 31, 31);
 }
 
+static void pl4_limit_quirks(const raplcap_msr_ctx* ctx, uint8_t* pl_last, uint64_t* pl_mask) {
+  if (ctx->cpu_model == CPUID_MODEL_METEORLAKE_L) {
+    if (pl_last != NULL) {
+      *pl_last = 15;
+    }
+    if (pl_mask != NULL) {
+      *pl_mask = 0xFFFF;
+    }
+  }
+}
+
 double msr_get_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
-  double watts = ctx->cfg[zone].from_msr_pl((msrval >> PL4_SHIFT) & PL4_MASK, ctx->power_units);
+  uint64_t pl_mask = PL4_MASK;
+  pl4_limit_quirks(ctx, NULL, &pl_mask);
+  double watts = ctx->cfg[zone].from_msr_pl((msrval >> PL4_SHIFT) & pl_mask, ctx->power_units);
   raplcap_log(DEBUG, "msr_get_pl4_limit: zone=%d, power=%.12f W\n", zone, watts);
   return watts;
 }
@@ -663,8 +713,10 @@ double msr_get_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t
 uint64_t msr_set_pl4_limit(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, double watts) {
   assert(ctx != NULL);
   raplcap_log(DEBUG, "msr_set_pl4_limit: zone=%d, power=%.12f W\n", zone, watts);
+  uint8_t pl_last = 12;
+  pl4_limit_quirks(ctx, &pl_last, NULL);
   if (watts > 0) {
-    msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl4(watts, ctx->power_units), 0, 12);
+    msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl4(watts, ctx->power_units), 0, pl_last);
   }
   return msrval;
 }

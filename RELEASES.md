@@ -1,5 +1,17 @@
 # Release Notes
 
+## [Unreleased]
+
+### Added
+
+* [msr] Support for Emerald Rapids server ("Raptor Cove"), Model 0xCF
+* [msr] Support for Meteor Lake mobile ("Redwood Cove" / "Crestmont"), Model 0xAA
+
+### Changed
+
+* [msr] Updated for the Intel Software Developer's Manual, December 2023 release
+
+
 ## [v0.9.1] - 2023-11-19
 
 ### Changed
@@ -275,6 +287,7 @@
 * Initial public release
 
 
+[Unreleased]: https://github.com/powercap/raplcap/compare/v0.9.1...HEAD
 [v0.9.1]: https://github.com/powercap/raplcap/compare/v0.9.0...v0.9.1
 [v0.9.0]: https://github.com/powercap/raplcap/compare/v0.8.0...v0.9.0
 [v0.8.0]: https://github.com/powercap/raplcap/compare/v0.7.0...v0.8.0
