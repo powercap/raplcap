@@ -116,6 +116,21 @@ static uint64_t to_msr_pl4_default(double watts, double power_units) {
   return bits;
 }
 
+// Table 2-52
+static uint64_t to_msr_pl_psys_spr(double watts, double power_units) {
+  assert(watts >= 0);
+  assert(power_units > 0);
+  // Lower bound is 0, but upper bound is limited by what fits in 17 bits
+  static const uint64_t MSR_POWER_MAX = 0x1FFFF;
+  uint64_t bits = (uint64_t) (watts / power_units);
+  if (bits > MSR_POWER_MAX) {
+    raplcap_log(WARN, "Power limit too large: %.12f W, using max: %.12f W\n", watts, MSR_POWER_MAX * power_units);
+    bits = MSR_POWER_MAX;
+  }
+  raplcap_log(DEBUG, "to_msr_pl_psys_spr: watts=%.12f, power_units=%.12f, bits=0x%04lX\n", watts, power_units, bits);
+  return bits;
+}
+
 // Table 2-53
 static uint64_t to_msr_pl4_meteorlake(double watts, double power_units) {
   assert(watts >= 0);
@@ -258,6 +273,14 @@ static const raplcap_msr_zone_cfg CFG_DEFAULT[RAPLCAP_NZONES] = {
   CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2)  // PSYS
 };
 
+static const raplcap_msr_zone_cfg CFG_SPR[RAPLCAP_NZONES] = {
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 2), // PACKAGE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // UNCORE
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // DRAM
+  CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_psys_spr, from_msr_pl_default, to_msr_pl4_default, 2)  // PSYS
+};
+
 static const raplcap_msr_zone_cfg CFG_DEFAULT_PL4[RAPLCAP_NZONES] = {
   CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 3), // PACKAGE
   CFG_STATIC_INIT(to_msr_tw_default, from_msr_tw_default, to_msr_pl_default, from_msr_pl_default, to_msr_pl4_default, 1), // CORE
@@ -356,7 +379,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       ctx->energy_units_dram = ctx->energy_units;
       ctx->energy_units_psys = 1.0;
       ctx->time_units = from_msr_tu_default(units_msrval);
-      ctx->cfg = CFG_DEFAULT;
+      ctx->cfg = CFG_SPR;
       break;
     //----
     case CPUID_MODEL_TIGERLAKE_L:

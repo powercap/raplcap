@@ -11,6 +11,10 @@
 
 * [msr] Updated for the Intel Software Developer's Manual, December 2023 release
 
+### Fixed
+
+* [msr] Incorrect maximum power limit for Sapphire Rapids PSYS zone
+
 
 ## [v0.9.1] - 2023-11-19
 
