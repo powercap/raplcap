@@ -4,7 +4,7 @@ This project provides a C interface for getting/setting power caps with Intel Ru
 It supports multiple implementations with different backends, primarily:
 
 * `libraplcap-msr` ([README](msr/README.md)): Uses [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the `/dev` filesystem (Linux).
-* `libraplcap-powercap` ([README](powercap/README.md)): Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/Documentation/power/powercap/powercap.txt) abstractions in the `/sys` filesystem (Linux).
+* `libraplcap-powercap` ([README](powercap/README.md)): Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/html/latest/power/powercap/powercap.html) abstractions in the `/sys` filesystem (Linux).
 
 It also provides binaries for getting/setting RAPL configurations from the command line.
 Each provides the same command line interface, but use different RAPLCap library backends.
