@@ -1,7 +1,11 @@
 # RAPLCap
 
-This project provides a C interface for getting/setting power caps with Intel Running Average Power Limit (RAPL).
-It supports multiple implementations with different backends, primarily:
+This project provides a C interface for managing Intel Running Average Power Limit (RAPL) power caps.
+
+RAPLCap is primarily intended for use by researchers and software developers.
+Most Linux users and system administrators looking to manage RAPL should prefer the `powercap-info` and `powercap-set` command-line utilities from the [powercap](https://github.com/powercap/powercap/) project.
+
+RAPLCap supports multiple implementations with different backends:
 
 * `libraplcap-msr` ([README](msr/README.md)): Uses [Model-Specific Register](https://en.wikipedia.org/wiki/Model-specific_register) files in the `/dev` filesystem (Linux).
 * `libraplcap-powercap` ([README](powercap/README.md)): Uses the [Linux Power Capping Framework](https://www.kernel.org/doc/html/latest/power/powercap/powercap.html) abstractions in the `/sys` filesystem (Linux).
