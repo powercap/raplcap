@@ -1,4 +1,4 @@
-.TH "rapl-configure-@RAPL_LIB@" "1" "2021-07-23" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
+.TH "rapl-configure-@RAPL_LIB@" "1" "2024-01-05" "RAPLCap @PROJECT_VERSION@" "RAPLCap Utilities"
 .SH "NAME"
 .LP
 rapl\-configure\-@RAPL_LIB@ \- get or set Intel RAPL configurations
@@ -35,15 +35,15 @@ available on client processors like those for desktops and laptops.
 DRAM power capping is typically only available on server systems, but has been
 spotted on some client hardware.
 .IP \[bu]
-\fIPSys\fP: the entire platform/system.
+\fIPSys\fP: the entire System-on-a-Chip (SoC).
 PSys is also known as \fIPlatform\fP and is only available on Intel\*R Skylake
 (6th generation Intel\*R Core) and newer processors, and requires additional
 BIOS support.
 .LP
 Package and PSys zones support two power limits, or \fIconstraints\fP - \fIlong
 term\fP and \fIshort term\fP.
-Package zones may also support a \fIpeak power\fP constraint on some
-processors.
+Package zones may also support a \fIpeak power\fP constraint on Tiger Lake
+(11th generation Intel\*R Core) & newer client processors.
 Other zones support a single constraint (long term).
 .LP
 Actual power limit and time window values are system-dependent.
@@ -83,20 +83,20 @@ PACKAGE \- a processor package (default)
 .br
 CORE \- core power plane
 .br
-UNCORE \- uncore power plane (client systems only)
+UNCORE \- uncore power plane
 .br
-DRAM \- main memory (server systems only)
+DRAM \- main memory
 .br
-PSYS \- the entire platform (Skylake and newer only)
+PSYS \- the entire SoC
 .TP
 \fB\-l,\fP \fB\-\-limit\fP=\fICONSTRAINT\fP
 Which limit/constraint to use. Allowable values:
 .br
 LONG \- long term (default)
 .br
-SHORT \- short term (PACKAGE & PSYS only)
+SHORT \- short term
 .br
-PEAK \- peak power (Tiger Lake PACKAGE only)
+PEAK \- peak power
 .TP
 \fB\-t,\fP \fB\-\-time\fP=\fISECONDS\fP
 Constraint's time window
@@ -116,10 +116,10 @@ Long term time window
 Long term power limit
 .TP
 \fB\-S,\fP \fB\-\-seconds1\fP=\fISECONDS\fP
-Short term time window (PACKAGE & PSYS only)
+Short term time window
 .TP
 \fB\-W,\fP \fB\-\-watts1\fP=\fIWATTS\fP
-Short term power limit (PACKAGE & PSYS only)
+Short term power limit
 .SH "EXAMPLES"
 .TP
 \fBrapl\-configure\-@RAPL_LIB@ \-n\fP
