@@ -12,6 +12,10 @@
 * [msr] Updated for the Intel Software Developer's Manual, December 2023 release
 * [rapl-configure] Refactor help output and man page documentation on zones and constraints
 
+### Removed
+
+* [ipg] Remove experimental Intel Power Gadget backend (no longer supported by Microsoft)
+
 ### Fixed
 
 * [msr] Incorrect maximum power limit for Sapphire Rapids PSYS zone

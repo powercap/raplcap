@@ -133,14 +133,13 @@ add_subdirectory(test)
 
 add_subdirectory(msr)
 add_subdirectory(powercap)
-add_subdirectory(ipg)
 
 # CMake package helper
 
 include(CMakePackageConfigHelpers)
 
 set(CONFIG_TARGETS_FILE RAPLCapTargets.cmake)
-set(CONFIG_SUPPORTED_COMPONENTS IPG IPGUtils MSR MSRUtils Powercap PowercapUtils)
+set(CONFIG_SUPPORTED_COMPONENTS MSR MSRUtils Powercap PowercapUtils)
 get_property(RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_VAR GLOBAL PROPERTY RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_PROP)
 string(REPLACE ";" "\n" CONFIG_FIND_COMPONENT_DEPENDENCIES "${RAPLCAP_EXPORT_COMPONENT_DEPENDENCIES_VAR}")
 configure_package_config_file(

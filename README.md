@@ -16,10 +16,6 @@ Each provides the same command line interface, but use different RAPLCap library
 * `rapl-configure-msr`
 * `rapl-configure-powercap`
 
-Experimental backends, which are not documented here in any further detail and may be removed at any time, include:
-
-* `libraplcap-ipg` ([README](ipg/README.md)): Uses Intel&reg; Power Gadget (OSX and Windows).
-
 If using this project for other scientific works or publications, please reference:
 
 * Connor Imes, Huazhe Zhang, Kevin Zhao, Henry Hoffmann. "CoPPer: Soft Real-time Application Performance Using Hardware Power Capping". In: IEEE International Conference on Autonomic Computing (ICAC). 2019. DOI: https://doi.org/10.1109/ICAC.2019.00015
