@@ -1,10 +1,12 @@
 os:
   - linux
 
-dist: focal
-
 matrix:
   include:
+    - dist: jammy
+      compiler: gcc
+    - dist: jammy
+      compiler: clang
     - dist: focal
       compiler: gcc
     - dist: focal
