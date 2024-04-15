@@ -32,6 +32,7 @@ PLATFORM_DEFAULT = "TBL_39"
 DRAM_15_3 = "ESU: 15.3 uJ" # assumed for now that this ESU is found in MSR_RAPL_POWER_UNIT
 DRAM_61 = "ESU: 61 uJ"
 DRAM_ICELAKE_XD = "TBL_51"
+PSYS_1000000 = "ESU: 1 J"
 RESERVED = "Reserved (0)" # this should also be OK (just gets a 0 energy reading)
 PL4_DEFAULT = "TBL_45"
 
@@ -289,15 +290,15 @@ if __name__ == "__main__":
     RAPTORLAKE_S = CPU("0xBF", "RAPTORLAKE_S", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_44, TBL_45, TBL_46])
     RAPTORLAKE_S.print_line()
 
-    TBL_52 = {MSR_PLATFORM_ENERGY_COUNTER: "ESU: 1 J [E]",
-              MSR_PLATFORM_POWER_LIMIT: "TBL_52 [E]",
+    TBL_52 = {MSR_PLATFORM_ENERGY_COUNTER: PSYS_1000000,
+              MSR_PLATFORM_POWER_LIMIT: "TBL_52",
               MSR_DRAM_ENERGY_STATUS: DRAM_61}
     SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
     SAPPHIRERAPIDS_X.print_line()
     EMERALDRAPIDS_X = CPU("0xCF", "EMERALDRAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
     EMERALDRAPIDS_X.print_line()
 
-    TBL_53 = {MSR_VR_CURRENT_CONFIG: "TBL_53 [E]",
+    TBL_53 = {MSR_VR_CURRENT_CONFIG: "TBL_53",
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT, # docs are a little different, but effect seems the same
               MSR_PLATFORM_POWER_LIMIT: PLATFORM_DEFAULT} # appears the same as TBL_39
     METEORLAKE_L = CPU("0xAA", "METEORLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_53])
