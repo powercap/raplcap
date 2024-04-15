@@ -376,7 +376,7 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_EMERALDRAPIDS_X:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
-      ctx->energy_units_dram = ctx->energy_units;
+      ctx->energy_units_dram = 0.000061;
       ctx->energy_units_psys = 1.0;
       ctx->time_units = from_msr_tu_default(units_msrval);
       ctx->cfg = CFG_SPR;

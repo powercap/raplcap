@@ -30,6 +30,7 @@ PP1_DEFAULT = "15.10.4"
 DRAM_DEFAULT = "15.10.5"
 PLATFORM_DEFAULT = "TBL_39"
 DRAM_15_3 = "ESU: 15.3 uJ" # assumed for now that this ESU is found in MSR_RAPL_POWER_UNIT
+DRAM_61 = "ESU: 61 uJ"
 DRAM_ICELAKE_XD = "TBL_51"
 RESERVED = "Reserved (0)" # this should also be OK (just gets a 0 energy reading)
 PL4_DEFAULT = "TBL_45"
@@ -289,7 +290,8 @@ if __name__ == "__main__":
     RAPTORLAKE_S.print_line()
 
     TBL_52 = {MSR_PLATFORM_ENERGY_COUNTER: "ESU: 1 J [E]",
-              MSR_PLATFORM_POWER_LIMIT: "TBL_52 [E]"}
+              MSR_PLATFORM_POWER_LIMIT: "TBL_52 [E]",
+              MSR_DRAM_ENERGY_STATUS: DRAM_61}
     SAPPHIRERAPIDS_X = CPU("0x8F", "SAPPHIRERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
     SAPPHIRERAPIDS_X.print_line()
     EMERALDRAPIDS_X = CPU("0xCF", "EMERALDRAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_52])
@@ -317,4 +319,4 @@ if __name__ == "__main__":
     XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_56, TBL_57, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - December 2023
+    # Last updated for Software Developer's Manual, Volume 4 - March 2024
