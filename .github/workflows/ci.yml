@@ -1,0 +1,33 @@
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    name: ${{ matrix.os }} Test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Linux powercap dependency
+        run: |
+          git clone https://github.com/powercap/powercap.git deps/powercap
+          cmake -S deps/powercap -B deps/powercap/_build -DCMAKE_INSTALL_PREFIX=$(pwd)/opt/powercap/
+          cmake --build deps/powercap/_build --target install
+      - name: Build
+        run: |
+          export CFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector -pedantic -Wall -Wextra -Wbad-function-cast -Wcast-align \
+            -Wcast-qual -Wdisabled-optimization -Wendif-labels -Wfloat-conversion -Wfloat-equal -Wformat=2 -Wformat-nonliteral \
+            -Winline -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Wshadow \
+            -Wsign-conversion -Wstrict-prototypes -Wstack-protector -Wundef -Wwrite-strings -Werror"
+          cmake -DCMAKE_PREFIX_PATH="$(pwd)/opt/powercap/" -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install -S . -B _build
+          cmake --build _build/ -v
+          ctest --test-dir _build/ -VV
+          cmake --build _build/ --target install
