@@ -702,6 +702,7 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
 
 int msr_is_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval) {
   assert(ctx != NULL);
+  (void) ctx;
   const int ret = (msrval >> 31 & LCK_MASK) == 0x1;
   raplcap_log(DEBUG, "msr_is_pl4_locked: zone=%d, locked=%d\n", zone, ret);
   return ret;
@@ -709,6 +710,7 @@ int msr_is_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t ms
 
 uint64_t msr_set_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t msrval, int locked) {
   assert(ctx != NULL);
+  (void) ctx;
   raplcap_log(DEBUG, "msr_set_pl4_locked: zone=%d, locked=%d\n", zone, locked);
   return replace_bits(msrval, locked ? 1 : 0, 31, 31);
 }

@@ -20,6 +20,7 @@
 
 * [msr] Incorrect maximum power limit for Sapphire Rapids PSYS zone
 * [msr] Sapphire Rapids and Emerald Rapids use 61 uJ DRAM energy units (per Intel SDM, March 2024 release)
+* [msr] Release builds may get an unused-parameter warning
 
 
 ## [v0.9.1] - 2023-11-19
