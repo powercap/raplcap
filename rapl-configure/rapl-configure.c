@@ -68,6 +68,16 @@ static const struct option long_options[] = {
 
 __attribute__ ((noreturn))
 static void print_usage(int exit_code) {
+  static const char* msr_help =
+#ifdef RAPLCAP_msr
+          "  -C, --clamped=1|0        Clamp/unclamp a zone\n"
+          "                           Clamping is automatically set when enabling\n"
+          "                           Therefore, you MUST explicitly set --clamped=0 when\n"
+          "                           setting limits (since zones are auto-enabled)\n"
+          "  -L, --locked             Lock a zone (a core RESET is required to unlock)\n";
+#else
+          "";
+#endif // RAPLCAP_msr
   fprintf(exit_code ? stderr : stdout,
           "Usage: %s [OPTION]...\n"
           "Options:\n"
@@ -89,13 +99,7 @@ static void print_usage(int exit_code) {
           "  -t, --time=SECONDS       Constraint's time window\n"
           "  -p, --power=WATTS        Constraint's power limit\n"
           "  -e, --enabled=1|0        Enable/disable a zone\n"
-#ifdef RAPLCAP_msr
-          "  -C, --clamped=1|0        Clamp/unclamp a zone\n"
-          "                           Clamping is automatically set when enabling\n"
-          "                           Therefore, you MUST explicitly set --clamped=0 when\n"
-          "                           setting limits (since zones are auto-enabled)\n"
-          "  -L, --locked             Lock a zone (a core RESET is required to unlock)\n"
-#endif // RAPLCAP_msr
+          "%s"
           "The following allow setting long and short term constraints simultaneously:\n"
           "  -s, --seconds0=SECONDS   Long term time window\n"
           "  -w, --watts0=WATTS       Long term power limit\n"
@@ -115,7 +119,7 @@ static void print_usage(int exit_code) {
           "  LONG: all zones\n"
           "  SHORT: PACKAGE & PSYS zones\n"
           "  PEAK: PACKAGE zone on Tiger Lake (2020) & newer client CPUs\n",
-          prog);
+          prog, msr_help);
   exit(exit_code);
 }
 
