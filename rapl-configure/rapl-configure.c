@@ -79,7 +79,8 @@ static void print_usage(int exit_code) {
           "";
 #endif // RAPLCAP_msr
   fprintf(exit_code ? stderr : stdout,
-          "Usage: %s [OPTION]...\n"
+          "Usage: %s [OPTION]...\n\n"
+          "Get or set Intel RAPL configurations.\n\n"
           "Options:\n"
           "  -h, --help               Print this message and exit\n"
           "  -n, --npackages          Print the number of packages found and exit\n"
