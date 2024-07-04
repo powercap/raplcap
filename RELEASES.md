@@ -9,7 +9,7 @@
 
 ### Changed
 
-* [msr] Updated for the Intel Software Developer's Manual, March 2024 release
+* [msr] Updated for the Intel Software Developer's Manual, June 2024 release
 * [rapl-configure] Refactor help output and man page documentation on zones and constraints
 
 ### Removed

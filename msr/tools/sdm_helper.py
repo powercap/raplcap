@@ -320,4 +320,4 @@ if __name__ == "__main__":
     XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_56, TBL_57, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - March 2024
+    # Last updated for Software Developer's Manual, Volume 4 - June 2024
