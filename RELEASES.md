@@ -22,6 +22,7 @@
 * [msr] Sapphire Rapids and Emerald Rapids use 61 uJ DRAM energy units (per Intel SDM, March 2024 release)
 * [msr] Release builds may get an unused-parameter warning
 * [rapl-configure] Clang may produce embedded-directive warning
+* CMake CMP0153 developer warning about using `exec_program` in uninstall script.
 
 
 ## [v0.9.1] - 2023-11-19
