@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12...3.30)
+cmake_minimum_required(VERSION 3.12...3.31)
 
 project(raplcap VERSION 0.10.0
                 LANGUAGES C)
