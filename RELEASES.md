@@ -6,10 +6,14 @@
 
 * [msr] Support for Emerald Rapids server ("Raptor Cove"), Model 0xCF
 * [msr] Support for Meteor Lake mobile ("Redwood Cove" / "Crestmont"), Model 0xAA
+* [msr] Support for Granite Rapids server ("Redwood Cove"), Model 0xAD
+* [msr] Support for Granite Rapids micro server ("Redwood Cove"), Model 0xAE
+* [msr] Support for Atom Crestmont server ("Crestmont"), Model 0xAF
+* [msr] Support for Lunar Lake ("Lion Cove" / "Skymont"), Model 0xBD
 
 ### Changed
 
-* [msr] Updated for the Intel Software Developer's Manual, June 2024 release
+* [msr] Updated for the Intel Software Developer's Manual, October 2024 release
 * [rapl-configure] Refactor help output and man page documentation on zones and constraints
 
 ### Removed

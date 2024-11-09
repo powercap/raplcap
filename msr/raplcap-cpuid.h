@@ -61,8 +61,14 @@ extern "C" {
 
 #define CPUID_MODEL_METEORLAKE_L      0xAA
 
+#define CPUID_MODEL_LUNARLAKE_M       0xBD
+
 #define CPUID_MODEL_SAPPHIRERAPIDS_X  0x8F
+
 #define CPUID_MODEL_EMERALDRAPIDS_X   0xCF
+
+#define CPUID_MODEL_GRANITERAPIDS_X   0xAD
+#define CPUID_MODEL_GRANITERAPIDS_D   0xAE
 
 #define CPUID_MODEL_XEON_PHI_KNL      0x57
 #define CPUID_MODEL_XEON_PHI_KNM      0x85
@@ -83,6 +89,8 @@ extern "C" {
 #define CPUID_MODEL_ATOM_TREMONT_D      0x86 // Jacobsville
 #define CPUID_MODEL_ATOM_TREMONT        0x96 // Elkhart Lake
 #define CPUID_MODEL_ATOM_TREMONT_L      0x9C // Jasper Lake
+
+#define CPUID_MODEL_ATOM_CRESTMONT_X    0xAF // Sierra Forest
 //----
 
 /**

@@ -52,7 +52,7 @@ static uint64_t log2_u64(uint64_t y) {
   return ret;
 }
 
-// Section 15.10.1
+// Section 16.10.1
 static double from_msr_pu_default(uint64_t msrval) {
   return 1.0 / pow2_u64((msrval >> PU_SHIFT) & PU_MASK);
 }
@@ -62,7 +62,7 @@ static double from_msr_pu_atom(uint64_t msrval) {
   return pow2_u64((msrval >> PU_SHIFT) & PU_MASK) / 1000.0;
 }
 
-// Section 15.10.1
+// Section 16.10.1
 static double from_msr_eu_default(uint64_t msrval) {
   return 1.0 / pow2_u64((msrval >> EU_SHIFT) & EU_MASK);
 }
@@ -72,13 +72,13 @@ static double from_msr_eu_atom(uint64_t msrval) {
   return pow2_u64((msrval >> EU_SHIFT) & EU_MASK) / 1000000.0;
 }
 
-// Section 15.10.1
+// Section 16.10.1
 static double from_msr_tu_default(uint64_t msrval) {
   // For Atom, Table 2-8 specifies that field value is always 0x0, meaning 1 second, so this works still
   return 1.0 / pow2_u64((msrval >> TU_SHIFT) & TU_MASK);
 }
 
-// Section 15.10.1
+// Section 16.10.1
 static double from_msr_pl_default(uint64_t bits, double power_units) {
   assert(power_units > 0);
   const double watts = power_units * bits;
@@ -86,7 +86,7 @@ static double from_msr_pl_default(uint64_t bits, double power_units) {
   return watts;
 }
 
-// Section 15.10.1
+// Section 16.10.1
 static uint64_t to_msr_pl_default(double watts, double power_units) {
   assert(watts >= 0);
   assert(power_units > 0);
@@ -147,12 +147,12 @@ static uint64_t to_msr_pl4_meteorlake(double watts, double power_units) {
 }
 
 /**
- * Note: Intel's documentation (Section 15.10.3) specifies different conversions for Package and Power Planes.
+ * Note: Intel's documentation (Section 16.10.3) specifies different conversions for Package and Power Planes.
  * We use the Package equation for Power Planes as well, which the Linux kernel appears to agree with.
  * Time window (seconds) = 2^Y * (1 + F/4) * Time_Unit
  * See the Linux kernel: drivers/powercap/intel_rapl.c:rapl_compute_time_window_core
  */
-// Section 15.10.3
+// Section 16.10.3
 static double from_msr_tw_default(uint64_t bits, double time_units) {
   assert(time_units > 0);
   // "Y" is an unsigned integer value represented by lower 5 bits
@@ -165,7 +165,7 @@ static double from_msr_tw_default(uint64_t bits, double time_units) {
   return seconds;
 }
 
-// Section 15.10.3
+// Section 16.10.3
 static uint64_t to_msr_tw_default(double seconds, double time_units) {
   assert(seconds > 0);
   assert(time_units > 0);
@@ -357,12 +357,17 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
     case CPUID_MODEL_COMETLAKE:
     case CPUID_MODEL_COMETLAKE_L:
     //
+    case CPUID_MODEL_GRANITERAPIDS_X:
+    case CPUID_MODEL_GRANITERAPIDS_D:
+    //
     case CPUID_MODEL_ATOM_GOLDMONT:
     case CPUID_MODEL_ATOM_GOLDMONT_D:
     case CPUID_MODEL_ATOM_GOLDMONT_PLUS:
     case CPUID_MODEL_ATOM_TREMONT_D:
     case CPUID_MODEL_ATOM_TREMONT:
     case CPUID_MODEL_ATOM_TREMONT_L:
+    //
+    case CPUID_MODEL_ATOM_CRESTMONT_X:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
@@ -400,6 +405,8 @@ void msr_get_context(raplcap_msr_ctx* ctx, uint32_t cpu_model, uint64_t units_ms
       break;
     //----
     case CPUID_MODEL_METEORLAKE_L:
+    //
+    case CPUID_MODEL_LUNARLAKE_M:
       ctx->power_units = from_msr_pu_default(units_msrval);
       ctx->energy_units = from_msr_eu_default(units_msrval);
       ctx->energy_units_dram = ctx->energy_units;
@@ -687,7 +694,7 @@ uint64_t msr_set_limits(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint64_t 
       msrval = replace_bits(msrval, ctx->cfg[zone].to_msr_pl(limit_short->watts, ctx->power_units), 32, pl2_last);
     }
     if (limit_short->seconds > 0) {
-      // 15.10.3: This field may have a hard-coded value in hardware and ignores values written by software.
+      // 16.10.3: This field may have a hard-coded value in hardware and ignores values written by software.
       if (zone == RAPLCAP_ZONE_PSYS) {
         // Table 2-39: PSYS has power limit #2, but time window #2 is chosen by the processor
         raplcap_log(WARN, "Not allowed to set PSys/Platform short term time window\n");
@@ -716,7 +723,7 @@ uint64_t msr_set_pl4_locked(const raplcap_msr_ctx* ctx, raplcap_zone zone, uint6
 }
 
 static void pl4_limit_quirks(const raplcap_msr_ctx* ctx, uint8_t* pl_last, uint64_t* pl_mask) {
-  if (ctx->cpu_model == CPUID_MODEL_METEORLAKE_L) {
+  if (ctx->cpu_model == CPUID_MODEL_METEORLAKE_L || ctx->cpu_model == CPUID_MODEL_LUNARLAKE_M) {
     if (pl_last != NULL) {
       *pl_last = 15;
     }

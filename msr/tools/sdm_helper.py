@@ -21,13 +21,15 @@ MSR_PLATFORM_POWER_LIMIT = "MSR_PLATFORM_POWER_LIMIT" # 0x65C
 MSR_PLATFORM_ENERGY_COUNTER = "MSR_PLATFORM_ENERGY_COUNTER" # 0x64D
 MSR_VR_CURRENT_CONFIG = "MSR_VR_CURRENT_CONFIG" # 0x601
 
+MSR_PKG_POWER_LIMIT_4 = MSR_VR_CURRENT_CONFIG # 0x601, appears to be an alias
+
 NONE = "None"
-POWER_DEFAULT = "15.10.1"
-PKG_DEFAULT = "15.10.3"
+POWER_DEFAULT = "16.10.1"
+PKG_DEFAULT = "16.10.3"
 PACKAGE_ENERGY_TIME_DEFAULT = "TBL_51"
-PP0_DEFAULT = "15.10.4"
-PP1_DEFAULT = "15.10.4"
-DRAM_DEFAULT = "15.10.5"
+PP0_DEFAULT = "16.10.4"
+PP1_DEFAULT = "16.10.4"
+DRAM_DEFAULT = "16.10.5"
 PLATFORM_DEFAULT = "TBL_39"
 DRAM_15_3 = "ESU: 15.3 uJ" # assumed for now that this ESU is found in MSR_RAPL_POWER_UNIT
 DRAM_61 = "ESU: 61 uJ"
@@ -304,20 +306,36 @@ if __name__ == "__main__":
     METEORLAKE_L = CPU("0xAA", "METEORLAKE_L", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_53])
     METEORLAKE_L.print_line()
 
-    TBL_56 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
+    # TBL_56 = {} # P-core only
+    GRANITERAPIDS_X = CPU("0xAD", "GRANITERAPIDS_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
+    GRANITERAPIDS_X.print_line()
+    GRANITERAPIDS_D = CPU("0xAE", "GRANITERAPIDS_D", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
+    GRANITERAPIDS_D.print_line()
+
+    # TBL_57 = {} # E-core only
+    ATOM_CRESTMONT_X = CPU("0xAF", "ATOM_CRESTMONT_X", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39])
+    ATOM_CRESTMONT_X.print_line()
+
+    TBL_58 = {MSR_PKG_POWER_LIMIT_4: "TBL_58"} # docs appear to be the same as MSR_VR_CURRENT_CONFIG in TBL_53
+    # TBL_59 = {} # P-core only
+    # TBL_60 = {} # E-core only
+    LUNARLAKE_M = CPU("0xBD", "LUNARLAKE_M", [TBL_20, TBL_21, TBL_25, TBL_29, TBL_35, TBL_39, TBL_58])
+    LUNARLAKE_M.print_line()
+
+    TBL_61 = {MSR_RAPL_POWER_UNIT: POWER_DEFAULT,
               MSR_PKG_POWER_LIMIT: PKG_DEFAULT,
               MSR_PKG_ENERGY_STATUS: PKG_DEFAULT,
               MSR_DRAM_POWER_LIMIT: DRAM_DEFAULT,
               MSR_DRAM_ENERGY_STATUS: DRAM_DEFAULT, # community consensus is that Xeon Phi should be DRAM_15_3
               MSR_PP0_POWER_LIMIT: PP0_DEFAULT,
               MSR_PP0_ENERGY_STATUS: PP0_DEFAULT}
-    TBL_57 = {}
+    TBL_62 = {}
 
     # The SDM and Xeon Phi Processor Datasheets (Vol. 2) don't back up this configuration
     # However, the community consensus is that Xeon Phi CPUs use 15.3 uJ as the DRAM energy units
-    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_56, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNL = CPU("0x57", "XEON_PHI_KNL", [TBL_61, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNL.print_line()
-    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_56, TBL_57, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
+    XEON_PHI_KNM = CPU("0x85", "XEON_PHI_KNM", [TBL_61, TBL_62, EXCEPTION_DRAM_ENERGY_STATUS_15_3])
     XEON_PHI_KNM.print_line()
 
-    # Last updated for Software Developer's Manual, Volume 4 - June 2024
+    # Last updated for Software Developer's Manual, Volume 4 - October 2024
