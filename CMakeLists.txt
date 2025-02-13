@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12...3.31)
 
-project(raplcap VERSION 0.10.0
+project(raplcap VERSION 0.10.1
                 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
