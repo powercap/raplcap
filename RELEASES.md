@@ -4,7 +4,7 @@
 
 ### Changed
 
-[msr] Updated for the Intel Software Developer's Manual, December 2024 release
+[msr] Updated for the Intel Software Developer's Manual, March 2025 release
 
 
 ## [v0.10.0] - 2024-11-09
