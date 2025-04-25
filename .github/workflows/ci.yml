@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, ubuntu-22.04]
         compiler: [gcc, clang]
     name: ${{ matrix.os }} ${{ matrix.compiler }} Test
     steps:
